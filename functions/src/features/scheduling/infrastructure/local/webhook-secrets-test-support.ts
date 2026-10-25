@@ -1,6 +1,6 @@
 import {randomBytes} from "node:crypto";
 import {type RuntimeDatabase} from "../../../../db/database.js";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../../language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 
 /** Nur Tests: echter verschlüsselter Speicher mit Wegwerf-Schlüssel. */

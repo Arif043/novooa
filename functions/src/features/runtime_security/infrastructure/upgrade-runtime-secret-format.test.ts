@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import test from "node:test";
-import {CredentialCipher} from "../../communication/infrastructure/security/credential-cipher.js";
+import {CredentialCipher} from "../../../shared/security/credential-cipher.js";
 import {parseRuntimeKeyring} from "./runtime-keyring.js";
 import {rotationFixture} from "./runtime-rotation-test-fixture.js";
 import {UpgradeRuntimeSecretFormat} from "./upgrade-runtime-secret-format.js";

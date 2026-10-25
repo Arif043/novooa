@@ -15,6 +15,8 @@ import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
+import '../google_accounts/google_account_test_doubles.dart';
+
 const _shop = Connection(
   id: 'c1',
   name: 'Shop',
@@ -38,6 +40,9 @@ void main() {
         TestConnection(repository),
         teams,
       ),
+    );
+    serviceLocator.registerFactory(
+      () => googleAccountsCubitFor(FakeGoogleAccountRepository(const [])),
     );
   });
 

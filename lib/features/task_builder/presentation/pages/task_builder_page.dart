@@ -1,4 +1,5 @@
 import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
+import 'package:syscat2/features/google_accounts/presentation/cubits/google_accounts_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -53,6 +54,9 @@ class TaskBuilderPage extends StatelessWidget {
           create: (_) => serviceLocator<ScriptPackagesCubit>()..load(),
         ),
         BlocProvider(create: (_) => serviceLocator<ConnectionsCubit>()..load()),
+        BlocProvider(
+          create: (_) => serviceLocator<GoogleAccountsCubit>()..load(),
+        ),
         BlocProvider(
           create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
         ),

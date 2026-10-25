@@ -1,13 +1,14 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
 import {IdParams, ItemsOf, StatusResponse} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
-import {type MailConnectorListCache} from "./mail-connector-list-cache.js";
+import {type RelayListCache} from "../../../../shared/local/relay-list-cache.js";
+import {type MailConnectorSummary} from "../../domain/entities/mail-connector-summary.js";
 import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 
 export type MailRelayRoutesOptions = {
   signedLicense: () => SignedRuntimeLicense | null;
   relay: Pick<RuntimeMailRelayClient, "beginMicrosoftAuthorization" | "listConnectors" | "listDeadLetters" | "replayDeadLetter">;
-  connectorCache: MailConnectorListCache;
+  connectorCache: RelayListCache<MailConnectorSummary>;
 };
 
 const DeadLetter = Type.Object({

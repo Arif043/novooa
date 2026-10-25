@@ -733,7 +733,8 @@
     "file_format_markdown": "Markdown (.md)",
     "file_format_csv": "Table (.csv)",
     "file_format_json": "JSON (.json)",
-    "file_format_text": "Text (.txt)"
+    "file_format_text": "Text (.txt)",
+    "authorization_page_open_failed": "The sign-in page could not be opened."
   },
   "machine_learning": {
     "model_import": {
@@ -954,5 +955,35 @@
     "schedule": "Schedule",
     "started_by": "started by {}",
     "trigger": "Trigger"
+  },
+  "google_drive": {
+    "section_title": "Google accounts",
+    "section_description": "Google Drive for tasks. novooa only sees files and folders you pick when connecting, and files it creates itself.",
+    "connect": "Connect Google account",
+    "share_more": "Share more files",
+    "reconnect": "Reconnect",
+    "empty": "No Google account connected yet.",
+    "load_failed": "Google accounts could not be loaded.",
+    "retry": "Try again",
+    "start_failed": "The Google sign-in could not be started.",
+    "shared_count": "{count} shared",
+    "reauthorization_required": "Sign-in expired",
+    "account": "Google account",
+    "account_missing": "Account not found",
+    "no_accounts_hint": "Connect a Google account under Settings → Connections.",
+    "folder": "Target folder",
+    "my_drive": "My Drive",
+    "file": "File",
+    "file_by_id": "File ID from a previous block",
+    "file_id": "File ID",
+    "file_id_hint": "e.g. {{driveFileId}}",
+    "file_name": "File name",
+    "content": "Content",
+    "content_helper": "Text, a file, an image or a table (saved as XLSX).",
+    "upload_title": "Save to Google Drive",
+    "upload_description": "Stores text, a file or a table as a new file in Google Drive.",
+    "read_title": "Read from Google Drive",
+    "read_description": "Loads a shared file from Google Drive; Google Docs arrive as PDF, Sheets as XLSX.",
+    "unknown_action": "This version of novooa does not know this Google Drive action."
   }
 }

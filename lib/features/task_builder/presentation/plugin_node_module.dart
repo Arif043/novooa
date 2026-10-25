@@ -10,8 +10,8 @@ class PluginNodeModule {
   const PluginNodeModule({
     required this.typeId,
     String? documentPrimitive,
-    required this.title,
-    required this.description,
+    required this._title,
+    required this._description,
     required this.group,
     required this.icon,
     required this.outputBase,
@@ -26,8 +26,14 @@ class PluginNodeModule {
   /// Name im Backend und im Dokument (`primitive`), z. B. `shopware`. Teilen sich
   /// mehrere Module ein Primitive, ist `fromDocument` bei allen dasselbe.
   final String documentPrimitive;
-  final String title;
-  final String description;
+
+  /// Erst beim Anzeigen ermittelt, damit Übersetzungen und ein Sprachwechsel
+  /// greifen; die Plugins melden sich vor dem Laden der Übersetzungen an.
+  final String Function() _title;
+  final String Function() _description;
+
+  String get title => _title();
+  String get description => _description();
 
   /// Gruppe in der Palette, z. B. „Shopware“.
   final String group;

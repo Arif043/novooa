@@ -3,7 +3,7 @@ import {AccessTokenCache} from "../../domain/services/access-token-cache.js";
 import {MailConnectorTokenService} from "../../domain/services/mail-connector-token-service.js";
 import {type MailConnectorRepository} from "../../domain/repositories/mail-connector-repository.js";
 import {type MailProvider} from "../../domain/repositories/mail-provider.js";
-import {CredentialCipher} from "../security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 import {MicrosoftGraphProvider} from "./microsoft-graph-provider.js";
 
 export const microsoftGraphClientId = defineString("MICROSOFT_GRAPH_CLIENT_ID");

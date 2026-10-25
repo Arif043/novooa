@@ -20,7 +20,7 @@ import {
   microsoftGraphClientSecret,
 } from "../microsoft_graph/microsoft-graph-config.js";
 import {authorizationCodeVerifier, authorizationId, codeChallenge} from
-  "../microsoft_graph/microsoft-oauth-proof.js";
+  "../../../../shared/security/oauth-pkce.js";
 import {sendTeamMicrosoftGraphEmail} from
   "../microsoft_graph/team-microsoft-graph-email-sender.js";
 

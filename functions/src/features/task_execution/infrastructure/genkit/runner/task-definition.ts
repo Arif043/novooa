@@ -331,6 +331,14 @@ export const shopwareNodeConfigSchema = z.object({
   params: z.record(z.string(), z.unknown()).default({}),
 });
 
+/** Die Parameter prüft die Aktion selbst (`integrations/google_drive`); hier nur Form und Größe. */
+export const googleDriveNodeConfigSchema = z.object({
+  primitive: z.literal("googleDrive").default("googleDrive"),
+  action: z.string().min(1).max(100),
+  accountId: z.string().max(200).optional(),
+  params: z.record(z.string(), z.unknown()).default({}),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -356,6 +364,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   notificationSendNodeConfigSchema,
   httpRequestNodeConfigSchema,
   shopwareNodeConfigSchema,
+  googleDriveNodeConfigSchema,
   teamworkNodeConfigSchema,
 ]);
 

@@ -39,3 +39,5 @@ export {completeMicrosoftMailConnector} from "./features/communication/infrastru
 export {microsoftGraphWebhook} from "./features/communication/infrastructure/firebase/microsoft-graph-webhook.js";
 export {processMicrosoftGraphNotification} from "./features/communication/infrastructure/firebase/process-microsoft-graph-notification.js";
 export {renewMicrosoftMailSubscriptions} from "./features/communication/infrastructure/firebase/renew-microsoft-mail-subscriptions.js";
+export {completeGoogleAccountAuthorizationFunction as completeGoogleAccountAuthorization} from "./features/google_accounts/infrastructure/firebase/complete-google-account-authorization-function.js";
+export {localRuntimeGoogleRelay} from "./features/google_accounts/infrastructure/firebase/local-runtime-google-relay-function.js";

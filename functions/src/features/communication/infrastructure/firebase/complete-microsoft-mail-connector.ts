@@ -1,6 +1,7 @@
 import {onRequest} from "firebase-functions/v2/https";
 import {type Request, type Response} from "express";
 import {logException, logInfo} from "../../../../shared/logging/logger.js";
+import {sendOAuthResultPage} from "../../../../shared/firebase/oauth-result-page.js";
 import {completeMailConnectorAuthorization} from
   "../../domain/usecases/complete-mail-connector-authorization.js";
 import {FirestoreMailConnectorRepository} from
@@ -11,10 +12,8 @@ import {
   microsoftGraphClientSecret,
   microsoftGraphProvider,
 } from "../microsoft_graph/microsoft-graph-config.js";
-import {
-  authorizationId,
-  subscriptionClientState,
-} from "../microsoft_graph/microsoft-oauth-proof.js";
+import {authorizationId} from "../../../../shared/security/oauth-pkce.js";
+import {subscriptionClientState} from "../microsoft_graph/microsoft-oauth-proof.js";
 
 export const completeMicrosoftMailConnector = onRequest(
   {
@@ -60,18 +59,12 @@ function methodNotAllowed(response: Response): void {
   response.status(405).send("Method Not Allowed");
 }
 
-function authorizationSucceeded(
-  response: Response,
-  emailAddress: string,
-): void {
-  response.type("html").status(200).send(successPage(emailAddress));
+function authorizationSucceeded(response: Response, emailAddress: string): void {
+  sendOAuthResultPage(response, {ok: true, title: "Postfach verbunden", message: `${emailAddress} ist jetzt mit novooa verbunden.`});
 }
 
-function authorizationFailed(
-  response: Response,
-  message: string,
-): void {
-  response.type("html").status(400).send(failurePage(message));
+function authorizationFailed(response: Response, message: string): void {
+  sendOAuthResultPage(response, {ok: false, title: "Verbindung fehlgeschlagen", message});
 }
 
 function requiredQueryValue(value: unknown, name: string): string {
@@ -83,19 +76,3 @@ function requiredQueryValue(value: unknown, name: string): string {
 function queryValue(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
-
-function successPage(emailAddress: string): string {
-  return `<main><h1>Postfach verbunden</h1><p>${escapeHtml(emailAddress)} ist jetzt mit novooa verbunden.</p></main>`;
-}
-
-function failurePage(message: string): string {
-  return `<main><h1>Verbindung fehlgeschlagen</h1><p>${escapeHtml(message)}</p></main>`;
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>'"]/g, (character) => htmlEntities[character] ?? character);
-}
-
-const htmlEntities: Record<string, string> = {
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
-};

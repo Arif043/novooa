@@ -1,4 +1,5 @@
-import {type MailConnectorListCache} from "./mail-connector-list-cache.js";
+import {type RelayListCache} from "../../../../shared/local/relay-list-cache.js";
+import {type MailConnectorSummary} from "../../domain/entities/mail-connector-summary.js";
 
 export type RuntimeWakeup = {communicationRevision?: unknown; connectorsRevision?: unknown};
 
@@ -18,7 +19,7 @@ export class RuntimeWakeupHandler {
 
   constructor(
     private readonly processMail: () => void,
-    private readonly connectors: MailConnectorListCache,
+    private readonly connectors: RelayListCache<MailConnectorSummary>,
     private readonly publish: (topic: string) => void,
   ) {}
 

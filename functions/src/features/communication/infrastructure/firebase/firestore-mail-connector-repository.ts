@@ -10,7 +10,7 @@ import {type MailConnectorRepository} from
   "../../domain/repositories/mail-connector-repository.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {signalRuntimeConnectorsChanged} from "./runtime-connectors-signal.js";
-import {CredentialCipher} from "../security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 import {
   authorizationDocument,
   authorizationFrom,

@@ -5,7 +5,10 @@ import {skillRoutes} from "../../features/skills/infrastructure/local/local-skil
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
-import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
+import {type RelayListCache} from "./relay-list-cache.js";
+import {type GoogleAccountsModule} from "../../features/google_accounts/infrastructure/local/google-accounts-module.js";
+import {googleAccountRoutes} from "../../features/google_accounts/infrastructure/local/local-google-account-routes.js";
+import {type MailConnectorSummary} from "../../features/communication/domain/entities/mail-connector-summary.js";
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
 import {dataRoutes} from "../../features/data/infrastructure/local/local-data-routes.js";
 import {fileSettingsRoutes} from "../../features/files/infrastructure/local/local-file-settings-routes.js";
@@ -50,7 +53,8 @@ export type LocalRuntimeApiDependencies = {
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
   realtimeConnections: LocalRuntimeRealtimeConnections;
-  mailConnectors: MailConnectorListCache;
+  mailConnectors: RelayListCache<MailConnectorSummary>;
+  googleAccounts: GoogleAccountsModule;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
   mlService: LocalMlService | undefined;
 };
@@ -99,6 +103,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(mailRelayRoutes, {
     signedLicense, relay: mailRelayFromEnvironment(), connectorCache: dependencies.mailConnectors,
   });
+  await api.register(googleAccountRoutes, {signedLicense, module: dependencies.googleAccounts});
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
   await api.register(connectionRoutes, {store: services.connections, client: services.connectionClient, notifier});
   await api.register(employeeRoutes, services.employees);

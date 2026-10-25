@@ -5,7 +5,7 @@ import {
 } from "../../domain/entities/mail-connector.js";
 import {type MailConnectorAuthorization} from
   "../../domain/entities/mail-connector-authorization.js";
-import {CredentialCipher} from "../security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 
 export function authorizationDocument(input: MailConnectorAuthorization) {
   return {...input, expiresAt: Timestamp.fromDate(input.expiresAt), createdAt: Timestamp.now()};

@@ -2,20 +2,22 @@ import {type NodeExecutorRegistry} from "../task_execution/infrastructure/genkit
 import {type OutboundHttpClient} from "../connections/domain/repositories/outbound-http-client.js";
 import {defaultEventTriggerSources, type EventTriggerSourceRegistry} from "../scheduling/domain/entities/event-trigger-source-registry.js";
 import {type WebhookInterpreter} from "../webhooks/domain/entities/webhook-interpreter.js";
-import {type IntegrationPlugin} from "./integration-plugin.js";
+import {type IntegrationPlugin, type IntegrationPluginDependencies} from "./integration-plugin.js";
 import {shopwarePlugin} from "./shopware/shopware-plugin.js";
+import {googleDrivePlugin} from "./google_drive/google-drive-plugin.js";
 
 /** Alle eingebauten Plugins. Ein neues Plugin wird hier eingetragen und sonst nirgends. */
-export const integrationPlugins: readonly IntegrationPlugin[] = [shopwarePlugin];
+export const integrationPlugins: readonly IntegrationPlugin[] = [shopwarePlugin, googleDrivePlugin];
 
 /** Meldet die Executoren aller Plugins an; gibt die Registry zur Verkettung zurück. */
 export function registerIntegrationPlugins(
   registry: NodeExecutorRegistry,
+  dependencies: IntegrationPluginDependencies,
   plugins: readonly IntegrationPlugin[] = integrationPlugins,
   sources: EventTriggerSourceRegistry = defaultEventTriggerSources,
 ): NodeExecutorRegistry {
   for (const plugin of plugins) {
-    for (const executor of plugin.executors) registry.register(executor);
+    for (const executor of plugin.executors(dependencies)) registry.register(executor);
     for (const trigger of plugin.eventTriggers ?? []) sources.register(trigger.source);
   }
   return registry;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
-import {MailConnectorListCache} from "./mail-connector-list-cache.js";
+import {RelayListCache} from "../../../../shared/local/relay-list-cache.js";
 import {MAIL_CONNECTORS_TOPIC, RuntimeWakeupHandler} from "./runtime-wakeup-handler.js";
 
 const license: SignedRuntimeLicense = {
@@ -10,7 +10,7 @@ const license: SignedRuntimeLicense = {
 };
 
 function setup() {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<never>();
   const events = {mail: 0, topics: [] as string[], loads: 0};
   const handler = new RuntimeWakeupHandler(
     () => { events.mail++; }, cache, (topic) => events.topics.push(topic),

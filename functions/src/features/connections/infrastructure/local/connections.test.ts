@@ -8,7 +8,7 @@ import {connections, languageModelSecrets, teams} from "../../../../db/schema.js
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {openLocalRuntimeDatabase} from "../../../../shared/local/local-runtime-database.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../../language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {ConnectionAuthError, ConnectionNotFoundError, ConnectionRequestError, type ConnectionInput} from "../../domain/entities/connection.js";
 import {connectionRoutes} from "./local-connection-routes.js";

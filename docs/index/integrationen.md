@@ -22,6 +22,11 @@
 - [Shopware: Ereignis lesen](../notes/shopware-ereignis-lesen.md)
 - [Shopware-Fehler und Grenzen](../notes/shopware-fehler-und-grenzen.md)
 
+## Google Drive
+
+- [Google Drive](./google-drive.md) — eigenes Inhaltsverzeichnis: Konto,
+  Scope, Bausteine
+
 ## Offene Punkte
 
 - Shopware gegen einen echten Shop prüfen (API-Formen, App ohne `<setup>`,

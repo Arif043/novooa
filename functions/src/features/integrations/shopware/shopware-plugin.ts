@@ -26,7 +26,7 @@ export const shopwareActions = new ShopwareActionRegistry()
 
 export const shopwarePlugin: IntegrationPlugin = {
   id: "shopware",
-  executors: [createShopwareNodeExecutor(shopwareActions)],
+  executors: () => [createShopwareNodeExecutor(shopwareActions)],
   eventTriggers: [{
     source: {
       id: "shopware",

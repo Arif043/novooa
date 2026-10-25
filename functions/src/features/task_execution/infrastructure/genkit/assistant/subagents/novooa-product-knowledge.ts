@@ -28,6 +28,7 @@ const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: st
   ["tableFromCollection", "Sammlung als Tabelle lesen (nur lokale Runtime)."],
   ["readWebhook", "Webhook-Ereignis lesen, das die Aufgabe gestartet hat (nur lokale Runtime)."],
   ["shopware", "Shopware-Aktion: Bestellungen, Produkte, Kunden (nur lokale Runtime, Verbindung nötig)."],
+  ["googleDrive", "Google Drive: Datei speichern oder lesen; nur freigegebene und selbst angelegte Dateien (Google-Konto nötig)."],
   ["teamwork", "Teamarbeit: Ein Orchestrator verteilt Aufträge an gewählte Mitarbeiter (je mit Zuständigkeit und eigenem Modell; sie erinnern sich an frühere Aufträge im Lauf) und liefert ein strukturiertes Ergebnis, auch Textdateien. Optional prüft ein eigenes, oft stärkeres Modell das Ergebnis vor der Abgabe (nur lokale Runtime)."],
   ["httpRequest", "HTTP-Anfrage an eine externe API, optional über eine gespeicherte Verbindung (nur lokale Runtime)."],
 ];

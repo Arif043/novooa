@@ -12,7 +12,7 @@ Ablage:
 
 ```
 functions/src/features/integrations/
-  integration-plugin.ts       Vertrag (id, executors, eventTriggers?)
+  integration-plugin.ts       Vertrag (id, executors(dependencies), eventTriggers?)
   index.ts                    integrationPlugins, registerIntegrationPlugins
   <system>/                   ein Ordner je Plugin, z. B. shopware/
     <system>-plugin.ts        meldet die Teile an
@@ -27,6 +27,9 @@ Regeln:
   `src/shared/local`: `registerIntegrationPlugins(createDefaultNodeExecutorRegistry())`,
   weitergereicht über `TaskGraphRuntime.executorRegistry`.
 - Ein neues Plugin wird nur in `integrationPlugins` eingetragen.
+- `executors(dependencies)` bekommt die Dienste der Runtime, die Plugins
+  nutzen dürfen (`IntegrationPluginDependencies`, heute
+  `googleAccessTokens`); die Komposition reicht sie herein.
 - Der Vertrag wächst mit dem nächsten Bedarf (Routen, Worker).
   `eventTriggers` bringen eine Ereignisquelle samt Interpreter; die Komposition
   reicht sie an den Webhook-Empfänger (`integrationWebhookInterpreters`). Im

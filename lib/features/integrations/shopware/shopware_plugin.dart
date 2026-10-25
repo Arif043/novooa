@@ -14,8 +14,8 @@ void registerShopwarePlugin() {
       PluginNodeModule(
         typeId: 'shopware.${action.id}',
         documentPrimitive: 'shopware',
-        title: action.title,
-        description: action.description,
+        title: () => action.title,
+        description: () => action.description,
         group: 'Shopware',
         icon: SimpleIcons.shopware,
         outputBase: action.outputBase,

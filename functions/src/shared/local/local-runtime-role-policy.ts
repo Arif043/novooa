@@ -15,6 +15,7 @@ const adminRules: ReadonlyArray<{prefix: string; restriction: Restriction}> = [
   {prefix: "/v1/language-model-connections", restriction: "writes"},
   {prefix: "/v1/language-model-defaults", restriction: "writes"},
   {prefix: "/v1/language-models", restriction: "writes"},
+  {prefix: "/v1/google-accounts", restriction: "writes"},
   {prefix: "/v1/mail-connectors", restriction: "writes"},
   {prefix: "/v1/mail-relay", restriction: "writes"},
   {prefix: "/v1/script-packages", restriction: "writes"},

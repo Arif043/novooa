@@ -185,6 +185,7 @@ Inhaltsverzeichnis, dann nur die Notizen, die du brauchst.
 | Dokumentenscanner | [`docs/index/dokumentscanner.md`](./docs/index/dokumentscanner.md) | Plattformen, Browser-Scanner, Grenzen |
 | Kommunikation | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | SendGrid, Mail-Connectoren, Twilio, Kanäle |
 | Integrationen | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Plugin-Mechanik und Shopware |
+| Google Drive | [`docs/index/google-drive.md`](./docs/index/google-drive.md) | Google-Konto, Scope `drive.file`, Bausteine |
 | Webhooks | [`docs/index/webhooks.md`](./docs/index/webhooks.md) | Auslöser, Aufruf, Ereignis, Sicherheit |
 | Verbindungen | [`docs/index/verbindungen.md`](./docs/index/verbindungen.md) | Verbindung, Anmeldung, HTTP-Anfrage |
 | Import/Export | [`docs/index/import-export.md`](./docs/index/import-export.md) | Bereiche, Archivformat, Ablauf |

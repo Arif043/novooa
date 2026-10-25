@@ -733,7 +733,8 @@
     "file_format_markdown": "Markdown (.md)",
     "file_format_csv": "Tablo (.csv)",
     "file_format_json": "JSON (.json)",
-    "file_format_text": "Metin (.txt)"
+    "file_format_text": "Metin (.txt)",
+    "authorization_page_open_failed": "Oturum açma sayfası açılamadı."
   },
   "machine_learning": {
     "model_import": {
@@ -954,5 +955,35 @@
     "schedule": "Zamanlama",
     "started_by": "{} tarafından başlatıldı",
     "trigger": "Tetikleyici"
+  },
+  "google_drive": {
+    "section_title": "Google hesapları",
+    "section_description": "Görevler için Google Drive. novooa yalnızca bağlanırken seçtiğin dosya ve klasörleri ve kendi oluşturduğu dosyaları görür.",
+    "connect": "Google hesabı bağla",
+    "share_more": "Daha fazla dosya paylaş",
+    "reconnect": "Yeniden bağlan",
+    "empty": "Henüz bağlı Google hesabı yok.",
+    "load_failed": "Google hesapları yüklenemedi.",
+    "retry": "Tekrar dene",
+    "start_failed": "Google oturum açma başlatılamadı.",
+    "shared_count": "{count} paylaşıldı",
+    "reauthorization_required": "Oturumun süresi doldu",
+    "account": "Google hesabı",
+    "account_missing": "Hesap bulunamadı",
+    "no_accounts_hint": "Ayarlar → Bağlantılar altında bir Google hesabı bağla.",
+    "folder": "Hedef klasör",
+    "my_drive": "Drive'ım",
+    "file": "Dosya",
+    "file_by_id": "Önceki bir bloktan dosya kimliği",
+    "file_id": "Dosya kimliği",
+    "file_id_hint": "ör. {{driveFileId}}",
+    "file_name": "Dosya adı",
+    "content": "İçerik",
+    "content_helper": "Metin, dosya, görsel veya tablo (XLSX olarak kaydedilir).",
+    "upload_title": "Google Drive'a kaydet",
+    "upload_description": "Metni, bir dosyayı veya tabloyu Google Drive'da yeni dosya olarak saklar.",
+    "read_title": "Google Drive'dan oku",
+    "read_description": "Google Drive'dan paylaşılan bir dosyayı yükler; Google Dokümanlar PDF, E-Tablolar XLSX olarak gelir.",
+    "unknown_action": "novooa'nın bu sürümü bu Google Drive işlemini tanımıyor."
   }
 }

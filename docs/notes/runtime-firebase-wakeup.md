@@ -7,8 +7,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - Nach Aktivierung und bei jedem Start fordert die Runtime mit signierter
   Lizenz **und** Aktivierungsgeheimnis ein kurzlebiges Custom-Token an und
   meldet sich bei Firebase Auth an.
-- Revisionen: `communicationRevision` (neue Mails) und `connectorsRevision`
-  (Postfächer geändert). Inhalte bleiben in der Relay-Queue; die Runtime
+- Revisionen: `communicationRevision` (neue Mails), `connectorsRevision`
+  (Postfächer geändert) und `googleAccountsRevision`
+  ([Google-Konten](./google-konto-verbinden.md) geändert). Inhalte bleiben in der Relay-Queue; die Runtime
   holt sie per `pull`, verarbeitet lokal und sendet `ack` oder `reject`.
 - Firestore stellt den Listener nach Netzunterbrechungen selbst wieder her
   und liefert den aktuellen Zustand erneut. Weil die Revision erhalten bleibt,

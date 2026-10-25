@@ -72,6 +72,7 @@ export const workflowPrimitives = [
   "validation",
   "httpRequest",
   "shopware",
+  "googleDrive",
   "teamwork",
 ] as const;
 
@@ -311,6 +312,14 @@ export type ShopwareNodeConfig = {
   connectionId?: string;
   params: Record<string, unknown>;
 };
+/** Aktion auf Google Drive (Plugin `integrations/google_drive`); `params` hängen von der Aktion ab. */
+export type GoogleDriveNodeConfig = {
+  primitive: "googleDrive";
+  action: string;
+  /** Verbundenes Google-Konto der Runtime. */
+  accountId?: string;
+  params: Record<string, unknown>;
+};
 export type HttpRequestNodeConfig = {
   primitive: "httpRequest";
   /** Fehlt sie, muss `url` vollständig sein und es wird ohne Anmeldung gesendet. */
@@ -349,6 +358,7 @@ export type NodeConfig =
   | NotificationSendNodeConfig
   | HttpRequestNodeConfig
   | ShopwareNodeConfig
+  | GoogleDriveNodeConfig
   | TeamworkNodeConfig;
 export type WorkflowNode = {
   id: string;

@@ -45,6 +45,7 @@ import {OAuthTokenProvider} from "../../features/connections/infrastructure/loca
 import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
 import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
 import {integrationWebhookInterpreters, registerIntegrationPlugins} from "../../features/integrations/index.js";
+import {type GoogleAccessTokens} from "../../features/google_accounts/domain/repositories/google-access-tokens.js";
 import {createDefaultNodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
@@ -72,6 +73,8 @@ export type LocalRuntimeCompositionOptions = {
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
   /** Prozessweit: Die Anmeldung beim ML-Dienst überdauert einen Arbeitsbereichswechsel. */
   mlService: LocalMlService | undefined;
+  /** Prozessweit: Zugriffstokens verbundener Google-Konten für Plugin-Bausteine. */
+  googleAccessTokens: GoogleAccessTokens;
 };
 
 export function createLocalRuntimeComposition(
@@ -155,7 +158,7 @@ export function createLocalRuntimeComposition(
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
     languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
-    executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry()),
+    executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: options.googleAccessTokens}),
     outboundHttpClient,
     modelCache,
     mlService: options.mlService?.client,

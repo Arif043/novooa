@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
-import {type MailConnectorSummary} from "../../domain/entities/mail-connector-summary.js";
-import {MailConnectorListCache} from "./mail-connector-list-cache.js";
+import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
+import {RelayListCache} from "./relay-list-cache.js";
+
+type Item = {id: string};
 
 function licenseOf(licenseId: string): SignedRuntimeLicense {
   return {
@@ -11,11 +12,11 @@ function licenseOf(licenseId: string): SignedRuntimeLicense {
   };
 }
 
-function summary(id: string): MailConnectorSummary {
-  return {id, teamId: "w", emailAddress: `${id}@example.com`, displayName: id, status: "active"};
+function summary(id: string): Item {
+  return {id};
 }
 
-function countingLoader(...lists: MailConnectorSummary[][]) {
+function countingLoader(...lists: Item[][]) {
   const state = {calls: 0};
   return {
     state,
@@ -24,7 +25,7 @@ function countingLoader(...lists: MailConnectorSummary[][]) {
 }
 
 test("lädt die Liste einmal aus der Cloud und bedient weitere Anfragen aus dem Cache", async () => {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<Item>();
   const loader = countingLoader([summary("a")]);
 
   await cache.list(licenseOf("l"), loader.load);
@@ -35,7 +36,7 @@ test("lädt die Liste einmal aus der Cloud und bedient weitere Anfragen aus dem 
 });
 
 test("nach invalidate wird die Liste neu aus der Cloud geladen", async () => {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<Item>();
   const loader = countingLoader([summary("a")], [summary("b")]);
 
   await cache.list(licenseOf("l"), loader.load);
@@ -47,7 +48,7 @@ test("nach invalidate wird die Liste neu aus der Cloud geladen", async () => {
 });
 
 test("eine andere Lizenz bekommt nie die Liste einer fremden", async () => {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<Item>();
   const loader = countingLoader([summary("a")], [summary("b")]);
 
   await cache.list(licenseOf("l1"), loader.load);
@@ -57,7 +58,7 @@ test("eine andere Lizenz bekommt nie die Liste einer fremden", async () => {
 });
 
 test("ein Fehlschlag wird nicht gecacht", async () => {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<Item>();
   let calls = 0;
   const load = async () => {
     calls++;
@@ -73,7 +74,7 @@ test("ein Fehlschlag wird nicht gecacht", async () => {
 });
 
 test("ein während des Ladens eintreffendes Ereignis verhindert das Festhalten des alten Stands", async () => {
-  const cache = new MailConnectorListCache();
+  const cache = new RelayListCache<Item>();
   const first = cache.list(licenseOf("l"), async () => [summary("alt")]);
   cache.invalidate();
   const loader = countingLoader([summary("neu")]);

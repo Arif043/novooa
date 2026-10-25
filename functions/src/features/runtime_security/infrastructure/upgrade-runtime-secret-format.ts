@@ -3,7 +3,7 @@ import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import {type RuntimeExecutor} from "../../../db/database.js";
 import {languageModelSecrets} from "../../../db/schema.js";
-import {CredentialCipher} from "../../communication/infrastructure/security/credential-cipher.js";
+import {CredentialCipher} from "../../../shared/security/credential-cipher.js";
 import {writeDurableSecretFile} from "./durable-secret-file.js";
 import {EnvelopeRuntimeFieldCipher} from "./envelope-runtime-field-cipher.js";
 import {parseRuntimeKeyring} from "./runtime-keyring.js";

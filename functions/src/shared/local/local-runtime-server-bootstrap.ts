@@ -1,4 +1,9 @@
-import {MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
+import {RelayListCache} from "./relay-list-cache.js";
+import {
+  googleAccountsModuleFromEnvironment,
+  type GoogleAccountsModule,
+} from "../../features/google_accounts/infrastructure/local/google-accounts-module.js";
+import {type MailConnectorSummary} from "../../features/communication/domain/entities/mail-connector-summary.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type Server} from "node:http";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -39,7 +44,8 @@ type RuntimeShared = {
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
   realtimeConnections: LocalRuntimeRealtimeConnections;
-  mailConnectors: MailConnectorListCache;
+  mailConnectors: RelayListCache<MailConnectorSummary>;
+  googleAccounts: GoogleAccountsModule;
   application: LocalRuntimeApplication;
   mlService: LocalMlService | undefined;
 };
@@ -72,19 +78,20 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
 function sharedFor(options: BootstrapOptions): RuntimeShared {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   const notifier = new LocalRuntimeRealtimeNotifier();
-  const mailConnectors = new MailConnectorListCache();
+  const mailConnectors = new RelayListCache<MailConnectorSummary>();
+  const googleAccounts = googleAccountsModuleFromEnvironment(() => licenses.signedActiveLicense());
   const mlService = localMlServiceFromEnvironment({
     runtimeRoot, cipher: fieldCipher, secretFileAccess: options.secretFileAccess,
     tenantId: () => licenses.activeContext()?.licenseId ?? null,
   });
   const application = new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, mlService,
+    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, googleAccounts, mlService,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
   });
   return {
-    sessions: new LocalRuntimeSessionStore(database, () => licenses.activeContext()?.workspaceId ?? null), notifier, mailConnectors, mlService,
+    sessions: new LocalRuntimeSessionStore(database, () => licenses.activeContext()?.workspaceId ?? null), notifier, mailConnectors, googleAccounts, mlService,
     tickets: new LocalRuntimeRealtimeTicketStore(), realtimeConnections: new LocalRuntimeRealtimeConnections(), application,
   };
 }
@@ -110,7 +117,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
-      realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors,
+      realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors, googleAccounts: shared.googleAccounts,
       workspaceContext: () => shared.application.workspaceContext(), mlService: shared.mlService,
     }));
     // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/notes/webhook-architektur.md).

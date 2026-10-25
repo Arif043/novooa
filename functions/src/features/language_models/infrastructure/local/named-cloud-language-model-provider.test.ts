@@ -5,7 +5,7 @@ import test from "node:test";
 import {connectRuntimeDatabase, RuntimeDatabase} from "../../../../db/database.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
+import {CredentialCipher} from "../../../../shared/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
 import {LocalLanguageModelDiscovery} from "./local-language-model-discovery.js";
 import {languageModelRoutes} from "./local-language-model-routes.js";

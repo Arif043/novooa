@@ -1,6 +1,9 @@
 import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
-import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
+import {type RelayListCache} from "./relay-list-cache.js";
+import {type MailConnectorSummary} from "../../features/communication/domain/entities/mail-connector-summary.js";
 import {RuntimeWakeupHandler} from "../../features/communication/infrastructure/local/runtime-wakeup-handler.js";
+import {type GoogleAccountsModule} from "../../features/google_accounts/infrastructure/local/google-accounts-module.js";
+import {GoogleAccountsWakeupHandler} from "../../features/google_accounts/infrastructure/local/google-accounts-wakeup-handler.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
@@ -16,7 +19,8 @@ export type LocalRuntimeApplicationOptions = {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   realtimeNotifier: LocalRuntimeRealtimeNotifier;
-  mailConnectors: MailConnectorListCache;
+  mailConnectors: RelayListCache<MailConnectorSummary>;
+  googleAccounts: GoogleAccountsModule;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -40,6 +44,7 @@ export class LocalRuntimeApplication {
     if (sameWorkspace(this.workspace, workspace)) return;
     await this.stopRuntime();
     this.options.mailConnectors.invalidate();
+    this.options.googleAccounts.cache.invalidate();
     await ensureLocalRuntimeWorkspace(this.options.database, workspace);
     this.workspace = workspace;
     this.runtime = createLocalRuntimeComposition({
@@ -48,6 +53,7 @@ export class LocalRuntimeApplication {
       isLicenseActive: this.options.isLicenseActive,
       signedLicense: this.options.signedLicense,
       activeLicenseActivation: this.options.activeLicenseActivation,
+      googleAccessTokens: this.options.googleAccounts.accessTokens,
     });
     this.runtime.taskRunWorker.start();
     this.runtime.taskTriggerWorker.start();
@@ -92,11 +98,18 @@ export class LocalRuntimeApplication {
     try {
       await runtime.firebaseSession.start(activation);
       const wakeups = this.wakeupHandlerFor(runtime, activation.license.payload.licenseId);
+      const googleWakeups = new GoogleAccountsWakeupHandler(
+        this.options.googleAccounts.cache, (topic) => this.options.realtimeNotifier.publish(topic),
+      );
       runtime.firebaseSession.listenForWakeups(
         activation.license.payload.licenseId,
-        (data) => wakeups.handle(data),
+        (data) => {
+          wakeups.handle(data);
+          googleWakeups.handle(data);
+        },
         (error) => {
           wakeups.handleFailure();
+          googleWakeups.handleFailure();
           runtime.applicationLogger.exception(
             "local_runtime.firebase_wakeup_listener_failed", error,
             {licenseId: activation.license.payload.licenseId},

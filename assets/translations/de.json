@@ -733,7 +733,8 @@
     "file_format_markdown": "Markdown (.md)",
     "file_format_csv": "Tabelle (.csv)",
     "file_format_json": "JSON (.json)",
-    "file_format_text": "Text (.txt)"
+    "file_format_text": "Text (.txt)",
+    "authorization_page_open_failed": "Die Anmeldeseite konnte nicht geöffnet werden."
   },
   "machine_learning": {
     "model_import": {
@@ -954,5 +955,35 @@
     "schedule": "Zeitplan",
     "started_by": "gestartet von {}",
     "trigger": "Auslöser"
+  },
+  "google_drive": {
+    "section_title": "Google-Konten",
+    "section_description": "Google Drive für Aufgaben. novooa sieht nur Dateien und Ordner, die du beim Verbinden auswählst, und Dateien, die es selbst anlegt.",
+    "connect": "Google-Konto verbinden",
+    "share_more": "Weitere Dateien freigeben",
+    "reconnect": "Neu verbinden",
+    "empty": "Noch kein Google-Konto verbunden.",
+    "load_failed": "Google-Konten konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "start_failed": "Die Google-Anmeldung konnte nicht gestartet werden.",
+    "shared_count": "{count} freigegeben",
+    "reauthorization_required": "Anmeldung abgelaufen",
+    "account": "Google-Konto",
+    "account_missing": "Konto nicht gefunden",
+    "no_accounts_hint": "Verbinde unter Einstellungen → Verbindungen ein Google-Konto.",
+    "folder": "Zielordner",
+    "my_drive": "Meine Ablage",
+    "file": "Datei",
+    "file_by_id": "Datei-ID aus einem vorherigen Baustein",
+    "file_id": "Datei-ID",
+    "file_id_hint": "z. B. {{driveFileId}}",
+    "file_name": "Dateiname",
+    "content": "Inhalt",
+    "content_helper": "Text, eine Datei, ein Bild oder eine Tabelle (wird als XLSX gespeichert).",
+    "upload_title": "In Google Drive speichern",
+    "upload_description": "Legt Text, eine Datei oder eine Tabelle als neue Datei in Google Drive ab.",
+    "read_title": "Aus Google Drive lesen",
+    "read_description": "Lädt eine freigegebene Datei aus Google Drive; Google-Dokumente kommen als PDF, Tabellen als XLSX.",
+    "unknown_action": "Diese Google-Drive-Aktion kennt diese Version von novooa nicht."
   }
 }

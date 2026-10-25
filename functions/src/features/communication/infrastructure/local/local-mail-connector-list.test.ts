@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test, {afterEach} from "node:test";
 import {testingRoutes, testWorkspace} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
-import {MailConnectorListCache} from "./mail-connector-list-cache.js";
+import {RelayListCache} from "../../../../shared/local/relay-list-cache.js";
+import {type MailConnectorSummary} from "../../domain/entities/mail-connector-summary.js";
 import {mailRelayRoutes} from "./local-mail-relay-routes.js";
 import {HttpRuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 
@@ -26,7 +27,7 @@ function relayReturning(items: unknown[]) {
 
 test("GET /v1/mail-connectors liefert die Postfächer dieser Runtime", async () => {
   const connector = {id: "c1", teamId: "w", emailAddress: "team@example.com", displayName: "Team", status: "active"};
-  const routes = testingRoutes(mailRelayRoutes, {signedLicense: () => license, relay: relayReturning([connector]), connectorCache: new MailConnectorListCache()}, testWorkspace());
+  const routes = testingRoutes(mailRelayRoutes, {signedLicense: () => license, relay: relayReturning([connector]), connectorCache: new RelayListCache<MailConnectorSummary>()}, testWorkspace());
 
   const response = await routes.handle({method: "GET", url: "/v1/mail-connectors", body: {}});
 
@@ -35,7 +36,7 @@ test("GET /v1/mail-connectors liefert die Postfächer dieser Runtime", async () 
 });
 
 test("ohne aktive Lizenz gibt es keine Postfach-Liste", async () => {
-  const routes = testingRoutes(mailRelayRoutes, {signedLicense: () => null, relay: relayReturning([]), connectorCache: new MailConnectorListCache()}, testWorkspace());
+  const routes = testingRoutes(mailRelayRoutes, {signedLicense: () => null, relay: relayReturning([]), connectorCache: new RelayListCache<MailConnectorSummary>()}, testWorkspace());
 
   const response = await routes.handle({method: "GET", url: "/v1/mail-connectors", body: {}});
 

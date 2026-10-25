@@ -15,6 +15,8 @@ LOCAL_RUNTIME_FIREBASE_TOKEN_URL=https://<region>-<projekt>.cloudfunctions.net/i
 
 Weitere Relays:
 
+- `LOCAL_RUNTIME_GOOGLE_RELAY_URL` → `localRuntimeGoogleRelay`, in Compose
+  voreingestellt ([Google-Konto verbinden](./google-konto-verbinden.md))
 - `LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL` → `localRuntimeTaskBuilderRelay`
   ([KI-Agenten in der Runtime](./ki-agenten-betriebsorte.md))
 - `SKILLS_SH_RELAY_URL` → `localRuntimeSkillsRelay`, in Compose voreingestellt

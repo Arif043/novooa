@@ -47,8 +47,8 @@ class _HelloConfig extends PluginNodeConfig {
 
 PluginNodeModule _module() => PluginNodeModule(
   typeId: 'helloPlugin',
-  title: 'Hallo-Baustein',
-  description: 'Sagt Hallo.',
+  title: () => 'Hallo-Baustein',
+  description: () => 'Sagt Hallo.',
   group: 'Hallo',
   icon: Icons.waving_hand,
   outputBase: 'gruss',

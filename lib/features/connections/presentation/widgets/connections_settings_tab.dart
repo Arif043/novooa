@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/google_accounts/presentation/cubits/google_accounts_cubit.dart';
+import 'package:syscat2/features/google_accounts/presentation/widgets/google_accounts_section.dart';
 import 'package:syscat2/features/settings/presentation/widgets/settings_section.dart';
 
 import '../../domain/entities/connection.dart';
@@ -9,17 +11,27 @@ import '../cubits/connections_cubit.dart';
 import '../cubits/connections_state.dart';
 import 'connection_editor_dialog.dart';
 
-/// Tab „Verbindungen“ in den Runtime-Einstellungen (nur Standalone).
+/// Tab „Verbindungen“ in den Runtime-Einstellungen: HTTP-Verbindungen und
+/// Google-Konten.
 class ConnectionsSettingsTab extends StatelessWidget {
   const ConnectionsSettingsTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<ConnectionsCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => serviceLocator<ConnectionsCubit>()..load()),
+        BlocProvider(
+          create: (_) => serviceLocator<GoogleAccountsCubit>()..load(),
+        ),
+      ],
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        children: const [_ConnectionsSection()],
+        children: const [
+          _ConnectionsSection(),
+          SizedBox(height: AppSpacing.lg),
+          GoogleAccountsSection(),
+        ],
       ),
     );
   }
