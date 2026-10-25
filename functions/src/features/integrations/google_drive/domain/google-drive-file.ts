@@ -8,6 +8,15 @@ export type GoogleDriveFile = {
   /** Adresse zum Öffnen im Browser. */
   webViewLink: string;
   sizeBytes: number;
+  /** Letzte Änderung als ISO-Zeitpunkt; leer, wenn Google keinen liefert. */
+  modifiedAt: string;
+};
+
+/** Ohne Ordner sucht Drive überall, wo novooa Dateien sehen darf; `root` steht für „Meine Ablage“. */
+export type GoogleDriveSearch = {
+  nameContains?: string;
+  folderId?: string;
+  limit: number;
 };
 
 export type GoogleDriveUpload = {
@@ -29,4 +38,6 @@ export interface GoogleDriveFiles {
   upload(file: GoogleDriveUpload): Promise<GoogleDriveFile>;
   /** Google-Dokumente, -Tabellen und -Präsentationen kommen als PDF bzw. XLSX. */
   download(fileId: string): Promise<GoogleDriveDownload>;
+  /** Neueste zuerst; Papierkorb ausgenommen. */
+  search(query: GoogleDriveSearch): Promise<GoogleDriveFile[]>;
 }

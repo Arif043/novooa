@@ -14,6 +14,7 @@ import '../../domain/google_drive_actions.dart';
 import '../../domain/google_drive_node_config.dart';
 import 'google_account_picker_field.dart';
 import 'google_drive_read_fields.dart';
+import 'google_drive_search_fields.dart';
 import 'google_drive_upload_fields.dart';
 
 /// Formular einer Drive-Aktion: Konto und die Eingaben der Aktion. Erwartet
@@ -74,18 +75,23 @@ class _ActionFields extends StatelessWidget {
           onChanged: (id) => update((c) => c.withAccount(id)),
         ),
         const SizedBox(height: AppSpacing.sm),
-        if (spec == GoogleDriveActions.upload)
-          GoogleDriveUploadFields(
-            config: config,
-            account: account,
-            update: update,
-          )
-        else
-          GoogleDriveReadFields(
+        switch (spec.id) {
+          'upload' => GoogleDriveUploadFields(
             config: config,
             account: account,
             update: update,
           ),
+          'search' => GoogleDriveSearchFields(
+            config: config,
+            account: account,
+            update: update,
+          ),
+          _ => GoogleDriveReadFields(
+            config: config,
+            account: account,
+            update: update,
+          ),
+        },
       ],
     );
   }

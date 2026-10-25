@@ -5,13 +5,14 @@ import {
   type GoogleDriveDownload,
   type GoogleDriveFile,
   type GoogleDriveFiles,
+  type GoogleDriveSearch,
   type GoogleDriveUpload,
 } from "../domain/google-drive-file.js";
 import {exportFormatFor, isGoogleAppsType} from "./google-drive-export-formats.js";
 
 const api = "https://www.googleapis.com/drive/v3";
 const uploadApi = "https://www.googleapis.com/upload/drive/v3";
-const fileFields = "id,name,mimeType,webViewLink,size";
+const fileFields = "id,name,mimeType,webViewLink,size,modifiedTime";
 const timeoutMilliseconds = 60_000;
 
 /** Ruft die Drive-API direkt aus der Runtime auf; Dateiinhalte laufen nie über Firebase. */
@@ -47,6 +48,16 @@ export class GoogleDriveClient implements GoogleDriveFiles {
     return {name: `${name}.${format.extension}`, mimeType: format.mimeType, content};
   }
 
+  async search(query: GoogleDriveSearch): Promise<GoogleDriveFile[]> {
+    const parameters = new URLSearchParams({
+      q: searchQuery(query), orderBy: "modifiedTime desc", pageSize: String(query.limit),
+      fields: `files(${fileFields})`, supportsAllDrives: "true", includeItemsFromAllDrives: "true",
+    });
+    const data = await (await this.send(`${api}/files?${parameters.toString()}`)).json() as {files?: unknown};
+    const files = Array.isArray(data.files) ? data.files as Record<string, unknown>[] : [];
+    return files.map(driveFileFrom);
+  }
+
   private async bytes(url: string): Promise<Uint8Array> {
     return new Uint8Array(await (await this.send(url)).arrayBuffer());
   }
@@ -79,6 +90,17 @@ function multipartBody(boundary: string, metadata: object, file: GoogleDriveUplo
   ]));
 }
 
+/** Drive-Query: Werte stehen in einfachen Anführungszeichen, `\` und `'` werden maskiert. */
+export function searchQuery(query: GoogleDriveSearch): string {
+  const quoted = (value: string) => `'${value.replace(/[\\']/g, (character) => `\\${character}`)}'`;
+  const name = query.nameContains?.trim();
+  return [
+    "trashed = false",
+    ...(name ? [`name contains ${quoted(name)}`] : []),
+    ...(query.folderId ? [`${quoted(query.folderId)} in parents`] : []),
+  ].join(" and ");
+}
+
 function driveFileFrom(data: Record<string, unknown>): GoogleDriveFile {
   if (typeof data.id !== "string") throw new GoogleDriveError("Google Drive hat keine Datei zurückgegeben.");
   return {
@@ -87,6 +109,7 @@ function driveFileFrom(data: Record<string, unknown>): GoogleDriveFile {
     mimeType: typeof data.mimeType === "string" ? data.mimeType : "",
     webViewLink: typeof data.webViewLink === "string" ? data.webViewLink : `https://drive.google.com/file/d/${data.id}/view`,
     sizeBytes: Number(data.size ?? 0) || 0,
+    modifiedAt: typeof data.modifiedTime === "string" ? data.modifiedTime : "",
   };
 }
 

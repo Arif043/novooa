@@ -984,6 +984,14 @@
     "upload_description": "Stores text, a file or a table as a new file in Google Drive.",
     "read_title": "Read from Google Drive",
     "read_description": "Loads a shared file from Google Drive; Google Docs arrive as PDF, Sheets as XLSX.",
+    "search_title": "Search Google Drive",
+    "search_description": "Finds files by name or folder and returns them as a list, newest first.",
+    "search_folder": "Search in",
+    "search_everywhere": "Everywhere",
+    "search_name": "Name contains",
+    "search_limit": "Maximum results",
+    "search_limit_helper": "1 to 100, default 25",
+    "search_helper": "Only files that novooa created or that you shared are found. novooa cannot see files that others add to a shared folder.",
     "unknown_action": "This version of novooa does not know this Google Drive action."
   }
 }

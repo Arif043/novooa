@@ -984,6 +984,14 @@
     "upload_description": "Metni, bir dosyayı veya tabloyu Google Drive'da yeni dosya olarak saklar.",
     "read_title": "Google Drive'dan oku",
     "read_description": "Google Drive'dan paylaşılan bir dosyayı yükler; Google Dokümanlar PDF, E-Tablolar XLSX olarak gelir.",
+    "search_title": "Google Drive'da ara",
+    "search_description": "Dosyaları ada veya klasöre göre bulur ve en yeniden başlayarak liste olarak döndürür.",
+    "search_folder": "Aranacak yer",
+    "search_everywhere": "Her yerde",
+    "search_name": "Ad şunu içerir",
+    "search_limit": "En fazla sonuç",
+    "search_limit_helper": "1 ile 100 arası, varsayılan 25",
+    "search_helper": "Yalnızca novooa'nın oluşturduğu veya senin paylaştığın dosyalar bulunur. Başkalarının paylaşılan bir klasöre eklediği dosyaları novooa göremez.",
     "unknown_action": "novooa'nın bu sürümü bu Google Drive işlemini tanımıyor."
   }
 }

@@ -904,6 +904,14 @@ abstract class  LocaleKeys {
   static const google_drive_upload_description = 'google_drive.upload_description';
   static const google_drive_read_title = 'google_drive.read_title';
   static const google_drive_read_description = 'google_drive.read_description';
+  static const google_drive_search_title = 'google_drive.search_title';
+  static const google_drive_search_description = 'google_drive.search_description';
+  static const google_drive_search_folder = 'google_drive.search_folder';
+  static const google_drive_search_everywhere = 'google_drive.search_everywhere';
+  static const google_drive_search_name = 'google_drive.search_name';
+  static const google_drive_search_limit = 'google_drive.search_limit';
+  static const google_drive_search_limit_helper = 'google_drive.search_limit_helper';
+  static const google_drive_search_helper = 'google_drive.search_helper';
   static const google_drive_unknown_action = 'google_drive.unknown_action';
   static const google_drive = 'google_drive';
 

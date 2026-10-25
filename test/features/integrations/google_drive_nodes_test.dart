@@ -114,6 +114,9 @@ void main() {
     ]);
     expect(primaryOutputTypeOf(read), NodeOutputType.file);
     expect(outputFieldsOf(read), ['driveFileId', 'name', 'mimeType']);
+    const search = GoogleDriveNodeConfig(action: 'search');
+    expect(primaryOutputTypeOf(search), NodeOutputType.json);
+    expect(outputFieldsOf(search), ['count', 'found']);
   });
 
   test('die Palette zeigt übersetzte Titel', () {
@@ -124,6 +127,10 @@ void main() {
     expect(
       PluginNodeModules.byTypeId('googleDrive.read')?.title,
       'Aus Google Drive lesen',
+    );
+    expect(
+      PluginNodeModules.byTypeId('googleDrive.search')?.title,
+      'In Google Drive suchen',
     );
   });
 
@@ -221,6 +228,26 @@ void main() {
 
       expect(current().params, {'fileSource': 'expression'});
       expect(find.text('Datei-ID'), findsOneWidget);
+    });
+
+    widgetTest('Suchen setzt Ordner und begrenzt die Höchstanzahl', (tester) async {
+      await pumpNode(tester, 'search');
+
+      await tester.tap(find.text('Überall'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Meine Ablage').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Höchstanzahl'),
+        '500',
+      );
+      await tester.pump();
+
+      expect(current().params, {'folderId': 'root', 'limit': 100});
+      expect(
+        find.textContaining('Gefunden werden nur Dateien'),
+        findsOneWidget,
+      );
     });
   });
 }

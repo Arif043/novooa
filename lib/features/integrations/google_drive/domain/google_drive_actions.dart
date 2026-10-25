@@ -52,7 +52,19 @@ class GoogleDriveActions {
     },
   );
 
-  static const all = [upload, read];
+  static const search = GoogleDriveActionSpec(
+    id: 'search',
+    titleKey: LocaleKeys.google_drive_search_title,
+    descriptionKey: LocaleKeys.google_drive_search_description,
+    outputBase: 'driveDateien',
+    primaryOutput: NodeOutputType.json,
+    outputFields: {
+      'count': NodeOutputType.number,
+      'found': NodeOutputType.boolean,
+    },
+  );
+
+  static const all = [upload, read, search];
 
   static GoogleDriveActionSpec? byId(String id) {
     for (final action in all) {

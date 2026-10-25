@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {GoogleDriveError} from "../domain/google-drive-error.js";
-import {GoogleDriveClient} from "./google-drive-client.js";
+import {GoogleDriveClient, searchQuery} from "./google-drive-client.js";
 
 type Call = {url: string; init?: RequestInit};
 
@@ -26,7 +26,7 @@ test("das Hochladen sendet Metadaten mit Zielordner und Inhalt als multipart", a
 
   const file = await client.upload({name: "a.txt", mimeType: "text/plain", content: "Hallo", folderId: "ordner-1"});
 
-  assert.deepEqual(file, {id: "neu", name: "a.txt", mimeType: "text/plain", webViewLink: "https://drive/neu", sizeBytes: 5});
+  assert.deepEqual(file, {id: "neu", name: "a.txt", mimeType: "text/plain", webViewLink: "https://drive/neu", sizeBytes: 5, modifiedAt: ""});
   assert.match(calls[0].url, /upload\/drive\/v3\/files\?uploadType=multipart/);
   const body = Buffer.from(calls[0].init?.body as Uint8Array).toString("utf8");
   assert.match(body, /"parents":\["ordner-1"\]/);
@@ -92,4 +92,30 @@ test("ein voller Drive-Speicher wird verständlich gemeldet", async () => {
 
   await assert.rejects(client.download("voll"), (error: unknown) =>
     error instanceof GoogleDriveError && /Speicher dieses Kontos ist voll/.test(error.message));
+});
+
+test("die Suche maskiert den Namen und schränkt auf den Ordner ein", () => {
+  assert.equal(searchQuery({limit: 5}), "trashed = false");
+  assert.equal(
+    searchQuery({nameContains: " Max's \\Bericht ", folderId: "root", limit: 5}),
+    "trashed = false and name contains 'Max\\'s \\\\Bericht' and 'root' in parents",
+  );
+});
+
+test("die Suche fragt neueste zuerst ab und liefert die Dateien", async () => {
+  const {client, calls} = clientAnswering([() => Response.json({files: [
+    {id: "d1", name: "a.txt", mimeType: "text/plain", webViewLink: "https://drive/d1", size: "2", modifiedTime: "2026-10-25T14:00:00.000Z"},
+  ]})]);
+
+  const files = await client.search({nameContains: "a", limit: 10});
+
+  const url = new URL(calls[0].url);
+  assert.equal(url.pathname, "/drive/v3/files");
+  assert.equal(url.searchParams.get("q"), "trashed = false and name contains 'a'");
+  assert.equal(url.searchParams.get("orderBy"), "modifiedTime desc");
+  assert.equal(url.searchParams.get("pageSize"), "10");
+  assert.deepEqual(files, [{
+    id: "d1", name: "a.txt", mimeType: "text/plain", webViewLink: "https://drive/d1", sizeBytes: 2,
+    modifiedAt: "2026-10-25T14:00:00.000Z",
+  }]);
 });

@@ -8,6 +8,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/template_expr
 
 import '../../domain/google_drive_node_config.dart';
 import 'google_drive_action_widget.dart';
+import 'google_drive_folder_field.dart';
 
 /// Eingaben von „In Google Drive speichern“: Zielordner, Dateiname, Inhalt.
 class GoogleDriveUploadFields extends StatelessWidget {
@@ -28,7 +29,13 @@ class GoogleDriveUploadFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FolderPicker(config: config, account: account, update: update),
+        GoogleDriveFolderField(
+          config: config,
+          account: account,
+          update: update,
+          label: LocaleKeys.google_drive_folder.tr(),
+          fixedOptions: GoogleDriveFolderField.myDriveOnly(),
+        ),
         const SizedBox(height: AppSpacing.sm),
         TemplateExpressionTextField(
           value: config.textParam('fileName'),
@@ -51,45 +58,6 @@ class GoogleDriveUploadFields extends StatelessWidget {
           onChanged: (value) => update((c) => c.withParam('content', value)),
         ),
       ],
-    );
-  }
-}
-
-class _FolderPicker extends StatelessWidget {
-  const _FolderPicker({
-    required this.config,
-    required this.account,
-    required this.update,
-  });
-
-  final GoogleDriveNodeConfig config;
-  final GoogleAccount? account;
-  final GoogleDriveNodeUpdate update;
-
-  @override
-  Widget build(BuildContext context) {
-    final folders = account?.sharedFolders ?? const [];
-    final selected = config.textParam('folderId');
-    final known = selected.isEmpty || folders.any((f) => f.id == selected);
-    return DropdownButtonFormField<String>(
-      key: ValueKey('drive-folder-$selected-${folders.length}'),
-      initialValue: known ? selected : null,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: LocaleKeys.google_drive_folder.tr(),
-      ),
-      items: [
-        DropdownMenuItem(
-          value: '',
-          child: Text(LocaleKeys.google_drive_my_drive.tr()),
-        ),
-        for (final folder in folders)
-          DropdownMenuItem(
-            value: folder.id,
-            child: Text(folder.name, overflow: TextOverflow.ellipsis),
-          ),
-      ],
-      onChanged: (id) => update((c) => c.withParam('folderId', id)),
     );
   }
 }

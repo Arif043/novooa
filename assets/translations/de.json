@@ -984,6 +984,14 @@
     "upload_description": "Legt Text, eine Datei oder eine Tabelle als neue Datei in Google Drive ab.",
     "read_title": "Aus Google Drive lesen",
     "read_description": "Lädt eine freigegebene Datei aus Google Drive; Google-Dokumente kommen als PDF, Tabellen als XLSX.",
+    "search_title": "In Google Drive suchen",
+    "search_description": "Findet Dateien nach Name oder Ordner und liefert sie als Liste, neueste zuerst.",
+    "search_folder": "Suchen in",
+    "search_everywhere": "Überall",
+    "search_name": "Name enthält",
+    "search_limit": "Höchstanzahl",
+    "search_limit_helper": "1 bis 100, ohne Angabe 25",
+    "search_helper": "Gefunden werden nur Dateien, die novooa angelegt hat oder die du freigegeben hast. Dateien, die andere in einen freigegebenen Ordner legen, sieht novooa nicht.",
     "unknown_action": "Diese Google-Drive-Aktion kennt diese Version von novooa nicht."
   }
 }

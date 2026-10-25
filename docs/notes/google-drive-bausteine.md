@@ -1,11 +1,13 @@
 # Google-Drive-Bausteine
 
-> Das Plugin `google_drive` bringt „In Google Drive speichern“ und „Aus Google Drive lesen“; beide laufen in der Runtime und rufen die Drive-API direkt auf.
+> Das Plugin `google_drive` bringt „In Google Drive speichern“, „Aus Google Drive lesen“ und „In Google Drive suchen“; alle laufen in der Runtime und rufen die Drive-API direkt auf.
 
 Gehört zu: [Google Drive](../index/google-drive.md)
 
-Beide teilen sich das Primitive `googleDrive` (`config.action`, `accountId`,
-`params`), wie die [Shopware-Aktionen](./shopware-plugin.md).
+Alle teilen sich das Primitive `googleDrive` (`config.action`, `accountId`,
+`params`), wie die [Shopware-Aktionen](./shopware-plugin.md). Wechselt man im
+Baustein das Konto, werden Ordner und eine aus der Liste gewählte Datei
+geleert, weil sie zum alten Konto gehören; eine Datei-ID als Template bleibt.
 
 **„In Google Drive speichern“** (`upload`):
 
@@ -28,11 +30,26 @@ Beide teilen sich das Primitive `googleDrive` (`config.action`, `accountId`,
   wie jede andere Datei.
 - Ausgaben: `value` (`file`), `driveFileId`, `name`, `mimeType`.
 
+**„In Google Drive suchen“** (`search`):
+
+- Eingaben: Konto, Ort („Überall“, „Meine Ablage“ = `root` oder ein
+  freigegebener Ordner), „Name enthält“ (Template), Höchstanzahl (1–100,
+  ohne Angabe 25).
+- Neueste Dateien zuerst, Papierkorb ausgenommen. Wegen
+  [`drive.file`](./google-drive-scope.md) findet die Suche nur Dateien, die
+  novooa angelegt hat oder die freigegeben wurden.
+- Ausgaben: `value` (`json`, Array aus `{id, name, mimeType, link,
+  sizeBytes, modifiedAt}`), `count` (`number`), `found` (`boolean`).
+- Beispiel: Suchen → [„Für jedes Element“](./foreach-baustein.md) →
+  „Aus Google Drive lesen“ mit der Datei-ID `{{iteration.value.id}}`.
+
 Fehler:
 
 - Bei 401 von Google wird einmal mit frischem Token wiederholt.
-- 403 und 404 melden „nicht gefunden oder nicht freigegeben“ und verweisen
-  auf „Weitere Dateien freigeben“.
+- 404 meldet „nicht gefunden oder nicht freigegeben“ und verweist auf
+  „Weitere Dateien freigeben“.
+- Ein voller Drive-Speicher (`storageQuotaExceeded`) wird als solcher
+  gemeldet; andere Ablehnungen nennen Status und Googles Begründung.
 
 Ort: `functions/src/features/integrations/google_drive/`,
 `lib/features/integrations/google_drive/`.
