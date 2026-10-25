@@ -26,4 +26,4 @@ Die UI-Vorschau ersetzt genau diese Schnittstelle durch In-Memory-Transporte
 ## Siehe auch
 
 - [Anfrage-Pipeline: Lizenz → Session → Route](./runtime-anfrage-pipeline.md)
-- [Verschlüsselter Transport über http](./verschluesselter-transport.md)
+- [Transportverschlüsselung ist Infrastruktur](./transport-ist-infrastruktur.md)

@@ -17,9 +17,13 @@ oder ein Zertifikat für ihre Domain haben, und belegte dort Port 443.
 
 Folgen:
 
-- Im LAN spricht der Client die Runtime über `http` an; die JSON-API ist dann
-  über den [verschlüsselten Transport](./verschluesselter-transport.md)
-  gegen passives Mitlesen geschützt.
+- Im LAN spricht der Client die Runtime über `http` im Klartext an,
+  Session-Token und Inhalte eingeschlossen. Das ist nur in einem
+  vertrauenswürdigen Netz zulässig.
+- Ein eigener verschlüsselter Tunnel über `http` wurde wieder entfernt: Er
+  schützte nur die JSON-API vor passivem Mitlesen, nicht Uploads, WebSocket
+  und Web-App, und jeder Client (auch [Kunden-Dashboards](./kunden-dashboards.md))
+  hätte ihn nachbauen müssen.
 - Für Internetzugriff stellt der Betreiber einen eigenen
   [Reverse Proxy](./reverse-proxy-externer-zugriff.md) davor.
 - novooa prüft nicht, ob vor der Runtime wirklich TLS terminiert wird, und

@@ -1,4 +1,5 @@
-import '../network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import 'client_logger.dart';
 
 class WorkspaceClientLogger implements ClientLogger {

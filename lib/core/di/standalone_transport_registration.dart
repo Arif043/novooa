@@ -1,13 +1,5 @@
 import 'package:get_it/get_it.dart';
-
-import '../network/session_aware_workspace_api_client.dart';
-import '../network/workspace_api_client.dart';
-import '../network/workspace_binary_client.dart';
-import '../network/workspace_realtime_channel.dart';
-import '../runtime/runtime_credential_store_factory.dart';
-import '../runtime/runtime_endpoint.dart';
-import '../runtime/runtime_profile.dart';
-import '../runtime/runtime_session_events.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 /// Registriert die drei Transportwege zur Runtime (JSON, Binär, Realtime).
 ///

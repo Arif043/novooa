@@ -1,5 +1,5 @@
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../domain/entities/communication_channel.dart';
 import '../../domain/repositories/communication_channel_repository.dart';
 import '../models/mail_connector_model.dart';

@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../features/integrations/integration_nodes.dart';
-import '../runtime/runtime_profile.dart';
 import 'connection_dependency_registration.dart';
 import 'google_account_dependency_registration.dart';
 import 'password_settings_dependencies.dart';

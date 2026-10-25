@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../theme/app_spacing.dart';
 import 'license_token_field.dart';
-import 'runtime_connection_cubit.dart';
-import 'runtime_endpoint.dart';
 import 'runtime_form_header.dart';
 
 class RuntimeLicenseForm extends StatefulWidget {

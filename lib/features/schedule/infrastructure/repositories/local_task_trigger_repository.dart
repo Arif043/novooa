@@ -1,5 +1,5 @@
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../domain/entities/create_task_trigger_input.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../models/event_trigger_config_mapper.dart';

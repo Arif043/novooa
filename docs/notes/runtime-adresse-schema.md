@@ -23,4 +23,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 ## Siehe auch
 
 - [Transportverschlüsselung ist Infrastruktur](./transport-ist-infrastruktur.md)
-- [Verschlüsselter Transport über http](./verschluesselter-transport.md)
+- [Reverse Proxy für externen Zugriff](./reverse-proxy-externer-zugriff.md)

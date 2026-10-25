@@ -857,10 +857,14 @@
   },
   "runtime": {
     "access": {
+      "activation_failed": "The license could not be activated.",
+      "activation_timeout": "Activation is taking too long. Please try again.",
       "admin_not_found": "There is no admin with this login name.",
+      "certificate_invalid": "The certificate of this domain is invalid — expired, self-signed or issued for a different name. Check the reverse proxy serving the domain. To connect without a certificate, use the runtime's IP address.",
       "display_name": "Name",
       "failed_with_status": "Sign-in failed (HTTP {}).",
       "hide_password": "Hide password",
+      "invalid_address": "Please enter an IP address or a domain, optionally with a port (e.g. 192.168.1.42 or novooa.example.de).",
       "invalid_credentials": "Login name or password is invalid.",
       "invalid_invitation": "The invitation code is invalid or has expired.",
       "invalid_password": "The password needs 12 to 1000 characters.",
@@ -873,10 +877,13 @@
       "password_hint": "At least 12 characters",
       "passwords_differ": "The passwords do not match.",
       "repeat_password": "Repeat password",
+      "saved_address_unreadable": "The saved runtime address could not be loaded.",
       "session_ended": "Your session has expired or was ended on another device. Please sign in again.",
       "show_password": "Show password",
+      "sign_out_failed": "Sign-out failed.",
       "token_incomplete": "Please enter all 16 characters of the license token.",
-      "too_many_attempts": "Too many sign-in attempts. Please wait a minute and try again."
+      "too_many_attempts": "Too many sign-in attempts. Please wait a minute and try again.",
+      "unreachable": "The runtime could not be reached at this address."
     },
     "invitation": {
       "action": "Set password and sign in",

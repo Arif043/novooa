@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/task_run_failure.dart';
 import '../errors/task_runner_datasource_exception.dart';
 import 'task_runner_datasource.dart';

@@ -1,6 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/google_accounts/domain/repositories/google_account_repository.dart';
 import 'package:syscat2/features/google_accounts/domain/usecases/begin_google_authorization.dart';
 import 'package:syscat2/features/google_accounts/domain/usecases/watch_google_accounts.dart';

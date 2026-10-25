@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../../../core/logging/logger.dart';
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_binary_client.dart';
 import '../../domain/entities/staged_transfer_import.dart';
 import '../../domain/entities/transfer_archive.dart';
 import '../../domain/entities/transfer_category.dart';

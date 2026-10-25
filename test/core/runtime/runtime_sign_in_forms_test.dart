@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/runtime/runtime_availability.dart';
-import 'package:syscat2/core/runtime/runtime_connection_cubit.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/core/runtime/runtime_connection_page.dart';
-import 'package:syscat2/core/runtime/runtime_connection_state.dart';
-import 'package:syscat2/core/runtime/runtime_credential_store.dart';
-import 'package:syscat2/core/runtime/runtime_endpoint.dart';
-import 'package:syscat2/core/runtime/runtime_endpoint_store.dart';
-import 'package:syscat2/core/runtime/runtime_login_client.dart';
-import 'package:syscat2/core/runtime/runtime_onboarding_client.dart';
 
 final _endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 

@@ -1,0 +1,69 @@
+{
+  "common": {
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "load_failed": "The data could not be loaded."
+  },
+  "connection": {
+    "title": "Connect to novooa",
+    "address": "Runtime address",
+    "address_hint": "e.g. 192.168.1.42 or novooa.example.de",
+    "connect": "Connect",
+    "connecting": "Connecting to {address} …",
+    "unreachable": "novooa cannot be reached right now.",
+    "setup_required": "This runtime is not set up yet or needs admin access. Please use the official novooa frontend for this."
+  },
+  "sign_in": {
+    "title": "Sign in",
+    "login_name": "Login name",
+    "password": "Password",
+    "action": "Sign in",
+    "have_invitation": "I have an invitation code",
+    "invitation_code": "Invitation code",
+    "invitation_action": "Set password and sign in",
+    "back": "Back to sign-in",
+    "sign_out": "Sign out"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "empty": "No tasks are available to you yet.",
+    "start": "Start",
+    "context": "Input (optional)",
+    "context_hint": "Text the task receives as input",
+    "started": "“{title}” is running.",
+    "start_failed": "The task could not be started."
+  },
+  "runs": {
+    "title": "Runs",
+    "empty": "No runs yet. Start a task.",
+    "show_tasks": "Go to tasks",
+    "result": "Result",
+    "no_result": "No result yet.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "review_failed": "The decision could not be sent.",
+    "open_in_official_app": "This input is only possible in the official novooa frontend.",
+    "status": {
+      "queued": "Queued",
+      "running": "Running",
+      "waitingForApproval": "Waiting for you",
+      "rejected": "Rejected",
+      "succeeded": "Done",
+      "failed": "Failed"
+    }
+  },
+  "failures": {
+    "invalidAddress": "Please enter an IP address or a domain.",
+    "savedAddressUnreadable": "The saved address could not be loaded.",
+    "unreachable": "The runtime cannot be reached at this address.",
+    "certificateInvalid": "The certificate of this domain is invalid.",
+    "invalidCredentials": "Login name or password is invalid.",
+    "invalidInvitation": "The invitation code is invalid or has expired.",
+    "invalidPassword": "The password needs 12 to 1000 characters.",
+    "notLicensed": "The runtime is not licensed yet.",
+    "tooManyAttempts": "Too many attempts. Please wait a minute.",
+    "sessionEnded": "Your session has expired. Please sign in again.",
+    "signOutFailed": "Sign-out failed.",
+    "other": "Sign-in failed."
+  }
+}

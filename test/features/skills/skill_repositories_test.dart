@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_binary_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/skills/domain/entities/skill_catalog.dart';
 import 'package:syscat2/features/skills/domain/entities/skill_import.dart';
 import 'package:syscat2/features/skills/infrastructure/repositories/local_skill_catalog_repository.dart';

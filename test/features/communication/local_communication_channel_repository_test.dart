@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/communication/domain/entities/communication_channel.dart';
 import 'package:syscat2/features/communication/infrastructure/repositories/local_communication_channel_repository.dart';
 

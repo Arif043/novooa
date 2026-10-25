@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../workspace_binary_client.dart';
-import '../workspace_realtime_channel.dart';
 import 'in_memory_workspace_store.dart';
 
 /// Gibt Änderungen des Speichers als Realtime-Signal weiter, damit offene

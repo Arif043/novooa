@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/files/domain/repositories/file_version_repository.dart';
 import '../../features/files/domain/repositories/team_file_repository.dart';
@@ -40,8 +41,6 @@ import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
 import '../../features/teams/infrastructure/repositories/local_workspace_team_repository.dart';
-import '../network/workspace_api_client.dart';
-import '../network/workspace_realtime_channel.dart';
 
 void configureStandaloneWorkspaceDependencies(
   GetIt locator, {

@@ -1,6 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/revoked_sessions.dart';
 import '../../domain/entities/runtime_session_failure.dart';
 import '../../domain/repositories/runtime_session_repository.dart';

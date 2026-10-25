@@ -1,7 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';

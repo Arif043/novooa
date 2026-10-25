@@ -1,6 +1,6 @@
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../../../core/entities/unique_id.dart';
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/application_log.dart';
 import '../../domain/repositories/application_log_repository.dart';
 

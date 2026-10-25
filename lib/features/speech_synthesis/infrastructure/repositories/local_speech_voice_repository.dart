@@ -1,4 +1,4 @@
-import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/entities/speech_voice.dart';
 import '../../domain/repositories/speech_voice_repository.dart';

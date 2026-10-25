@@ -2,8 +2,7 @@ import 'dart:typed_data';
 
 import 'package:multiple_result/multiple_result.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/files/domain/entities/upload_file_input.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/local_team_file_repository.dart';

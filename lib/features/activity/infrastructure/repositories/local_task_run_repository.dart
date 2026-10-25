@@ -1,6 +1,6 @@
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../../../core/entities/unique_id.dart';
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/entities/task_run_interaction.dart';

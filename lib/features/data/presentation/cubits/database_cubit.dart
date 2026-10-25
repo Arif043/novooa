@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/data_collection.dart';
 import '../../domain/entities/data_filter.dart';
 import '../../domain/entities/data_record.dart';

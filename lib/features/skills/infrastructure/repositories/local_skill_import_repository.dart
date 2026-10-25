@@ -1,8 +1,7 @@
 import 'dart:convert';
 
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_binary_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/entities/skill.dart';
 import '../../domain/entities/skill_failure.dart';

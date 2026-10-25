@@ -1,4 +1,5 @@
-import '../../../../core/network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../domain/entities/push_device.dart';
 import '../../domain/repositories/push_device_repository.dart';
 

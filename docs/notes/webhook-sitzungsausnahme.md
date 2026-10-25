@@ -8,7 +8,6 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - Ohne Lizenz `423`; Authentifizierung über das Token der Adresse, optional
   zusätzlich per HMAC-Signatur.
 - Fehlversuche und Aufrufe je Auslöser sind begrenzt.
-- Der Tunnel `/v1/secure/…` leitet diese Pfade nicht weiter.
 - Die Runtime muss dafür öffentlich erreichbar sein
   ([Reverse Proxy](./reverse-proxy-externer-zugriff.md) mit `https`).
 

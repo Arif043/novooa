@@ -1,6 +1,6 @@
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../../../core/entities/unique_id.dart';
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
 import '../models/failure_details_mapper.dart';

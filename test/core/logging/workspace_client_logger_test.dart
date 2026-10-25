@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/core/logging/workspace_client_logger.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
 
 void main() {
   test('sends structured client information to the runtime', () async {

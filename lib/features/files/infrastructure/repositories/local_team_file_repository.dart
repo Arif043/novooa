@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/file_failure.dart';
 import '../../domain/entities/file_version.dart';
 import '../../domain/entities/team_file.dart';

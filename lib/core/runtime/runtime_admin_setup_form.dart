@@ -1,16 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import 'license_token_field.dart';
+import 'runtime_access_failure_text.dart';
 import 'runtime_account_fields.dart';
 import 'runtime_password_rule.dart';
-import 'runtime_connection_cubit.dart';
-import 'runtime_connection_state.dart';
 import 'runtime_form_header.dart';
-import 'runtime_onboarding_client.dart';
 
 /// Zweiter Einrichtungsschritt nach der Lizenz: das erste Konto, das Admin
 /// wird. Der Lizenz-Token aus Schritt 1 reist im State mit; nur wenn die App
@@ -84,7 +83,7 @@ class _RuntimeAdminSetupFormState extends State<RuntimeAdminSetupForm> {
           controller: _confirmationController,
           label: LocaleKeys.runtime_access_repeat_password.tr(),
           isNewPassword: true,
-          errorText: _validationMessage ?? setup.errorMessage,
+          errorText: _validationMessage ?? setup.failure?.text,
           onSubmitted: _setUp,
         ),
         const SizedBox(height: AppSpacing.lg),

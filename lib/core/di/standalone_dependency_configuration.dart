@@ -1,3 +1,4 @@
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/task_builder/domain/services/node_text_defaults.dart';
 import 'package:syscat2/features/task_builder/presentation/localization/localized_node_text_defaults.dart';
 import '../../features/employees/domain/repositories/employee_repository.dart';
@@ -131,12 +132,8 @@ import '../../features/notifications/infrastructure/repositories/local_app_notif
 import '../../features/notifications/infrastructure/repositories/local_relay_push_device_repository.dart';
 import '../../features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
-import '../runtime/runtime_profile.dart';
-import '../network/workspace_api_client.dart';
 import 'standalone_runtime_users_dependency_configuration.dart';
 import 'standalone_transport_registration.dart';
-import '../network/workspace_binary_client.dart';
-import '../network/workspace_realtime_channel.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
 import 'standalone_script_packages_dependency_configuration.dart';

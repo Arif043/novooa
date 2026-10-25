@@ -1,0 +1,69 @@
+{
+  "common": {
+    "retry": "Tekrar dene",
+    "cancel": "İptal",
+    "load_failed": "Veriler yüklenemedi."
+  },
+  "connection": {
+    "title": "novooa'ya bağlan",
+    "address": "Runtime adresi",
+    "address_hint": "ör. 192.168.1.42 veya novooa.example.de",
+    "connect": "Bağlan",
+    "connecting": "{address} adresine bağlanılıyor …",
+    "unreachable": "novooa şu anda erişilemiyor.",
+    "setup_required": "Bu runtime henüz kurulmamış veya yönetici erişimi gerekiyor. Lütfen bunun için resmi novooa arayüzünü kullan."
+  },
+  "sign_in": {
+    "title": "Giriş yap",
+    "login_name": "Kullanıcı adı",
+    "password": "Parola",
+    "action": "Giriş yap",
+    "have_invitation": "Davet kodum var",
+    "invitation_code": "Davet kodu",
+    "invitation_action": "Parola belirle ve giriş yap",
+    "back": "Girişe dön",
+    "sign_out": "Çıkış yap"
+  },
+  "tasks": {
+    "title": "Görevler",
+    "empty": "Henüz sana açık görev yok.",
+    "start": "Başlat",
+    "context": "Girdi (isteğe bağlı)",
+    "context_hint": "Görevin girdi olarak alacağı metin",
+    "started": "“{title}” çalışıyor.",
+    "start_failed": "Görev başlatılamadı."
+  },
+  "runs": {
+    "title": "Çalıştırmalar",
+    "empty": "Henüz çalıştırma yok. Bir görev başlat.",
+    "show_tasks": "Görevlere git",
+    "result": "Sonuç",
+    "no_result": "Henüz sonuç yok.",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "review_failed": "Karar gönderilemedi.",
+    "open_in_official_app": "Bu girdi yalnızca resmi novooa arayüzünde yapılabilir.",
+    "status": {
+      "queued": "Sırada",
+      "running": "Çalışıyor",
+      "waitingForApproval": "Seni bekliyor",
+      "rejected": "Reddedildi",
+      "succeeded": "Tamamlandı",
+      "failed": "Başarısız"
+    }
+  },
+  "failures": {
+    "invalidAddress": "Lütfen bir IP adresi veya alan adı gir.",
+    "savedAddressUnreadable": "Kayıtlı adres yüklenemedi.",
+    "unreachable": "Runtime'a bu adresten ulaşılamıyor.",
+    "certificateInvalid": "Bu alan adının sertifikası geçersiz.",
+    "invalidCredentials": "Kullanıcı adı veya parola geçersiz.",
+    "invalidInvitation": "Davet kodu geçersiz veya süresi dolmuş.",
+    "invalidPassword": "Parola 12 ile 1000 karakter arasında olmalı.",
+    "notLicensed": "Runtime henüz lisanslı değil.",
+    "tooManyAttempts": "Çok fazla deneme. Lütfen bir dakika bekle.",
+    "sessionEnded": "Oturumunun süresi doldu. Lütfen yeniden giriş yap.",
+    "signOutFailed": "Çıkış yapılamadı.",
+    "other": "Giriş başarısız oldu."
+  }
+}

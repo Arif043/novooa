@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/assistant_message.dart';
 import '../models/assistant_generated_response.dart';
 import 'assistant_datasource.dart';

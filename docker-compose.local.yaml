@@ -14,8 +14,9 @@ services:
       # docs/notes/runtime-liefert-web-app.md). Ohne Verzeichnis bleibt die
       # Runtime eine reine API.
       LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
-      # Erlaubte Browser-Herkünfte für CORS. Leer = keine fremde Herkunft.
-      # Nur für lokale Entwicklung nötig (z.B. http://localhost:59193).
+      # Erlaubte Browser-Herkünfte für CORS, kommagetrennt. Leer = keine fremde
+      # Herkunft. Nötig für Web-Builds von Kunden-Dashboards und für die
+      # Entwicklung (z.B. http://localhost:59193).
       LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
       # Der ML-Dienst des Servers; die Runtime meldet sich dort mit ihrer Lizenz-ID an.

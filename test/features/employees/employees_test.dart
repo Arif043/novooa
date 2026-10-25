@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
 import 'package:syscat2/features/employees/domain/entities/employee_draft.dart';
 import 'package:syscat2/features/employees/domain/entities/employee_failure.dart';

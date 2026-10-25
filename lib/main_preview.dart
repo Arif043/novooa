@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import 'core/di/preview_dependency_configuration.dart';
 import 'core/di/service_locator.dart';
@@ -8,7 +9,6 @@ import 'core/localization/localized_app.dart';
 import 'core/logging/application_bloc_observer.dart';
 import 'core/logging/developer_client_logger.dart';
 import 'core/logging/logger.dart';
-import 'core/runtime/runtime_profile.dart';
 import 'main.dart' show MyApp;
 
 /// Startet die Oberfläche **ohne Runtime, Lizenz und Anmeldung**.

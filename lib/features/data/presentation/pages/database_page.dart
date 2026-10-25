@@ -13,8 +13,10 @@ import '../widgets/database_theme.dart';
 class DatabasePage extends StatelessWidget {
   const DatabasePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      BlocProvider(create: (_) => serviceLocator<DatabaseCubit>()..loadCollections(), child: const DatabaseView());
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => serviceLocator<DatabaseCubit>()..loadCollections(),
+    child: const DatabaseView(),
+  );
 }
 
 class DatabaseView extends StatelessWidget {
@@ -27,19 +29,25 @@ class DatabaseView extends StatelessWidget {
         listenWhen: (before, after) => before.message != after.message,
         listener: (context, state) {
           if (state.message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message!)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message!)));
           }
         },
         builder: (context, state) => ColoredBox(
           color: Theme.of(context).colorScheme.surfaceContainerLowest,
           child: SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 16 : 24),
+              padding: EdgeInsets.all(
+                MediaQuery.sizeOf(context).width < 600 ? 16 : 24,
+              ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final content = _Workspace(state: state);
                   if (constraints.maxHeight < 540) {
-                    return SingleChildScrollView(child: SizedBox(height: 660, child: content));
+                    return SingleChildScrollView(
+                      child: SizedBox(height: 660, child: content),
+                    );
                   }
                   return content;
                 },
@@ -75,7 +83,8 @@ class _Workspace extends StatelessWidget {
                 onPressed: state.isMutating ? null : cubit.showCollections,
                 icon: const Icon(CupertinoIcons.chevron_left),
               ),
-            if (records) Text(state.collection!.name, style: theme.textTheme.titleLarge),
+            if (records)
+              Text(state.collection!.name, style: theme.textTheme.titleLarge),
             if (records)
               FilledButton.icon(
                 onPressed: state.isMutating ? null : () => _edit(context),
@@ -85,37 +94,54 @@ class _Workspace extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        if (records) Text(
-           '${state.records.length} Datensätze · Zeile zum Bearbeiten öffnen',
-          style: theme.textTheme.bodySmall,
-        ),
+        if (records)
+          Text(
+            '${state.records.length} Datensätze · Zeile zum Bearbeiten öffnen',
+            style: theme.textTheme.bodySmall,
+          ),
         const SizedBox(height: 20),
         if (records) ...[
           ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .28),
-            child: SingleChildScrollView(child: DatabaseFilterBar(state: state)),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * .28,
+            ),
+            child: SingleChildScrollView(
+              child: DatabaseFilterBar(state: state),
+            ),
           ),
           const SizedBox(height: 16),
         ],
         Expanded(
           child: switch (state.status) {
-            DatabaseStatus.loading => const Center(child: CupertinoActivityIndicator()),
-            DatabaseStatus.failure => _Failure(message: state.message ?? 'Die Daten konnten nicht geladen werden.'),
+            DatabaseStatus.loading => const Center(
+              child: CupertinoActivityIndicator(),
+            ),
+            DatabaseStatus.failure => _Failure(
+              message:
+                  state.message ?? 'Die Daten konnten nicht geladen werden.',
+            ),
             DatabaseStatus.collections =>
               state.collections.isEmpty
                   ? const _Empty(
                       title: 'Deine Daten bekommen hier ihren Platz',
-                      message: 'Datensammlungen entstehen durch deine Aufgaben und erscheinen automatisch hier.',
+                      message:
+                          'Datensammlungen entstehen durch deine Aufgaben und erscheinen automatisch hier.',
                     )
                   : DatabaseSheet(
                       columns: const ['Datensammlung', 'Datensätze'],
-                      rows: state.collections.map((c) => [c.name, '${c.documentCount}']).toList(),
-                      onOpen: (index) => cubit.openCollection(state.collections[index]),
+                      rows: state.collections
+                          .map((c) => [c.name, '${c.documentCount}'])
+                          .toList(),
+                      onOpen: (index) =>
+                          cubit.openCollection(state.collections[index]),
                     ),
             DatabaseStatus.records => _Records(state: state),
           },
         ),
-        if (records) ...[const SizedBox(height: 12), _CollectionTabs(state: state)],
+        if (records) ...[
+          const SizedBox(height: 12),
+          _CollectionTabs(state: state),
+        ],
       ],
     );
   }
@@ -136,14 +162,24 @@ class _CollectionTabs extends StatelessWidget {
               message: collection.name,
               child: ChoiceChip(
                 showCheckmark: false,
-                selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
+                selectedColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .10),
                 label: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 240),
-                  child: Text(collection.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    collection.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 avatar: const Icon(CupertinoIcons.table, size: 18),
                 selected: collection.name == state.collection?.name,
-                onSelected: state.isMutating ? null : (_) => context.read<DatabaseCubit>().openCollection(collection),
+                onSelected: state.isMutating
+                    ? null
+                    : (_) => context.read<DatabaseCubit>().openCollection(
+                        collection,
+                      ),
               ),
             ),
           ),
@@ -160,15 +196,24 @@ class _Records extends StatelessWidget {
     if (state.records.isEmpty) {
       return const _Empty(
         title: 'Keine Datensätze gefunden',
-        message: 'Lege einen Datensatz an oder passe deine Suche und Filter an.',
+        message:
+            'Lege einen Datensatz an oder passe deine Suche und Filter an.',
       );
     }
-    final fields = state.records.expand((record) => record.fields.keys).toSet().toList()..sort();
+    final fields =
+        state.records.expand((record) => record.fields.keys).toSet().toList()
+          ..sort();
     return DatabaseSheet(
       key: ValueKey(state.collection!.name),
       columns: fields.isEmpty ? ['Felder'] : fields,
       rows: state.records
-          .map((record) => fields.isEmpty ? ['Leer'] : fields.map((field) => _display(record.fields[field])).toList())
+          .map(
+            (record) => fields.isEmpty
+                ? ['Leer']
+                : fields
+                      .map((field) => _display(record.fields[field]))
+                      .toList(),
+          )
           .toList(),
       enabled: !state.isMutating,
       onOpen: (index) => _edit(context, state.records[index]),
@@ -204,8 +249,14 @@ Future<void> _delete(BuildContext context, DataRecord record) async {
       title: const Text('Datensatz löschen?'),
       content: const Text('Der Datensatz wird dauerhaft gelöscht.'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Löschen')),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Abbrechen'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Löschen'),
+        ),
       ],
     ),
   );
@@ -226,11 +277,23 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(CupertinoIcons.table, size: 40, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              CupertinoIcons.table,
+              size: 40,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 16),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ],
         ),
       ),

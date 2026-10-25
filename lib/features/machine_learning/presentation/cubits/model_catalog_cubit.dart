@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/model_cache_status.dart';
 import '../../domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/model_catalog_import.dart';

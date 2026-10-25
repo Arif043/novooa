@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/new_password.dart';
 import '../../domain/entities/password_failure.dart';
 import '../../domain/repositories/password_repository.dart';

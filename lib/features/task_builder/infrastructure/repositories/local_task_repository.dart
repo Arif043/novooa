@@ -1,7 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_run_failure.dart';
 import '../../domain/entities/task_run_start.dart';

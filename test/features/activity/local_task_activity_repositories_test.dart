@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/activity/domain/entities/activity_failure_code.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';

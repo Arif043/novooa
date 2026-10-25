@@ -19,6 +19,8 @@
 - [Mixed Content im LAN](../notes/mixed-content-im-lan.md)
 - [`dart:io` im Web-Build ist kein Blocker](../notes/web-build-dart-io.md)
 - [Identität in der App](../notes/app-identitaet.md)
+- [Client-Paket `novooa_runtime_client`](../notes/runtime-client-paket.md)
+- [Kunden-Dashboards](../notes/kunden-dashboards.md)
 
 ## Zugriff und Authentifizierung
 
@@ -37,7 +39,6 @@
 
 - [Transportverschlüsselung ist Infrastruktur](../notes/transport-ist-infrastruktur.md)
 - [Adresse und Schema der Runtime](../notes/runtime-adresse-schema.md)
-- [Verschlüsselter Transport über http](../notes/verschluesselter-transport.md)
 - [Reverse Proxy für externen Zugriff](../notes/reverse-proxy-externer-zugriff.md)
 
 ## HTTP-Server

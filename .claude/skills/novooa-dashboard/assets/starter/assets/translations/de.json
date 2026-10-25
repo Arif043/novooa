@@ -1,0 +1,69 @@
+{
+  "common": {
+    "retry": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "load_failed": "Die Daten konnten nicht geladen werden."
+  },
+  "connection": {
+    "title": "Mit novooa verbinden",
+    "address": "Adresse der Runtime",
+    "address_hint": "z. B. 192.168.1.42 oder novooa.example.de",
+    "connect": "Verbinden",
+    "connecting": "Verbinde mit {address} …",
+    "unreachable": "novooa ist gerade nicht erreichbar.",
+    "setup_required": "Diese Runtime ist noch nicht eingerichtet oder braucht einen Admin-Zugang. Bitte nutze dafür das offizielle novooa-Frontend."
+  },
+  "sign_in": {
+    "title": "Anmelden",
+    "login_name": "Anmeldename",
+    "password": "Passwort",
+    "action": "Anmelden",
+    "have_invitation": "Ich habe einen Einladungscode",
+    "invitation_code": "Einladungscode",
+    "invitation_action": "Passwort setzen und anmelden",
+    "back": "Zurück zur Anmeldung",
+    "sign_out": "Abmelden"
+  },
+  "tasks": {
+    "title": "Aufgaben",
+    "empty": "Für dich sind noch keine Aufgaben freigegeben.",
+    "start": "Starten",
+    "context": "Eingabe (optional)",
+    "context_hint": "Text, den die Aufgabe als Eingabe erhält",
+    "started": "„{title}“ läuft.",
+    "start_failed": "Die Aufgabe konnte nicht gestartet werden."
+  },
+  "runs": {
+    "title": "Läufe",
+    "empty": "Noch keine Läufe. Starte eine Aufgabe.",
+    "show_tasks": "Zu den Aufgaben",
+    "result": "Ergebnis",
+    "no_result": "Noch kein Ergebnis.",
+    "approve": "Freigeben",
+    "reject": "Ablehnen",
+    "review_failed": "Die Entscheidung konnte nicht gesendet werden.",
+    "open_in_official_app": "Diese Eingabe ist nur im offiziellen novooa-Frontend möglich.",
+    "status": {
+      "queued": "Wartet",
+      "running": "Läuft",
+      "waitingForApproval": "Wartet auf dich",
+      "rejected": "Abgelehnt",
+      "succeeded": "Fertig",
+      "failed": "Fehlgeschlagen"
+    }
+  },
+  "failures": {
+    "invalidAddress": "Bitte gib eine IP-Adresse oder eine Domain ein.",
+    "savedAddressUnreadable": "Die gespeicherte Adresse konnte nicht geladen werden.",
+    "unreachable": "Die Runtime ist unter dieser Adresse nicht erreichbar.",
+    "certificateInvalid": "Das Zertifikat dieser Domain ist ungültig.",
+    "invalidCredentials": "Anmeldename oder Passwort ist ungültig.",
+    "invalidInvitation": "Der Einladungscode ist ungültig oder abgelaufen.",
+    "invalidPassword": "Das Passwort braucht 12 bis 1000 Zeichen.",
+    "notLicensed": "Die Runtime ist noch nicht lizenziert.",
+    "tooManyAttempts": "Zu viele Versuche. Bitte warte eine Minute.",
+    "sessionEnded": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    "signOutFailed": "Abmelden fehlgeschlagen.",
+    "other": "Die Anmeldung ist fehlgeschlagen."
+  }
+}

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/speech_synthesis/domain/entities/speech_voice.dart';
 import 'package:syscat2/features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
 import 'package:syscat2/features/speech_synthesis/domain/usecases/list_speech_voices.dart';

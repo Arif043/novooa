@@ -1,5 +1,5 @@
-import '../../../../core/network/workspace_api_client.dart';
-import '../../../../core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import '../../domain/entities/google_account.dart';
 import '../../domain/repositories/google_account_repository.dart';
 import '../models/google_account_model.dart';

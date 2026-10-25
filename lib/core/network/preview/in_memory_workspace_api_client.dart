@@ -1,4 +1,5 @@
-import '../workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
+
 import 'in_memory_workspace_store.dart';
 
 /// Ersetzt die Runtime in der UI-Vorschau: beantwortet die `/v1`-Aufrufe der

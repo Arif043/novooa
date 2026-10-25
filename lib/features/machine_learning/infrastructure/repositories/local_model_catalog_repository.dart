@@ -1,7 +1,5 @@
 import 'dart:convert';
-
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/entities/model_cache_status.dart';
 import '../../domain/entities/model_catalog_entry.dart';

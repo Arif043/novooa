@@ -1,5 +1,4 @@
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/entities/python_package.dart';
 import '../../domain/entities/script_package_environment.dart';

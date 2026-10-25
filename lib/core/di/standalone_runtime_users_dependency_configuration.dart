@@ -1,12 +1,11 @@
 import 'package:get_it/get_it.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../features/runtime_users/domain/repositories/runtime_user_repository.dart';
 import '../../features/runtime_users/domain/usecases/runtime_user_use_cases.dart';
 import '../../features/runtime_users/infrastructure/repositories/local_runtime_user_repository.dart';
 import '../../features/runtime_users/presentation/cubits/current_runtime_user_cubit.dart';
 import '../../features/runtime_users/presentation/cubits/runtime_users_cubit.dart';
-import '../network/workspace_api_client.dart';
-import '../network/workspace_realtime_channel.dart';
 
 /// Konten mit Rollen gibt es nur in der lokalen Runtime.
 void configureStandaloneRuntimeUsersDependencies(GetIt locator) {

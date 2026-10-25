@@ -11,6 +11,7 @@
 - [Kern-Entitäten](../notes/kern-entitaeten.md)
 - [Lokalisierung](../notes/lokalisierung.md)
 - [Genkit-Flow-Konventionen](../notes/genkit-flow-konventionen.md)
+- [Client-Paket `novooa_runtime_client`](../notes/runtime-client-paket.md)
 
 ## Persistenz
 

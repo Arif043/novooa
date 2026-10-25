@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_cache_status.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';

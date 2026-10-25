@@ -857,10 +857,14 @@
   },
   "runtime": {
     "access": {
+      "activation_failed": "Die Lizenz konnte nicht aktiviert werden.",
+      "activation_timeout": "Die Aktivierung dauert zu lange. Bitte versuche es erneut.",
       "admin_not_found": "Es gibt keinen Admin mit diesem Anmeldenamen.",
+      "certificate_invalid": "Das Zertifikat dieser Domain ist ungültig — abgelaufen, selbstsigniert oder auf einen anderen Namen ausgestellt. Prüfe den Reverse Proxy, der die Domain bedient. Für einen Zugriff ohne Zertifikat verwende die IP-Adresse der Runtime.",
       "display_name": "Name",
       "failed_with_status": "Anmeldung fehlgeschlagen (HTTP {}).",
       "hide_password": "Passwort verbergen",
+      "invalid_address": "Bitte gib eine IP-Adresse oder eine Domain ein, optional mit Port (z.B. 192.168.1.42 oder novooa.example.de).",
       "invalid_credentials": "Anmeldename oder Passwort ist ungültig.",
       "invalid_invitation": "Der Einladungscode ist ungültig oder abgelaufen.",
       "invalid_password": "Das Passwort braucht 12 bis 1000 Zeichen.",
@@ -873,10 +877,13 @@
       "password_hint": "Mindestens 12 Zeichen",
       "passwords_differ": "Die Passwörter stimmen nicht überein.",
       "repeat_password": "Passwort wiederholen",
+      "saved_address_unreadable": "Die gespeicherte Runtime-Adresse konnte nicht geladen werden.",
       "session_ended": "Deine Sitzung ist abgelaufen oder wurde auf einem anderen Gerät beendet. Bitte melde dich erneut an.",
       "show_password": "Passwort anzeigen",
+      "sign_out_failed": "Abmelden fehlgeschlagen.",
       "token_incomplete": "Bitte gib alle 16 Zeichen des Lizenz-Tokens ein.",
-      "too_many_attempts": "Zu viele Anmeldeversuche. Bitte warte eine Minute und versuche es dann erneut."
+      "too_many_attempts": "Zu viele Anmeldeversuche. Bitte warte eine Minute und versuche es dann erneut.",
+      "unreachable": "Die Runtime konnte unter dieser Adresse nicht erreicht werden."
     },
     "invitation": {
       "action": "Passwort setzen und anmelden",

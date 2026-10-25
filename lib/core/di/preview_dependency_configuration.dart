@@ -1,13 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../network/preview/in_memory_workspace_api_client.dart';
 import '../network/preview/in_memory_workspace_store.dart';
 import '../network/preview/in_memory_workspace_transport.dart';
-import '../network/workspace_api_client.dart';
-import '../network/workspace_binary_client.dart';
-import '../network/workspace_realtime_channel.dart';
-import '../runtime/runtime_profile.dart';
-import '../runtime/runtime_session_events.dart';
 import 'standalone_transport_registration.dart';
 
 /// Transportwege der UI-Vorschau: alles läuft im Speicher, es gibt weder

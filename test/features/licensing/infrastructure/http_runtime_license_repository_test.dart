@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/licensing/domain/entities/runtime_license.dart';
 import 'package:syscat2/features/licensing/infrastructure/repositories/http_runtime_license_repository.dart';
 

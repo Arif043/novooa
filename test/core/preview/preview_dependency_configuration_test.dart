@@ -1,8 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/core/di/preview_dependency_configuration.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/runtime/runtime_profile.dart';
 import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note_draft.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';

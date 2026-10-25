@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_message.dart';
 import 'package:syscat2/features/assistant/infrastructure/datasources/http_runtime_assistant_datasource.dart';
 

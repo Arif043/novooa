@@ -857,10 +857,14 @@
   },
   "runtime": {
     "access": {
+      "activation_failed": "Lisans etkinleştirilemedi.",
+      "activation_timeout": "Etkinleştirme çok uzun sürüyor. Lütfen tekrar dene.",
       "admin_not_found": "Bu kullanıcı adına sahip bir yönetici yok.",
+      "certificate_invalid": "Bu alan adının sertifikası geçersiz — süresi dolmuş, kendinden imzalı veya başka bir ada verilmiş. Alan adını sunan ters proxy'yi kontrol et. Sertifikasız erişim için runtime'ın IP adresini kullan.",
       "display_name": "Ad",
       "failed_with_status": "Giriş başarısız (HTTP {}).",
       "hide_password": "Parolayı gizle",
+      "invalid_address": "Lütfen bir IP adresi veya alan adı gir, istersen bağlantı noktasıyla (ör. 192.168.1.42 veya novooa.example.de).",
       "invalid_credentials": "Kullanıcı adı veya parola geçersiz.",
       "invalid_invitation": "Davet kodu geçersiz veya süresi dolmuş.",
       "invalid_password": "Parola 12 ile 1000 karakter arasında olmalıdır.",
@@ -873,10 +877,13 @@
       "password_hint": "En az 12 karakter",
       "passwords_differ": "Parolalar eşleşmiyor.",
       "repeat_password": "Parolayı tekrarla",
+      "saved_address_unreadable": "Kayıtlı runtime adresi yüklenemedi.",
       "session_ended": "Oturumunun süresi doldu veya başka bir cihazda sonlandırıldı. Lütfen yeniden giriş yap.",
       "show_password": "Parolayı göster",
+      "sign_out_failed": "Çıkış yapılamadı.",
       "token_incomplete": "Lütfen lisans anahtarının 16 karakterinin tamamını gir.",
-      "too_many_attempts": "Çok fazla giriş denemesi. Lütfen bir dakika bekleyip tekrar dene."
+      "too_many_attempts": "Çok fazla giriş denemesi. Lütfen bir dakika bekleyip tekrar dene.",
+      "unreachable": "Runtime'a bu adresten ulaşılamadı."
     },
     "invitation": {
       "action": "Parolayı belirle ve giriş yap",

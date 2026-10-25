@@ -5,7 +5,7 @@
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 Der Proxy terminiert TLS und leitet an `127.0.0.1:8090` weiter. Der Client
-erkennt die Domain und nutzt HTTPS ohne Tunnel. Minimales nginx-Beispiel:
+erkennt die Domain und nutzt HTTPS. Minimales nginx-Beispiel:
 
 ```nginx
 server {
@@ -26,11 +26,10 @@ Damit die Runtime nicht zusätzlich direkt erreichbar bleibt, wird das
 Port-Mapping in `docker-compose.local.yaml` beschränkt:
 `"127.0.0.1:8090:8080"` statt `"8090:8080"`.
 
-Warum zwingend: Über `http` schützt der Tunnel nur vor passivem Mitlesen der
-JSON-API, nicht vor einem aktiven Angreifer und nicht Uploads, WebSocket und
-Web-App. Webhooks setzen diesen Aufbau ebenfalls voraus.
+Warum zwingend: Über `http` laufen Session-Token und Inhalte im Klartext.
+Webhooks setzen diesen Aufbau ebenfalls voraus.
 
 ## Siehe auch
 
-- [Verschlüsselter Transport über http](./verschluesselter-transport.md)
+- [Transportverschlüsselung ist Infrastruktur](./transport-ist-infrastruktur.md)
 - [Login-Ratenbegrenzung](./login-ratenbegrenzung.md) — Client-Adresse hinter dem Proxy

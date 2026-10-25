@@ -1,6 +1,5 @@
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 
 import '../../domain/entities/connection.dart';

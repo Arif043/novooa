@@ -1,5 +1,4 @@
-import 'package:syscat2/core/network/workspace_api_client.dart';
-import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/repositories/file_settings_repository.dart';
 

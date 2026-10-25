@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../features/workspace_transfer/domain/repositories/transfer_file_gateway.dart';
 import '../../features/workspace_transfer/domain/repositories/workspace_transfer_repository.dart';
@@ -10,8 +11,6 @@ import '../../features/workspace_transfer/infrastructure/datasources/file_picker
 import '../../features/workspace_transfer/infrastructure/repositories/local_workspace_transfer_repository.dart';
 import '../../features/workspace_transfer/presentation/cubits/workspace_export_cubit.dart';
 import '../../features/workspace_transfer/presentation/cubits/workspace_import_cubit.dart';
-import '../network/workspace_api_client.dart';
-import '../network/workspace_binary_client.dart';
 
 /// Import/Export gibt es nur in der lokalen Runtime.
 void configureStandaloneWorkspaceTransferDependencies(GetIt locator) {

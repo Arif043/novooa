@@ -111,6 +111,7 @@ flutter run -d <device>
 flutter run -d chrome -t lib/main_preview.dart   # UI ohne Backend/Lizenz
 flutter analyze
 flutter test
+(cd packages/novooa_runtime_client && flutter test)   # Client-Paket
 
 # Backend
 cd functions

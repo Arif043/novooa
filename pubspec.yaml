@@ -69,12 +69,13 @@ dependencies:
   flutter_svg: ^2.3.0
   flutter_localizations:
     sdk: flutter
-  cryptography: ^2.9.0
   flutter_markdown_plus: ^1.0.12
   markdown: ^7.3.1
   flutter_markdown_plus_latex: ^1.0.5
   flutter_math_fork: ^0.7.4
   easy_localization: ^3.0.8
+  novooa_runtime_client:
+    path: packages/novooa_runtime_client
 
 dev_dependencies:
   flutter_test:
