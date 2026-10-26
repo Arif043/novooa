@@ -79,7 +79,9 @@ class _SideMenuContent extends StatelessWidget {
           selectedIndex: selectedIndex,
           onSelected: onSelected,
         ),
-        if (onSignOut != null)
+        if (onSignOut != null) ...[
+          // Gleicher Abstand wie zwischen den Einträgen in SideMenuTabList.
+          const SizedBox(height: AppSpacing.sm),
           ListTile(
             selected: false,
             iconColor: colorScheme.error,
@@ -92,6 +94,7 @@ class _SideMenuContent extends StatelessWidget {
             title: Text(LocaleKeys.navigation_sign_out.tr()),
             onTap: onSignOut,
           ),
+        ],
       ],
     );
   }
