@@ -337,7 +337,8 @@
       "connections": "Verbindungen",
       "machine_learning": "Machine Learning",
       "import_export": "Import/Export",
-      "users": "Benutzer"
+      "users": "Benutzer",
+      "plugins": "Plugins"
     }
   },
   "ui": {
@@ -758,7 +759,8 @@
       "forEachUnsupported": "„Für jedes Element“ unterstützt keine {reason}.",
       "scriptFailed": "Das Script ist mit einem Fehler beendet worden. Meldung und Ausgabe stehen darunter.",
       "scriptOutputInvalid": "Eine workflow_output-Ausgabe ist ungültig: {reason}{name}.",
-      "scriptPackagesUnavailable": "Python-Pakete ({packages}): {reason}"
+      "scriptPackagesUnavailable": "Python-Pakete ({packages}): {reason}",
+      "pluginDisabled": "Das Plugin {plugin} ist deaktiviert. Ein Admin kann es unter Einstellungen → Plugins aktivieren."
     },
     "operand_kinds": {
       "number": "eine Zahl",
@@ -989,7 +991,11 @@
     "search_limit": "Höchstanzahl",
     "search_limit_helper": "1 bis 100, ohne Angabe 25",
     "search_helper": "Gefunden werden nur Dateien, die novooa angelegt hat oder die du freigegeben hast. Dateien, die andere in einen freigegebenen Ordner legen, sieht novooa nicht.",
-    "unknown_action": "Diese Google-Drive-Aktion kennt diese Version von novooa nicht."
+    "unknown_action": "Diese Google-Drive-Aktion kennt diese Version von novooa nicht.",
+    "plugin": {
+      "title": "Google Drive",
+      "description": "Dateien in Google Drive speichern, freigegebene Dateien lesen und suchen. Braucht ein verbundenes Google-Konto."
+    }
   },
   "shopware": {
     "actions": {
@@ -1184,6 +1190,10 @@
       "app_copy": "Kopieren",
       "app_close": "Schließen",
       "app_manifest_description": "Meldet „{summary}“ an novooa."
+    },
+    "plugin": {
+      "title": "Shopware",
+      "description": "Bestellungen, Produkte und Kunden in einem Shopware-Shop suchen und ändern und auf Ereignisse des Shops reagieren."
     }
   },
   "image_field": {
@@ -1227,6 +1237,28 @@
       "runtime_unavailable": "Die Runtime ist nicht erreichbar. Bitte versuche es erneut.",
       "not_found": "Dieses Gerät war bereits abgemeldet.",
       "unexpected": "Das Gerät konnte nicht abgemeldet werden."
+    }
+  },
+  "plugins": {
+    "title": "Plugins",
+    "description": "Plugins schließen externe Systeme an. Sie sind aus, bis ein Admin sie einschaltet; aktive Plugins bringen ihre Bausteine und Auslöser mit.",
+    "loading": "Plugins werden geladen",
+    "load_failed": "Die Plugins konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "empty": "Diese App bringt keine Plugins mit.",
+    "switch_label": "{} aktivieren",
+    "active": "Aktiv",
+    "inactive": "Aus",
+    "disable_title": "{} deaktivieren?",
+    "disable_message": "Bausteine dieses Plugins scheitern dann in Läufen, und seine Auslöser starten nichts. Aufgaben und Einstellungen bleiben erhalten.",
+    "disable_confirm": "Deaktivieren",
+    "cancel": "Abbrechen",
+    "disabled_hint": "Plugin deaktiviert. Ein Admin kann es unter Einstellungen → Plugins aktivieren.",
+    "failure": {
+      "runtime_unavailable": "Die Runtime ist nicht erreichbar. Bitte versuche es erneut.",
+      "admin_required": "Nur Admins können Plugins ein- oder ausschalten.",
+      "not_found": "Diese Runtime kennt das Plugin nicht. Bitte aktualisiere die Runtime.",
+      "unexpected": "Das Plugin konnte nicht umgeschaltet werden."
     }
   }
 }

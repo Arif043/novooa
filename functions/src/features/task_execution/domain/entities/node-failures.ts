@@ -34,6 +34,8 @@ export const nodeFailures = {
   forEachUnsupported: (reason: "nestedForEach" | "pausingBlock") => coded("forEachUnsupported", {reason}),
   scriptOutputInvalid: (reason: ScriptOutputProblem, name?: string, type?: string) =>
     coded("scriptOutputInvalid", withName(type === undefined ? {reason} : {reason, type}, name)),
+  /** Der Baustein gehört zu einem Plugin, das im Arbeitsbereich nicht aktiviert ist. */
+  pluginDisabled: (plugin: string) => coded("pluginDisabled", {plugin}),
   scriptPackagesUnavailable: (reason: ScriptPackagesProblem, packages: readonly string[]) =>
     coded("scriptPackagesUnavailable", {reason, packages: packages.join(", ")}),
   /** Die Meldung des Scripts selbst (z. B. die Python-Ausnahme) ist der technische Text. */

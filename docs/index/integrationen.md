@@ -5,6 +5,7 @@
 ## Plugin-Mechanik
 
 - [Integrations-Plugins](../notes/integrations-plugins.md)
+- [Plugins aktivieren](../notes/plugin-aktivierung.md)
 - [Bausteine von Plugins](../notes/plugin-bausteine.md)
 - [Ereignisquellen-Registry](../notes/ereignisquellen-registry.md)
 

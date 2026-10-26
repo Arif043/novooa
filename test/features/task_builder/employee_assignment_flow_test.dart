@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
@@ -137,6 +139,7 @@ Widget _panelHost(
           BlocProvider<NodeFileAttachmentsCubit>.value(value: _NoFiles()),
           BlocProvider<NodeKnowledgeAttachmentsCubit>.value(value: _NoNotes()),
           BlocProvider<NodeSkillAttachmentsCubit>.value(value: _NoSkills()),
+          BlocProvider(create: (_) => pluginsCubitWith(FakePluginRepository())),
         ],
         child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
           builder: (_, state) => TaskBuilderBody(state: state),

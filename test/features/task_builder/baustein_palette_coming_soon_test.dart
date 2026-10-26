@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
@@ -14,9 +16,14 @@ void main() {
     addTearDown(tester.view.reset);
     final added = <BausteinChoice>[];
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(width: 320, child: BausteinPalette(onAdd: added.add)),
+      withPlugins(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: BausteinPalette(onAdd: added.add),
+            ),
+          ),
         ),
       ),
     );

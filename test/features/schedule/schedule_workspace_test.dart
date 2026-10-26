@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/schedule/domain/entities/schedule_config.dart';
 import 'package:syscat2/features/schedule/domain/entities/task_trigger.dart';
@@ -77,22 +79,27 @@ const _trigger = TaskTrigger(
   ),
 );
 
-Widget _app(_Cubit cubit, {bool dark = false, double scale = 1}) => MaterialApp(
-  debugShowCheckedModeBanner: false,
-  theme: dark ? SyscatTheme.darkTheme : SyscatTheme.lightTheme,
-  builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(textScaler: TextScaler.linear(scale), disableAnimations: true),
-    child: child!,
-  ),
-  home: Scaffold(
-    body: BlocProvider<ScheduleCubit>.value(
-      value: cubit,
-      child: const ScheduleView(),
-    ),
-  ),
-);
+Widget _app(_Cubit cubit, {bool dark = false, double scale = 1}) =>
+    withPlugins(_materialApp(cubit, dark: dark, scale: scale));
+
+Widget _materialApp(_Cubit cubit, {bool dark = false, double scale = 1}) =>
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: dark ? SyscatTheme.darkTheme : SyscatTheme.lightTheme,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(scale),
+          disableAnimations: true,
+        ),
+        child: child!,
+      ),
+      home: Scaffold(
+        body: BlocProvider<ScheduleCubit>.value(
+          value: cubit,
+          child: const ScheduleView(),
+        ),
+      ),
+    );
 
 void main() {
   testWidgets('form exposes weekly slots and event configuration', (

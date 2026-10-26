@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../integrations/shopware/domain/shopware_trigger_params.dart';
 import '../../../integrations/shopware/presentation/widgets/shopware_trigger_controls.dart';
+import '../../../integrations/shopware/shopware_plugin.dart';
+import '../../../plugins/domain/entities/plugin_activation.dart';
+import '../../../plugins/presentation/cubits/plugins_cubit.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../cubits/event_target_options_cubit.dart';
 import 'event_file_kind_chips.dart';
@@ -77,8 +80,16 @@ class EventTriggerControls extends StatelessWidget {
   bool get _showsFileKinds =>
       source.targetScope == EventTargetScope.files && target is! FileTarget;
 
+  /// Quellen deaktivierter Plugins fehlen; ein bestehender Auslöser behält
+  /// seine Quelle, damit er sich weiter bearbeiten lässt.
+  bool _offers(EventTriggerSource item, bool shopwareEnabled) =>
+      item != EventTriggerSource.shopware || shopwareEnabled || _isShopware;
+
   @override
   Widget build(BuildContext context) {
+    final shopwareEnabled = context.select<PluginsCubit, bool>(
+      (cubit) => cubit.state.isEnabled(const PluginId(shopwarePluginId)),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -86,7 +97,10 @@ class EventTriggerControls extends StatelessWidget {
           isExpanded: true,
           initialValue: source,
           decoration: const InputDecoration(labelText: 'Ereignis'),
-          items: [for (final item in EventTriggerSource.values) _itemFor(item)],
+          items: [
+            for (final item in EventTriggerSource.values)
+              if (_offers(item, shopwareEnabled)) _itemFor(item),
+          ],
           onChanged: (value) {
             if (value != null) onSourceChanged(value);
           },

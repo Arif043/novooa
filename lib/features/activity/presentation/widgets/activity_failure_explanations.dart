@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
+import 'package:syscat2/features/plugins/presentation/plugin_catalog.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_condition_operator_labels.dart';
 
@@ -101,7 +102,18 @@ const activityFailureExplanations =
         LocaleKeys.activity_failures_codes_scriptPackagesUnavailable,
         _scriptPackagesArguments,
       ),
+      ActivityFailureCode.pluginDisabled: ActivityFailureExplanation(
+        LocaleKeys.activity_failures_codes_pluginDisabled,
+        _pluginArguments,
+      ),
     };
+
+/// Name des Plugins aus dem Katalog der App; unbekannt bleibt die Kennung.
+Map<String, String> _pluginArguments(Map<String, String> details) {
+  final id = details['plugin'] ?? '';
+  final plugin = PluginCatalog.all.where((entry) => entry.id.value == id);
+  return {'plugin': plugin.isEmpty ? id : plugin.first.title};
+}
 
 Map<String, String> _operandArguments(Map<String, String> details) => {
   'operator': _operatorLabel(details['operator']),

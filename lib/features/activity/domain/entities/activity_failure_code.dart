@@ -29,7 +29,10 @@ enum ActivityFailureCode {
   forEachUnsupported,
   scriptFailed,
   scriptOutputInvalid,
-  scriptPackagesUnavailable;
+  scriptPackagesUnavailable,
+
+  /// Der Baustein gehört zu einem deaktivierten Plugin (Detail `plugin`).
+  pluginDisabled;
 
   /// Unbekannte Codes (auch `unknown`) ergeben `null`: dann zählt nur der
   /// gespeicherte Text.

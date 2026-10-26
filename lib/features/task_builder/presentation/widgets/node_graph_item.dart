@@ -3,9 +3,7 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/features/task_builder/domain/entities/plugin_node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
-import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
@@ -19,6 +17,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/teamwork/team
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/plugin_node_body.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_webhook_widget.dart';
@@ -213,15 +212,6 @@ class NodeGraphItem extends StatelessWidget {
     );
   }
 
-  Widget _pluginWidget() {
-    final config = node.config;
-    final module = config is PluginNodeConfig
-        ? PluginNodeModules.byTypeId(config.typeId)
-        : null;
-    return module?.builder(node) ??
-        Text(LocaleKeys.ui_dieser_baustein_ist_nicht_verfuegbar.tr());
-  }
-
   Widget _nodeWidget() {
     final child = switch (node.config.primitive) {
       .stringInput => StringInputWidget(node: node),
@@ -246,7 +236,7 @@ class NodeGraphItem extends StatelessWidget {
       .tableFromCollection => TableFromCollectionWidget(node: node),
       .httpRequest => HttpRequestWidget(node: node),
       .teamwork => TeamworkWidget(node: node),
-      .plugin => _pluginWidget(),
+      .plugin => PluginNodeBody(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(

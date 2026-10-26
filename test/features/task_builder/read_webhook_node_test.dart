@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
@@ -69,9 +71,14 @@ void main() {
   ) async {
     Future<void> pump() async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(height: 700, child: BausteinPalette(onAdd: (_) {})),
+        withPlugins(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 700,
+                child: BausteinPalette(onAdd: (_) {}),
+              ),
+            ),
           ),
         ),
       );

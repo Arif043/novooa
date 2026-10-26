@@ -10,6 +10,7 @@ void main() {
       LocaleKeys.settings_tabs_language_models,
       LocaleKeys.settings_tabs_communication,
       LocaleKeys.settings_tabs_connections,
+      LocaleKeys.settings_tabs_plugins,
       LocaleKeys.settings_tabs_machine_learning,
       LocaleKeys.settings_tabs_import_export,
     ]);

@@ -20,7 +20,8 @@ Primitive eine Zeile.
   (Name → Typ).
 - `TaskBuilderCubit.updatePluginNode` ändert sie ohne eigene Mutation.
 - `PluginNodeModule` (`task_builder/presentation/plugin_node_module.dart`)
-  bündelt Titel, Beschreibung, Gruppe und Icon der Palette,
+  nennt sein Plugin (`pluginId`; die Palette zeigt nur Bausteine aktiver
+  Plugins) und bündelt Titel, Beschreibung, Gruppe und Icon der Palette,
   Anfangskonfiguration, `fromDocument` und Widget. Titel und Beschreibung
   sind Funktionen (`'schlüssel'.tr`), weil die Plugins sich vor dem Laden
   der Übersetzungen anmelden;

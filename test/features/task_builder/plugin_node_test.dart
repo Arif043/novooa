@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/plugin_node_config.dart';
@@ -47,6 +49,7 @@ class _HelloConfig extends PluginNodeConfig {
 }
 
 PluginNodeModule _module() => PluginNodeModule(
+  pluginId: 'hello',
   typeId: 'helloPlugin',
   title: () => 'Hallo-Baustein',
   description: () => 'Sagt Hallo.',
@@ -152,11 +155,14 @@ void main() {
     Future<List<BausteinChoice>> pumpPalette(WidgetTester tester) async {
       final added = <BausteinChoice>[];
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              height: 900,
-              child: BausteinPalette(onAdd: added.add),
+        withPlugins(
+          enabled: {'hello'},
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 900,
+                child: BausteinPalette(onAdd: added.add),
+              ),
             ),
           ),
         ),
@@ -198,27 +204,34 @@ void main() {
   });
 
   group('Leinwand', () {
-    Future<void> pumpNode(WidgetTester tester, PluginNodeConfig config) async {
+    Future<void> pumpNode(
+      WidgetTester tester,
+      PluginNodeConfig config, {
+      Set<String> enabled = const {'hello'},
+    }) async {
       final builder = TaskBuilderCubit(repository: _TaskRepository());
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BlocProvider.value(
-              value: builder,
-              child: NodeGraphItem(
-                node: WorkflowNode(
-                  id: const NodeId('n1'),
-                  title: 'Hallo-Baustein',
-                  description: '',
-                  outputs: [WorkflowOutput.primary('gruss1')],
-                  config: config,
+        withPlugins(
+          enabled: enabled,
+          MaterialApp(
+            home: Scaffold(
+              body: BlocProvider.value(
+                value: builder,
+                child: NodeGraphItem(
+                  node: WorkflowNode(
+                    id: const NodeId('n1'),
+                    title: 'Hallo-Baustein',
+                    description: '',
+                    outputs: [WorkflowOutput.primary('gruss1')],
+                    config: config,
+                  ),
+                  dragSourceNodeIds: const {},
+                  isSource: false,
+                  isDragActive: false,
+                  onDragStarted: () {},
+                  onDragEnded: () {},
                 ),
-                dragSourceNodeIds: const {},
-                isSource: false,
-                isDragActive: false,
-                onDragStarted: () {},
-                onDragEnded: () {},
               ),
             ),
           ),
@@ -232,6 +245,17 @@ void main() {
       await pumpNode(tester, const _HelloConfig(name: 'Anna'));
 
       expect(find.text('Hallo Anna'), findsOneWidget);
+      expect(find.textContaining('Plugin deaktiviert'), findsNothing);
+    });
+
+    testWidgets('ein deaktiviertes Plugin zeigt Formular und Hinweis', (
+      tester,
+    ) async {
+      PluginNodeModules.register(_module());
+      await pumpNode(tester, const _HelloConfig(name: 'Anna'), enabled: {});
+
+      expect(find.text('Hallo Anna'), findsOneWidget);
+      expect(find.textContaining('Plugin deaktiviert'), findsOneWidget);
     });
 
     testWidgets('ein Baustein ohne registriertes Plugin zeigt einen Hinweis', (

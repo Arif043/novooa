@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {unusedGoogleTokens} from "../../integration-test-support.js";
+import {allPluginsEnabled, unusedGoogleTokens} from "../../integration-test-support.js";
 import {genkit} from "genkit/beta";
 import {type OutboundHttpClient, type OutboundHttpRequest} from "../../../connections/domain/repositories/outbound-http-client.js";
 import {type TaskRunContext} from "../../../task_execution/domain/executors/node-executor.js";
@@ -71,7 +71,7 @@ test("das Zod-Schema füllt Standardwerte und lehnt fehlende Aktionen ab", () =>
 });
 
 test("die Plugin-Executoren werden über die Registry im echten Runner ausgeführt, die eingebauten bleiben", async () => {
-  const registry = registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: unusedGoogleTokens});
+  const registry = registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: unusedGoogleTokens}, allPluginsEnabled);
   assert.equal(registry.resolve("shopware", {} as never)?.primitive, "shopware");
   assert.equal(registry.resolve("stringInput", {} as never)?.primitive, "stringInput");
 

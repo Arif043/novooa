@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
@@ -326,11 +328,15 @@ void main() {
     Future<List<BausteinChoice>> pump(WidgetTester tester) async {
       final added = <BausteinChoice>[];
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              height: 900,
-              child: BausteinPalette(onAdd: added.add),
+        withPlugins(
+          enabled: {'shopware'},
+
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 900,
+                child: BausteinPalette(onAdd: added.add),
+              ),
             ),
           ),
         ),

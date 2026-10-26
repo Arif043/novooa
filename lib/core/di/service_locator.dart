@@ -5,6 +5,7 @@ import '../../features/integrations/integration_nodes.dart';
 import 'connection_dependency_registration.dart';
 import 'google_account_dependency_registration.dart';
 import 'password_settings_dependencies.dart';
+import 'plugin_dependency_registration.dart';
 import 'standalone_dependency_configuration.dart';
 import 'standalone_transport_registration.dart';
 
@@ -22,6 +23,7 @@ Future<void> configureDependencies({
   registerConnectionDependencies(serviceLocator);
   registerGoogleAccountDependencies(serviceLocator);
   registerPasswordSettingsDependencies(serviceLocator);
+  registerPluginDependencies(serviceLocator);
   registerIntegrationNodes();
 }
 

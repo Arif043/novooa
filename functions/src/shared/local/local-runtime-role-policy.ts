@@ -3,7 +3,7 @@ import {type RuntimeActor} from "../../features/runtime_users/domain/entities/ru
 type Restriction = "all" | "reads" | "writes";
 
 /**
- * Was nur Admins dürfen. Mitglieder lesen Anbindungen (für die Auswahl in Bausteinen), ändern sie aber nicht;
+ * Was nur Admins dürfen. Mitglieder lesen Anbindungen und Plugins (für die Auswahl in Bausteinen), ändern sie aber nicht;
  * Benutzer, Import/Export und das Protokoll gehören ganz den Admins. Protokolleinträge schreibt jede App selbst.
  * Alles andere – Aufgaben, Läufe, Freigaben, Auslöser, Inhalte, Mitarbeiter, Modelle – dürfen alle.
  */
@@ -21,6 +21,7 @@ const adminRules: ReadonlyArray<{prefix: string; restriction: Restriction}> = [
   {prefix: "/v1/script-packages", restriction: "writes"},
   {prefix: "/v1/skills", restriction: "writes"},
   {prefix: "/v1/file-settings", restriction: "writes"},
+  {prefix: "/v1/plugins", restriction: "writes"},
 ];
 
 export function requiresAdmin(method: string, routeUrl: string): boolean {

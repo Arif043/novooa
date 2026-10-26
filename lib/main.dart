@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugins_cubit.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'core/di/service_locator.dart';
 import 'core/runtime/push_availability.dart';
@@ -147,6 +148,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         BlocProvider.value(value: serviceLocator<RuntimeLicenseCubit>()),
         BlocProvider.value(value: serviceLocator<CurrentRuntimeUserCubit>()),
+        BlocProvider.value(value: serviceLocator<PluginsCubit>()),
       ],
       child: app,
     );

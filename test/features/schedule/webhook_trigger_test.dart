@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/schedule/domain/entities/create_task_trigger_input.dart';
@@ -430,7 +432,9 @@ Future<_Cubit> _openEventForm(WidgetTester tester) async {
   return cubit;
 }
 
-Widget _app(_Cubit cubit) => MaterialApp(
+Widget _app(_Cubit cubit) => withPlugins(_materialApp(cubit));
+
+Widget _materialApp(_Cubit cubit) => MaterialApp(
   home: Scaffold(
     body: BlocProvider<ScheduleCubit>.value(
       value: cubit,

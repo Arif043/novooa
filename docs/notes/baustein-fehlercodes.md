@@ -24,6 +24,7 @@ Katalog: `nodeFailures` in `functions/src/features/task_execution/domain/entitie
 | `scriptFailed` | – (Konsole an der Failure) | Fehler im Script |
 | `scriptOutputInvalid` | `reason`, `name`, `type` | `workflow_output` |
 | `scriptPackagesUnavailable` | `reason` (`notInstalled`, `unsupported`), `packages` | Script mit Paketen |
+| `pluginDisabled` | `plugin` | Baustein eines deaktivierten Plugins ([Plugins aktivieren](./plugin-aktivierung.md)) |
 | `conditionOperandMismatch` | `operator`, `expected`, `received` | [Bedingungen](./bedingter-ablauf-auswertung.md) |
 | `unexpected` | – | Exception in einem verschachtelten Plan; nicht übersetzt |
 

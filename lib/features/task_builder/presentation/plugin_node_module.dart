@@ -8,6 +8,7 @@ import '../domain/entities/workflow_node.dart';
 /// Registrierung; weitere Verdrahtung (Mapper, Palette, Canvas) entfällt.
 class PluginNodeModule {
   const PluginNodeModule({
+    required this.pluginId,
     required this.typeId,
     String? documentPrimitive,
     required this._title,
@@ -19,6 +20,10 @@ class PluginNodeModule {
     required this.fromDocument,
     required this.builder,
   }) : documentPrimitive = documentPrimitive ?? typeId;
+
+  /// Das Plugin, zu dem der Baustein gehört, z. B. `shopware`. Ist es im
+  /// Arbeitsbereich deaktiviert, fehlt der Baustein in der Palette.
+  final String pluginId;
 
   /// Kennung in der Palette und in der Registry, z. B. `shopware.searchOrders`.
   final String typeId;

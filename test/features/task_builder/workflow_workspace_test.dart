@@ -5,6 +5,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
@@ -441,26 +443,28 @@ void main() {
         });
       }
       await tester.pumpWidget(
-        BlocProvider.value(
-          value: cubit,
-          child: MaterialApp(
-            theme: TaskBuilderTheme.from(SyscatTheme.lightTheme),
-            home: Scaffold(
-              body: RepaintBoundary(
-                key: captureKey,
-                child: Column(
-                  children: [
-                    TaskBuilderHeader(
-                      title: const TaskTitleField(),
-                      onMenuPressed: () {},
-                      actions: const _HeaderActions(),
-                    ),
-                    Expanded(
-                      child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-                        builder: (_, state) => TaskBuilderBody(state: state),
+        withPlugins(
+          BlocProvider.value(
+            value: cubit,
+            child: MaterialApp(
+              theme: TaskBuilderTheme.from(SyscatTheme.lightTheme),
+              home: Scaffold(
+                body: RepaintBoundary(
+                  key: captureKey,
+                  child: Column(
+                    children: [
+                      TaskBuilderHeader(
+                        title: const TaskTitleField(),
+                        onMenuPressed: () {},
+                        actions: const _HeaderActions(),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+                          builder: (_, state) => TaskBuilderBody(state: state),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

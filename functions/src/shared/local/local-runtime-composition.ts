@@ -45,6 +45,7 @@ import {OAuthTokenProvider} from "../../features/connections/infrastructure/loca
 import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
 import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
 import {integrationWebhookInterpreters, registerIntegrationPlugins} from "../../features/integrations/index.js";
+import {SQLitePluginActivationStore} from "../../features/plugins/infrastructure/local/sqlite-plugin-activation-store.js";
 import {type GoogleAccessTokens} from "../../features/google_accounts/domain/repositories/google-access-tokens.js";
 import {createDefaultNodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
@@ -153,12 +154,15 @@ export function createLocalRuntimeComposition(
     database: options.database, runtimeRoot: options.runtimeRoot, teamId: options.workspace.teamId,
     systemModelCatalog, notifier: realtimeNotifier, logger: applicationLogger, mlService: options.mlService?.client,
   });
+  const pluginActivation = new SQLitePluginActivationStore(options.database);
   taskWorkflow = createLocalTaskWorkflow({
     database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
     languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
-    executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: options.googleAccessTokens}),
+    executorRegistry: registerIntegrationPlugins(
+      createDefaultNodeExecutorRegistry(), {googleAccessTokens: options.googleAccessTokens}, pluginActivation,
+    ),
     outboundHttpClient,
     modelCache,
     mlService: options.mlService?.client,
@@ -168,7 +172,7 @@ export function createLocalRuntimeComposition(
     teamId: options.workspace.teamId,
     triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
     secrets: languageModelSecretStore,
-    interpreters: integrationWebhookInterpreters(outboundHttpClient),
+    interpreters: integrationWebhookInterpreters(outboundHttpClient, pluginActivation),
     // Fehlversuche: kleiner Eimer. Gültige Aufrufe je Auslöser: im Schnitt 5 pro Sekunde, Stöße bis 20.
     failures: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 30, refillPerSecond: 1})}),
     triggers: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 20, refillPerSecond: 5})}),

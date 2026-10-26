@@ -10,7 +10,7 @@ import '../cubits/google_accounts_state.dart';
 import 'google_account_tile.dart';
 import 'google_authorization_launcher.dart';
 
-/// Abschnitt „Google-Konten“ im Tab „Verbindungen“. Erwartet einen
+/// Abschnitt „Google-Konten“ in den Einstellungen des Drive-Plugins. Erwartet einen
 /// [GoogleAccountsCubit] im Kontext.
 class GoogleAccountsSection extends StatelessWidget {
   const GoogleAccountsSection({super.key});

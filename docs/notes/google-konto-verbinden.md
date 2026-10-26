@@ -42,7 +42,7 @@ Ablage:
 | Refresh-Token (AES-GCM, `GOOGLE_ACCOUNT_ENCRYPTION_KEY`) | `teams/{team}/googleAccountCredentials/{id}` |
 | Begonnene Anmeldung (10 Minuten, einmalig) | `googleAccountAuthorizations/{id}` |
 | Code | `functions/src/features/google_accounts/` |
-| Client | `lib/features/google_accounts/`, Abschnitt im Tab „Verbindungen“ |
+| Client | `lib/features/google_accounts/`, unter Einstellungen → Plugins → Google Drive (nur bei aktivem Plugin) |
 
 ## Siehe auch
 

@@ -14,6 +14,7 @@ import 'package:syscat2/features/runtime_users/presentation/widgets/runtime_user
 import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
 
 import 'package:syscat2/core/localization/locale_keys.g.dart';
+import 'package:syscat2/features/plugins/presentation/widgets/plugins_settings_tab.dart';
 
 import 'adaptive_settings_tabs.dart';
 import 'file_version_limit_section.dart';
@@ -58,6 +59,11 @@ List<SettingsTabContribution> runtimeSettingsTabs({required bool isAdmin}) => [
       icon: Icons.link,
       labelKey: LocaleKeys.settings_tabs_connections,
       builder: (_) => const ConnectionsSettingsTab(),
+    ),
+    SettingsTabContribution(
+      icon: Icons.extension_outlined,
+      labelKey: LocaleKeys.settings_tabs_plugins,
+      builder: (_) => const PluginsSettingsTab(),
     ),
   ],
   SettingsTabContribution(

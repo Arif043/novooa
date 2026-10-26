@@ -126,3 +126,11 @@ export type Employees = typeof employees.$inferSelect;
 export type NewEmployees = typeof employees.$inferInsert;
 export type KnowledgeNotes = typeof knowledgeNotes.$inferSelect;
 export type NewKnowledgeNotes = typeof knowledgeNotes.$inferInsert;
+
+/** Aktivierte Plugins je Arbeitsbereich; ohne Zeile ist ein Plugin aus. */
+export const workspacePlugins = sqliteTable("workspace_plugins", {
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  plugin_id: text("plugin_id").notNull(),
+  enabled_at: text("enabled_at").notNull(),
+  enabled_by_uid: text("enabled_by_uid"),
+}, (table) => [primaryKey({columns: [table.team_id, table.plugin_id]})]);

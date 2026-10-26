@@ -65,6 +65,7 @@
 - [Benutzerkonten in SQLite (0025)](../notes/sqlite-benutzerkonten-0025.md)
 - [Verschlüsselte Passwort-Hashes (0026)](../notes/sqlite-passwort-hashes-0026.md)
 - [Geräte der Sitzungen (0027)](../notes/sqlite-sitzungsgeraete-0027.md)
+- [Plugins je Arbeitsbereich (0028)](../notes/sqlite-workspace-plugins-0028.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
 - [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)

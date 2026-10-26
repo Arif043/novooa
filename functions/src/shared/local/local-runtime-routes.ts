@@ -39,6 +39,7 @@ import {type LocalMlService} from "../../features/machine_learning/infrastructur
 import {createLocalRuntimeRouteServices} from "./local-runtime-route-services.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {sessionRoutes} from "./local-runtime-session-routes.js";
+import {pluginRoutes} from "../../features/plugins/infrastructure/local/local-plugin-routes.js";
 import {accountRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-account-routes.js";
 import {userRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-user-routes.js";
 import {createRuntimeUsersModule} from "../../features/runtime_users/infrastructure/local/runtime-users-composition.js";
@@ -112,6 +113,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(speechVoiceRoutes, {voices: services.speechVoices});
   await api.register(languageModelDefaultsRoutes, {store: services.languageModelDefaults, notifier});
   await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});
+  await api.register(pluginRoutes, services.plugins);
   await api.register(dataRoutes, {store: services.documents});
   await api.register(modelCatalogRoutes, services.modelCatalog);
   await api.register(scriptPackageRoutes, {jobs: services.scriptPackages});

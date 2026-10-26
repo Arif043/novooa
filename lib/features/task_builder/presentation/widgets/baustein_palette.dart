@@ -5,6 +5,9 @@ import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anch
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/features/plugins/domain/entities/plugin_activation.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugins_cubit.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
@@ -168,8 +171,10 @@ class _BausteinPaletteState extends State<BausteinPalette> {
             .where((choice) => choice.label.toLowerCase().contains(_query))
             .toList(),
     };
+    final plugins = context.watch<PluginsCubit>().state;
     for (final module in PluginNodeModules.all) {
-      if (!module.title.toLowerCase().contains(_query)) {
+      if (!plugins.isEnabled(PluginId(module.pluginId)) ||
+          !module.title.toLowerCase().contains(_query)) {
         continue;
       }
       (groups[module.group] ??= []).add(BausteinChoice.plugin(module));

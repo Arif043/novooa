@@ -337,7 +337,8 @@
       "connections": "Bağlantılar",
       "machine_learning": "Makine Öğrenimi",
       "import_export": "İçe/Dışa Aktarma",
-      "users": "Kullanıcılar"
+      "users": "Kullanıcılar",
+      "plugins": "Eklentiler"
     }
   },
   "ui": {
@@ -758,7 +759,8 @@
       "forEachUnsupported": "“Her öğe için” {reason} desteklemez.",
       "scriptFailed": "Betik bir hatayla sona erdi. Mesaj ve çıktı aşağıda.",
       "scriptOutputInvalid": "Bir workflow_output geçersiz: {reason}{name}.",
-      "scriptPackagesUnavailable": "Python paketleri ({packages}): {reason}"
+      "scriptPackagesUnavailable": "Python paketleri ({packages}): {reason}",
+      "pluginDisabled": "{plugin} eklentisi kapalı. Bir yönetici bunu Ayarlar → Eklentiler altında açabilir."
     },
     "operand_kinds": {
       "number": "bir sayı",
@@ -989,7 +991,11 @@
     "search_limit": "En fazla sonuç",
     "search_limit_helper": "1 ile 100 arası, varsayılan 25",
     "search_helper": "Yalnızca novooa'nın oluşturduğu veya senin paylaştığın dosyalar bulunur. Başkalarının paylaşılan bir klasöre eklediği dosyaları novooa göremez.",
-    "unknown_action": "novooa'nın bu sürümü bu Google Drive işlemini tanımıyor."
+    "unknown_action": "novooa'nın bu sürümü bu Google Drive işlemini tanımıyor.",
+    "plugin": {
+      "title": "Google Drive",
+      "description": "Dosyaları Google Drive'a kaydedin, paylaşılan dosyaları okuyun ve arayın. Bağlı bir Google hesabı gerekir."
+    }
   },
   "shopware": {
     "actions": {
@@ -1184,6 +1190,10 @@
       "app_copy": "Kopyala",
       "app_close": "Kapat",
       "app_manifest_description": "“{summary}” olayını novooa'ya bildirir."
+    },
+    "plugin": {
+      "title": "Shopware",
+      "description": "Bir Shopware mağazasında sipariş, ürün ve müşterileri arayın, değiştirin ve mağaza olaylarına tepki verin."
     }
   },
   "image_field": {
@@ -1227,6 +1237,28 @@
       "runtime_unavailable": "Runtime'a ulaşılamıyor. Lütfen tekrar deneyin.",
       "not_found": "Bu cihazın oturumu zaten kapatılmıştı.",
       "unexpected": "Cihazın oturumu kapatılamadı."
+    }
+  },
+  "plugins": {
+    "title": "Eklentiler",
+    "description": "Eklentiler harici sistemleri bağlar. Bir yönetici açana kadar kapalıdırlar; etkin eklentiler kendi bloklarını ve tetikleyicilerini getirir.",
+    "loading": "Eklentiler yükleniyor",
+    "load_failed": "Eklentiler yüklenemedi.",
+    "retry": "Tekrar dene",
+    "empty": "Bu uygulama hiç eklenti içermiyor.",
+    "switch_label": "{} eklentisini etkinleştir",
+    "active": "Etkin",
+    "inactive": "Kapalı",
+    "disable_title": "{} kapatılsın mı?",
+    "disable_message": "Bu eklentinin blokları çalıştırmalarda başarısız olur ve tetikleyicileri hiçbir şey başlatmaz. Görevler ve ayarlar korunur.",
+    "disable_confirm": "Kapat",
+    "cancel": "İptal",
+    "disabled_hint": "Eklenti kapalı. Bir yönetici bunu Ayarlar → Eklentiler altında açabilir.",
+    "failure": {
+      "runtime_unavailable": "Runtime'a ulaşılamıyor. Lütfen tekrar deneyin.",
+      "admin_required": "Eklentileri yalnızca yöneticiler açıp kapatabilir.",
+      "not_found": "Bu runtime eklentiyi tanımıyor. Lütfen runtime'ı güncelleyin.",
+      "unexpected": "Eklenti değiştirilemedi."
     }
   }
 }

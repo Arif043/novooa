@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/plugins_scope.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
@@ -354,11 +356,13 @@ void main() {
     testWidgets('der Baustein erscheint unter Externe Systeme', (tester) async {
       Future<void> pump() async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: SizedBox(
-                height: 700,
-                child: BausteinPalette(onAdd: (_) {}),
+          withPlugins(
+            MaterialApp(
+              home: Scaffold(
+                body: SizedBox(
+                  height: 700,
+                  child: BausteinPalette(onAdd: (_) {}),
+                ),
               ),
             ),
           ),

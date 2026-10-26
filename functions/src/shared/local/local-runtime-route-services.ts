@@ -7,6 +7,8 @@ import {CatalogGenkitLanguageModelResolver} from "../../features/language_models
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
 import {taskBuilderRelayFromEnvironment} from "./local-runtime-relays.js";
 import {createEmployeeRoutesOptions} from "../../features/employees/infrastructure/local/employees-composition.js";
+import {integrationPluginIds} from "../../features/integrations/index.js";
+import {createPluginRoutesOptions} from "../../features/plugins/infrastructure/local/plugins-composition.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {createSkillsModule} from "../../features/skills/infrastructure/local/skills-composition.js";
 import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
@@ -77,6 +79,7 @@ export function createLocalRuntimeRouteServices(options: {
     connectionClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(connectionStore, new OAuthTokenProvider())),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
     employees: createEmployeeRoutesOptions(database, options.notifier),
+    plugins: createPluginRoutesOptions(database, integrationPluginIds, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {unusedGoogleTokens} from "../../integration-test-support.js";
+import {allPluginsEnabled, unusedGoogleTokens} from "../../integration-test-support.js";
 import {EventTriggerSourceRegistry} from "../../../scheduling/domain/entities/event-trigger-source-registry.js";
 import {createDefaultNodeExecutorRegistry} from "../../../task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {integrationWebhookInterpreters, registerIntegrationPlugins} from "../../index.js";
@@ -8,7 +8,7 @@ import {shopwarePlugin} from "../shopware-plugin.js";
 
 test("das Plugin meldet die Quelle „shopware“ an; der Server vergibt das Token und verlangt keine Signatur", () => {
   const sources = new EventTriggerSourceRegistry();
-  registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: unusedGoogleTokens}, [shopwarePlugin], sources);
+  registerIntegrationPlugins(createDefaultNodeExecutorRegistry(), {googleAccessTokens: unusedGoogleTokens}, allPluginsEnabled, [shopwarePlugin], sources);
 
   assert.equal(sources.has("shopware"), true);
   assert.equal(sources.usesWebhook("shopware"), true);
@@ -24,7 +24,7 @@ test("das Plugin meldet die Quelle „shopware“ an; der Server vergibt das Tok
 });
 
 test("der Interpreter ist unter der Quelle abrufbar", () => {
-  const interpreters = integrationWebhookInterpreters({send: () => Promise.reject(new Error("nicht gebraucht"))}, [shopwarePlugin]);
+  const interpreters = integrationWebhookInterpreters({send: () => Promise.reject(new Error("nicht gebraucht"))}, allPluginsEnabled, [shopwarePlugin]);
 
   assert.deepEqual([...interpreters.keys()], ["shopware"]);
 });
