@@ -2,510 +2,281 @@
 
 // ignore_for_file: constant_identifier_names
 
-abstract class LocaleKeys {
-  static const navigation_greeting = 'navigation.greeting';
-  static const navigation_greeting_named = 'navigation.greeting_named';
+abstract class  LocaleKeys {
+  static const navigation_greeting_morning = 'navigation.greeting_morning';
+  static const navigation_greeting_morning_named = 'navigation.greeting_morning_named';
+  static const navigation_greeting_day = 'navigation.greeting_day';
+  static const navigation_greeting_day_named = 'navigation.greeting_day_named';
+  static const navigation_greeting_evening = 'navigation.greeting_evening';
+  static const navigation_greeting_evening_named = 'navigation.greeting_evening_named';
   static const navigation_sign_out = 'navigation.sign_out';
   static const navigation = 'navigation';
-  static const task_builder_primitives_string_input_label =
-      'task_builder.primitives.string_input.label';
-  static const task_builder_primitives_string_input_description =
-      'task_builder.primitives.string_input.description';
-  static const task_builder_primitives_string_input =
-      'task_builder.primitives.string_input';
-  static const task_builder_primitives_script_label =
-      'task_builder.primitives.script.label';
-  static const task_builder_primitives_script_description =
-      'task_builder.primitives.script.description';
-  static const task_builder_primitives_script =
-      'task_builder.primitives.script';
-  static const task_builder_primitives_prompt_label =
-      'task_builder.primitives.prompt.label';
-  static const task_builder_primitives_prompt_description =
-      'task_builder.primitives.prompt.description';
-  static const task_builder_primitives_prompt =
-      'task_builder.primitives.prompt';
-  static const task_builder_primitives_conditional_label =
-      'task_builder.primitives.conditional.label';
-  static const task_builder_primitives_conditional_description =
-      'task_builder.primitives.conditional.description';
-  static const task_builder_primitives_conditional =
-      'task_builder.primitives.conditional';
-  static const task_builder_primitives_iterative_refinement_label =
-      'task_builder.primitives.iterative_refinement.label';
-  static const task_builder_primitives_iterative_refinement_description =
-      'task_builder.primitives.iterative_refinement.description';
-  static const task_builder_primitives_iterative_refinement =
-      'task_builder.primitives.iterative_refinement';
-  static const task_builder_primitives_write_file_label =
-      'task_builder.primitives.write_file.label';
-  static const task_builder_primitives_write_file_description =
-      'task_builder.primitives.write_file.description';
-  static const task_builder_primitives_write_file =
-      'task_builder.primitives.write_file';
-  static const task_builder_primitives_read_file_label =
-      'task_builder.primitives.read_file.label';
-  static const task_builder_primitives_read_file_description =
-      'task_builder.primitives.read_file.description';
-  static const task_builder_primitives_read_file =
-      'task_builder.primitives.read_file';
-  static const task_builder_primitives_read_email_label =
-      'task_builder.primitives.read_email.label';
-  static const task_builder_primitives_read_email_description =
-      'task_builder.primitives.read_email.description';
-  static const task_builder_primitives_read_email =
-      'task_builder.primitives.read_email';
-  static const task_builder_primitives_read_channel_event_label =
-      'task_builder.primitives.read_channel_event.label';
-  static const task_builder_primitives_read_channel_event_description =
-      'task_builder.primitives.read_channel_event.description';
-  static const task_builder_primitives_read_channel_event =
-      'task_builder.primitives.read_channel_event';
-  static const task_builder_primitives_read_webhook_label =
-      'task_builder.primitives.read_webhook.label';
-  static const task_builder_primitives_read_webhook_description =
-      'task_builder.primitives.read_webhook.description';
-  static const task_builder_primitives_read_webhook =
-      'task_builder.primitives.read_webhook';
-  static const task_builder_primitives_send_channel_message_label =
-      'task_builder.primitives.send_channel_message.label';
-  static const task_builder_primitives_send_channel_message_description =
-      'task_builder.primitives.send_channel_message.description';
-  static const task_builder_primitives_send_channel_message =
-      'task_builder.primitives.send_channel_message';
-  static const task_builder_primitives_notification_send_label =
-      'task_builder.primitives.notification_send.label';
-  static const task_builder_primitives_notification_send_description =
-      'task_builder.primitives.notification_send.description';
-  static const task_builder_primitives_notification_send =
-      'task_builder.primitives.notification_send';
-  static const task_builder_primitives_tool_call_label =
-      'task_builder.primitives.tool_call.label';
-  static const task_builder_primitives_tool_call_description =
-      'task_builder.primitives.tool_call.description';
-  static const task_builder_primitives_tool_call =
-      'task_builder.primitives.tool_call';
-  static const task_builder_primitives_human_approval_label =
-      'task_builder.primitives.human_approval.label';
-  static const task_builder_primitives_human_approval_description =
-      'task_builder.primitives.human_approval.description';
-  static const task_builder_primitives_human_approval =
-      'task_builder.primitives.human_approval';
-  static const task_builder_primitives_dialog_input_label =
-      'task_builder.primitives.dialog_input.label';
-  static const task_builder_primitives_dialog_input_description =
-      'task_builder.primitives.dialog_input.description';
-  static const task_builder_primitives_dialog_input =
-      'task_builder.primitives.dialog_input';
-  static const task_builder_primitives_model_inference_label =
-      'task_builder.primitives.model_inference.label';
-  static const task_builder_primitives_model_inference_description =
-      'task_builder.primitives.model_inference.description';
-  static const task_builder_primitives_model_inference =
-      'task_builder.primitives.model_inference';
-  static const task_builder_primitives_text_to_speech_label =
-      'task_builder.primitives.text_to_speech.label';
-  static const task_builder_primitives_text_to_speech_description =
-      'task_builder.primitives.text_to_speech.description';
-  static const task_builder_primitives_text_to_speech =
-      'task_builder.primitives.text_to_speech';
-  static const task_builder_primitives_speech_to_text_label =
-      'task_builder.primitives.speech_to_text.label';
-  static const task_builder_primitives_speech_to_text_description =
-      'task_builder.primitives.speech_to_text.description';
-  static const task_builder_primitives_speech_to_text =
-      'task_builder.primitives.speech_to_text';
-  static const task_builder_primitives_for_each_label =
-      'task_builder.primitives.for_each.label';
-  static const task_builder_primitives_for_each_description =
-      'task_builder.primitives.for_each.description';
-  static const task_builder_primitives_for_each =
-      'task_builder.primitives.for_each';
-  static const task_builder_primitives_document_lookup_label =
-      'task_builder.primitives.document_lookup.label';
-  static const task_builder_primitives_document_lookup_description =
-      'task_builder.primitives.document_lookup.description';
-  static const task_builder_primitives_document_lookup =
-      'task_builder.primitives.document_lookup';
-  static const task_builder_primitives_save_document_label =
-      'task_builder.primitives.save_document.label';
-  static const task_builder_primitives_save_document_description =
-      'task_builder.primitives.save_document.description';
-  static const task_builder_primitives_save_document =
-      'task_builder.primitives.save_document';
-  static const task_builder_primitives_table_from_collection_label =
-      'task_builder.primitives.table_from_collection.label';
-  static const task_builder_primitives_table_from_collection_description =
-      'task_builder.primitives.table_from_collection.description';
-  static const task_builder_primitives_table_from_collection =
-      'task_builder.primitives.table_from_collection';
-  static const task_builder_primitives_validation_label =
-      'task_builder.primitives.validation.label';
-  static const task_builder_primitives_validation_description =
-      'task_builder.primitives.validation.description';
-  static const task_builder_primitives_validation =
-      'task_builder.primitives.validation';
-  static const task_builder_primitives_http_request_label =
-      'task_builder.primitives.http_request.label';
-  static const task_builder_primitives_http_request_description =
-      'task_builder.primitives.http_request.description';
-  static const task_builder_primitives_http_request =
-      'task_builder.primitives.http_request';
-  static const task_builder_primitives_plugin_label =
-      'task_builder.primitives.plugin.label';
-  static const task_builder_primitives_plugin_description =
-      'task_builder.primitives.plugin.description';
-  static const task_builder_primitives_plugin =
-      'task_builder.primitives.plugin';
-  static const task_builder_primitives_teamwork_label =
-      'task_builder.primitives.teamwork.label';
-  static const task_builder_primitives_teamwork_description =
-      'task_builder.primitives.teamwork.description';
-  static const task_builder_primitives_teamwork =
-      'task_builder.primitives.teamwork';
+  static const task_builder_primitives_string_input_label = 'task_builder.primitives.string_input.label';
+  static const task_builder_primitives_string_input_description = 'task_builder.primitives.string_input.description';
+  static const task_builder_primitives_string_input = 'task_builder.primitives.string_input';
+  static const task_builder_primitives_script_label = 'task_builder.primitives.script.label';
+  static const task_builder_primitives_script_description = 'task_builder.primitives.script.description';
+  static const task_builder_primitives_script = 'task_builder.primitives.script';
+  static const task_builder_primitives_prompt_label = 'task_builder.primitives.prompt.label';
+  static const task_builder_primitives_prompt_description = 'task_builder.primitives.prompt.description';
+  static const task_builder_primitives_prompt = 'task_builder.primitives.prompt';
+  static const task_builder_primitives_conditional_label = 'task_builder.primitives.conditional.label';
+  static const task_builder_primitives_conditional_description = 'task_builder.primitives.conditional.description';
+  static const task_builder_primitives_conditional = 'task_builder.primitives.conditional';
+  static const task_builder_primitives_iterative_refinement_label = 'task_builder.primitives.iterative_refinement.label';
+  static const task_builder_primitives_iterative_refinement_description = 'task_builder.primitives.iterative_refinement.description';
+  static const task_builder_primitives_iterative_refinement = 'task_builder.primitives.iterative_refinement';
+  static const task_builder_primitives_write_file_label = 'task_builder.primitives.write_file.label';
+  static const task_builder_primitives_write_file_description = 'task_builder.primitives.write_file.description';
+  static const task_builder_primitives_write_file = 'task_builder.primitives.write_file';
+  static const task_builder_primitives_read_file_label = 'task_builder.primitives.read_file.label';
+  static const task_builder_primitives_read_file_description = 'task_builder.primitives.read_file.description';
+  static const task_builder_primitives_read_file = 'task_builder.primitives.read_file';
+  static const task_builder_primitives_read_email_label = 'task_builder.primitives.read_email.label';
+  static const task_builder_primitives_read_email_description = 'task_builder.primitives.read_email.description';
+  static const task_builder_primitives_read_email = 'task_builder.primitives.read_email';
+  static const task_builder_primitives_read_channel_event_label = 'task_builder.primitives.read_channel_event.label';
+  static const task_builder_primitives_read_channel_event_description = 'task_builder.primitives.read_channel_event.description';
+  static const task_builder_primitives_read_channel_event = 'task_builder.primitives.read_channel_event';
+  static const task_builder_primitives_read_webhook_label = 'task_builder.primitives.read_webhook.label';
+  static const task_builder_primitives_read_webhook_description = 'task_builder.primitives.read_webhook.description';
+  static const task_builder_primitives_read_webhook = 'task_builder.primitives.read_webhook';
+  static const task_builder_primitives_send_channel_message_label = 'task_builder.primitives.send_channel_message.label';
+  static const task_builder_primitives_send_channel_message_description = 'task_builder.primitives.send_channel_message.description';
+  static const task_builder_primitives_send_channel_message = 'task_builder.primitives.send_channel_message';
+  static const task_builder_primitives_notification_send_label = 'task_builder.primitives.notification_send.label';
+  static const task_builder_primitives_notification_send_description = 'task_builder.primitives.notification_send.description';
+  static const task_builder_primitives_notification_send = 'task_builder.primitives.notification_send';
+  static const task_builder_primitives_tool_call_label = 'task_builder.primitives.tool_call.label';
+  static const task_builder_primitives_tool_call_description = 'task_builder.primitives.tool_call.description';
+  static const task_builder_primitives_tool_call = 'task_builder.primitives.tool_call';
+  static const task_builder_primitives_human_approval_label = 'task_builder.primitives.human_approval.label';
+  static const task_builder_primitives_human_approval_description = 'task_builder.primitives.human_approval.description';
+  static const task_builder_primitives_human_approval = 'task_builder.primitives.human_approval';
+  static const task_builder_primitives_dialog_input_label = 'task_builder.primitives.dialog_input.label';
+  static const task_builder_primitives_dialog_input_description = 'task_builder.primitives.dialog_input.description';
+  static const task_builder_primitives_dialog_input = 'task_builder.primitives.dialog_input';
+  static const task_builder_primitives_model_inference_label = 'task_builder.primitives.model_inference.label';
+  static const task_builder_primitives_model_inference_description = 'task_builder.primitives.model_inference.description';
+  static const task_builder_primitives_model_inference = 'task_builder.primitives.model_inference';
+  static const task_builder_primitives_text_to_speech_label = 'task_builder.primitives.text_to_speech.label';
+  static const task_builder_primitives_text_to_speech_description = 'task_builder.primitives.text_to_speech.description';
+  static const task_builder_primitives_text_to_speech = 'task_builder.primitives.text_to_speech';
+  static const task_builder_primitives_speech_to_text_label = 'task_builder.primitives.speech_to_text.label';
+  static const task_builder_primitives_speech_to_text_description = 'task_builder.primitives.speech_to_text.description';
+  static const task_builder_primitives_speech_to_text = 'task_builder.primitives.speech_to_text';
+  static const task_builder_primitives_for_each_label = 'task_builder.primitives.for_each.label';
+  static const task_builder_primitives_for_each_description = 'task_builder.primitives.for_each.description';
+  static const task_builder_primitives_for_each = 'task_builder.primitives.for_each';
+  static const task_builder_primitives_document_lookup_label = 'task_builder.primitives.document_lookup.label';
+  static const task_builder_primitives_document_lookup_description = 'task_builder.primitives.document_lookup.description';
+  static const task_builder_primitives_document_lookup = 'task_builder.primitives.document_lookup';
+  static const task_builder_primitives_save_document_label = 'task_builder.primitives.save_document.label';
+  static const task_builder_primitives_save_document_description = 'task_builder.primitives.save_document.description';
+  static const task_builder_primitives_save_document = 'task_builder.primitives.save_document';
+  static const task_builder_primitives_table_from_collection_label = 'task_builder.primitives.table_from_collection.label';
+  static const task_builder_primitives_table_from_collection_description = 'task_builder.primitives.table_from_collection.description';
+  static const task_builder_primitives_table_from_collection = 'task_builder.primitives.table_from_collection';
+  static const task_builder_primitives_validation_label = 'task_builder.primitives.validation.label';
+  static const task_builder_primitives_validation_description = 'task_builder.primitives.validation.description';
+  static const task_builder_primitives_validation = 'task_builder.primitives.validation';
+  static const task_builder_primitives_http_request_label = 'task_builder.primitives.http_request.label';
+  static const task_builder_primitives_http_request_description = 'task_builder.primitives.http_request.description';
+  static const task_builder_primitives_http_request = 'task_builder.primitives.http_request';
+  static const task_builder_primitives_plugin_label = 'task_builder.primitives.plugin.label';
+  static const task_builder_primitives_plugin_description = 'task_builder.primitives.plugin.description';
+  static const task_builder_primitives_plugin = 'task_builder.primitives.plugin';
+  static const task_builder_primitives_teamwork_label = 'task_builder.primitives.teamwork.label';
+  static const task_builder_primitives_teamwork_description = 'task_builder.primitives.teamwork.description';
+  static const task_builder_primitives_teamwork = 'task_builder.primitives.teamwork';
   static const task_builder_primitives = 'task_builder.primitives';
-  static const task_builder_output_names_string_input =
-      'task_builder.output_names.string_input';
-  static const task_builder_output_names_script =
-      'task_builder.output_names.script';
-  static const task_builder_output_names_prompt =
-      'task_builder.output_names.prompt';
-  static const task_builder_output_names_prompt_decision =
-      'task_builder.output_names.prompt_decision';
-  static const task_builder_output_names_conditional =
-      'task_builder.output_names.conditional';
-  static const task_builder_output_names_iterative_refinement =
-      'task_builder.output_names.iterative_refinement';
-  static const task_builder_output_names_write_file =
-      'task_builder.output_names.write_file';
-  static const task_builder_output_names_read_file =
-      'task_builder.output_names.read_file';
-  static const task_builder_output_names_read_email =
-      'task_builder.output_names.read_email';
-  static const task_builder_output_names_read_channel_event =
-      'task_builder.output_names.read_channel_event';
-  static const task_builder_output_names_read_webhook =
-      'task_builder.output_names.read_webhook';
-  static const task_builder_output_names_send_channel_message =
-      'task_builder.output_names.send_channel_message';
-  static const task_builder_output_names_notification_send =
-      'task_builder.output_names.notification_send';
-  static const task_builder_output_names_tool_call =
-      'task_builder.output_names.tool_call';
-  static const task_builder_output_names_human_approval =
-      'task_builder.output_names.human_approval';
-  static const task_builder_output_names_dialog_input =
-      'task_builder.output_names.dialog_input';
-  static const task_builder_output_names_model_inference =
-      'task_builder.output_names.model_inference';
-  static const task_builder_output_names_text_to_speech =
-      'task_builder.output_names.text_to_speech';
-  static const task_builder_output_names_speech_to_text =
-      'task_builder.output_names.speech_to_text';
-  static const task_builder_output_names_for_each =
-      'task_builder.output_names.for_each';
-  static const task_builder_output_names_document_lookup =
-      'task_builder.output_names.document_lookup';
-  static const task_builder_output_names_save_document =
-      'task_builder.output_names.save_document';
-  static const task_builder_output_names_table_from_collection =
-      'task_builder.output_names.table_from_collection';
-  static const task_builder_output_names_validation =
-      'task_builder.output_names.validation';
-  static const task_builder_output_names_http_request =
-      'task_builder.output_names.http_request';
-  static const task_builder_output_names_plugin =
-      'task_builder.output_names.plugin';
-  static const task_builder_output_names_teamwork =
-      'task_builder.output_names.teamwork';
+  static const task_builder_output_names_string_input = 'task_builder.output_names.string_input';
+  static const task_builder_output_names_script = 'task_builder.output_names.script';
+  static const task_builder_output_names_prompt = 'task_builder.output_names.prompt';
+  static const task_builder_output_names_prompt_decision = 'task_builder.output_names.prompt_decision';
+  static const task_builder_output_names_conditional = 'task_builder.output_names.conditional';
+  static const task_builder_output_names_iterative_refinement = 'task_builder.output_names.iterative_refinement';
+  static const task_builder_output_names_write_file = 'task_builder.output_names.write_file';
+  static const task_builder_output_names_read_file = 'task_builder.output_names.read_file';
+  static const task_builder_output_names_read_email = 'task_builder.output_names.read_email';
+  static const task_builder_output_names_read_channel_event = 'task_builder.output_names.read_channel_event';
+  static const task_builder_output_names_read_webhook = 'task_builder.output_names.read_webhook';
+  static const task_builder_output_names_send_channel_message = 'task_builder.output_names.send_channel_message';
+  static const task_builder_output_names_notification_send = 'task_builder.output_names.notification_send';
+  static const task_builder_output_names_tool_call = 'task_builder.output_names.tool_call';
+  static const task_builder_output_names_human_approval = 'task_builder.output_names.human_approval';
+  static const task_builder_output_names_dialog_input = 'task_builder.output_names.dialog_input';
+  static const task_builder_output_names_model_inference = 'task_builder.output_names.model_inference';
+  static const task_builder_output_names_text_to_speech = 'task_builder.output_names.text_to_speech';
+  static const task_builder_output_names_speech_to_text = 'task_builder.output_names.speech_to_text';
+  static const task_builder_output_names_for_each = 'task_builder.output_names.for_each';
+  static const task_builder_output_names_document_lookup = 'task_builder.output_names.document_lookup';
+  static const task_builder_output_names_save_document = 'task_builder.output_names.save_document';
+  static const task_builder_output_names_table_from_collection = 'task_builder.output_names.table_from_collection';
+  static const task_builder_output_names_validation = 'task_builder.output_names.validation';
+  static const task_builder_output_names_http_request = 'task_builder.output_names.http_request';
+  static const task_builder_output_names_plugin = 'task_builder.output_names.plugin';
+  static const task_builder_output_names_teamwork = 'task_builder.output_names.teamwork';
   static const task_builder_output_names = 'task_builder.output_names';
   static const task_builder_script_starter = 'task_builder.script_starter';
-  static const task_builder_send_output_names_email =
-      'task_builder.send_output_names.email';
-  static const task_builder_send_output_names_whatsapp =
-      'task_builder.send_output_names.whatsapp';
-  static const task_builder_send_output_names_sms =
-      'task_builder.send_output_names.sms';
-  static const task_builder_send_output_names_telegram =
-      'task_builder.send_output_names.telegram';
-  static const task_builder_send_output_names_instagram =
-      'task_builder.send_output_names.instagram';
-  static const task_builder_send_output_names =
-      'task_builder.send_output_names';
-  static const task_builder_output_field_names_sender =
-      'task_builder.output_field_names.sender';
-  static const task_builder_output_field_names_subject =
-      'task_builder.output_field_names.subject';
-  static const task_builder_output_field_names_message =
-      'task_builder.output_field_names.message';
-  static const task_builder_output_field_names_receivedAt =
-      'task_builder.output_field_names.receivedAt';
-  static const task_builder_output_field_names_recipient =
-      'task_builder.output_field_names.recipient';
-  static const task_builder_output_field_names_channelId =
-      'task_builder.output_field_names.channelId';
-  static const task_builder_output_field_names_providerMessageId =
-      'task_builder.output_field_names.providerMessageId';
-  static const task_builder_output_field_names_fileId =
-      'task_builder.output_field_names.fileId';
-  static const task_builder_output_field_names_versionId =
-      'task_builder.output_field_names.versionId';
-  static const task_builder_output_field_names_displayName =
-      'task_builder.output_field_names.displayName';
-  static const task_builder_output_field_names_contentType =
-      'task_builder.output_field_names.contentType';
-  static const task_builder_output_field_names_sizeBytes =
-      'task_builder.output_field_names.sizeBytes';
-  static const task_builder_output_field_names_folderId =
-      'task_builder.output_field_names.folderId';
-  static const task_builder_output_field_names_isNewFile =
-      'task_builder.output_field_names.isNewFile';
-  static const task_builder_output_field_names_modelId =
-      'task_builder.output_field_names.modelId';
-  static const task_builder_output_field_names_found =
-      'task_builder.output_field_names.found';
-  static const task_builder_output_field_names_record =
-      'task_builder.output_field_names.record';
-  static const task_builder_output_field_names_created =
-      'task_builder.output_field_names.created';
-  static const task_builder_output_field_names_count =
-      'task_builder.output_field_names.count';
-  static const task_builder_output_field_names_records =
-      'task_builder.output_field_names.records';
-  static const task_builder_output_field_names_status =
-      'task_builder.output_field_names.status';
-  static const task_builder_output_field_names_ok =
-      'task_builder.output_field_names.ok';
-  static const task_builder_output_field_names_headers =
-      'task_builder.output_field_names.headers';
-  static const task_builder_output_field_names_method =
-      'task_builder.output_field_names.method';
-  static const task_builder_output_field_names_query =
-      'task_builder.output_field_names.query';
-  static const task_builder_output_field_names_rowCount =
-      'task_builder.output_field_names.rowCount';
-  static const task_builder_output_field_names_changed =
-      'task_builder.output_field_names.changed';
-  static const task_builder_output_field_names_customerEmail =
-      'task_builder.output_field_names.customerEmail';
-  static const task_builder_output_field_names_deliveryStatus =
-      'task_builder.output_field_names.deliveryStatus';
-  static const task_builder_output_field_names_event =
-      'task_builder.output_field_names.event';
-  static const task_builder_output_field_names_id =
-      'task_builder.output_field_names.id';
-  static const task_builder_output_field_names_newStatus =
-      'task_builder.output_field_names.newStatus';
-  static const task_builder_output_field_names_orderNumber =
-      'task_builder.output_field_names.orderNumber';
-  static const task_builder_output_field_names_paymentStatus =
-      'task_builder.output_field_names.paymentStatus';
-  static const task_builder_output_field_names_previousStatus =
-      'task_builder.output_field_names.previousStatus';
-  static const task_builder_output_field_names_total =
-      'task_builder.output_field_names.total';
-  static const task_builder_output_field_names =
-      'task_builder.output_field_names';
-  static const task_builder_channels_email_read_title =
-      'task_builder.channels.email.read_title';
-  static const task_builder_channels_email_read_description =
-      'task_builder.channels.email.read_description';
-  static const task_builder_channels_email_send_title =
-      'task_builder.channels.email.send_title';
-  static const task_builder_channels_email_send_description =
-      'task_builder.channels.email.send_description';
+  static const task_builder_send_output_names_email = 'task_builder.send_output_names.email';
+  static const task_builder_send_output_names_whatsapp = 'task_builder.send_output_names.whatsapp';
+  static const task_builder_send_output_names_sms = 'task_builder.send_output_names.sms';
+  static const task_builder_send_output_names_telegram = 'task_builder.send_output_names.telegram';
+  static const task_builder_send_output_names_instagram = 'task_builder.send_output_names.instagram';
+  static const task_builder_send_output_names = 'task_builder.send_output_names';
+  static const task_builder_output_field_names_sender = 'task_builder.output_field_names.sender';
+  static const task_builder_output_field_names_subject = 'task_builder.output_field_names.subject';
+  static const task_builder_output_field_names_message = 'task_builder.output_field_names.message';
+  static const task_builder_output_field_names_receivedAt = 'task_builder.output_field_names.receivedAt';
+  static const task_builder_output_field_names_recipient = 'task_builder.output_field_names.recipient';
+  static const task_builder_output_field_names_channelId = 'task_builder.output_field_names.channelId';
+  static const task_builder_output_field_names_providerMessageId = 'task_builder.output_field_names.providerMessageId';
+  static const task_builder_output_field_names_fileId = 'task_builder.output_field_names.fileId';
+  static const task_builder_output_field_names_versionId = 'task_builder.output_field_names.versionId';
+  static const task_builder_output_field_names_displayName = 'task_builder.output_field_names.displayName';
+  static const task_builder_output_field_names_contentType = 'task_builder.output_field_names.contentType';
+  static const task_builder_output_field_names_sizeBytes = 'task_builder.output_field_names.sizeBytes';
+  static const task_builder_output_field_names_folderId = 'task_builder.output_field_names.folderId';
+  static const task_builder_output_field_names_isNewFile = 'task_builder.output_field_names.isNewFile';
+  static const task_builder_output_field_names_modelId = 'task_builder.output_field_names.modelId';
+  static const task_builder_output_field_names_found = 'task_builder.output_field_names.found';
+  static const task_builder_output_field_names_record = 'task_builder.output_field_names.record';
+  static const task_builder_output_field_names_created = 'task_builder.output_field_names.created';
+  static const task_builder_output_field_names_count = 'task_builder.output_field_names.count';
+  static const task_builder_output_field_names_records = 'task_builder.output_field_names.records';
+  static const task_builder_output_field_names_status = 'task_builder.output_field_names.status';
+  static const task_builder_output_field_names_ok = 'task_builder.output_field_names.ok';
+  static const task_builder_output_field_names_headers = 'task_builder.output_field_names.headers';
+  static const task_builder_output_field_names_method = 'task_builder.output_field_names.method';
+  static const task_builder_output_field_names_query = 'task_builder.output_field_names.query';
+  static const task_builder_output_field_names_rowCount = 'task_builder.output_field_names.rowCount';
+  static const task_builder_output_field_names_changed = 'task_builder.output_field_names.changed';
+  static const task_builder_output_field_names_customerEmail = 'task_builder.output_field_names.customerEmail';
+  static const task_builder_output_field_names_deliveryStatus = 'task_builder.output_field_names.deliveryStatus';
+  static const task_builder_output_field_names_event = 'task_builder.output_field_names.event';
+  static const task_builder_output_field_names_id = 'task_builder.output_field_names.id';
+  static const task_builder_output_field_names_newStatus = 'task_builder.output_field_names.newStatus';
+  static const task_builder_output_field_names_orderNumber = 'task_builder.output_field_names.orderNumber';
+  static const task_builder_output_field_names_paymentStatus = 'task_builder.output_field_names.paymentStatus';
+  static const task_builder_output_field_names_previousStatus = 'task_builder.output_field_names.previousStatus';
+  static const task_builder_output_field_names_total = 'task_builder.output_field_names.total';
+  static const task_builder_output_field_names = 'task_builder.output_field_names';
+  static const task_builder_channels_email_read_title = 'task_builder.channels.email.read_title';
+  static const task_builder_channels_email_read_description = 'task_builder.channels.email.read_description';
+  static const task_builder_channels_email_send_title = 'task_builder.channels.email.send_title';
+  static const task_builder_channels_email_send_description = 'task_builder.channels.email.send_description';
   static const task_builder_channels_email = 'task_builder.channels.email';
-  static const task_builder_channels_whatsapp_read_title =
-      'task_builder.channels.whatsapp.read_title';
-  static const task_builder_channels_whatsapp_read_description =
-      'task_builder.channels.whatsapp.read_description';
-  static const task_builder_channels_whatsapp_send_title =
-      'task_builder.channels.whatsapp.send_title';
-  static const task_builder_channels_whatsapp_send_description =
-      'task_builder.channels.whatsapp.send_description';
-  static const task_builder_channels_whatsapp =
-      'task_builder.channels.whatsapp';
-  static const task_builder_channels_sms_read_title =
-      'task_builder.channels.sms.read_title';
-  static const task_builder_channels_sms_read_description =
-      'task_builder.channels.sms.read_description';
-  static const task_builder_channels_sms_send_title =
-      'task_builder.channels.sms.send_title';
-  static const task_builder_channels_sms_send_description =
-      'task_builder.channels.sms.send_description';
+  static const task_builder_channels_whatsapp_read_title = 'task_builder.channels.whatsapp.read_title';
+  static const task_builder_channels_whatsapp_read_description = 'task_builder.channels.whatsapp.read_description';
+  static const task_builder_channels_whatsapp_send_title = 'task_builder.channels.whatsapp.send_title';
+  static const task_builder_channels_whatsapp_send_description = 'task_builder.channels.whatsapp.send_description';
+  static const task_builder_channels_whatsapp = 'task_builder.channels.whatsapp';
+  static const task_builder_channels_sms_read_title = 'task_builder.channels.sms.read_title';
+  static const task_builder_channels_sms_read_description = 'task_builder.channels.sms.read_description';
+  static const task_builder_channels_sms_send_title = 'task_builder.channels.sms.send_title';
+  static const task_builder_channels_sms_send_description = 'task_builder.channels.sms.send_description';
   static const task_builder_channels_sms = 'task_builder.channels.sms';
-  static const task_builder_channels_telegram_read_title =
-      'task_builder.channels.telegram.read_title';
-  static const task_builder_channels_telegram_read_description =
-      'task_builder.channels.telegram.read_description';
-  static const task_builder_channels_telegram_send_title =
-      'task_builder.channels.telegram.send_title';
-  static const task_builder_channels_telegram_send_description =
-      'task_builder.channels.telegram.send_description';
-  static const task_builder_channels_telegram =
-      'task_builder.channels.telegram';
-  static const task_builder_channels_instagram_read_title =
-      'task_builder.channels.instagram.read_title';
-  static const task_builder_channels_instagram_read_description =
-      'task_builder.channels.instagram.read_description';
-  static const task_builder_channels_instagram_send_title =
-      'task_builder.channels.instagram.send_title';
-  static const task_builder_channels_instagram_send_description =
-      'task_builder.channels.instagram.send_description';
-  static const task_builder_channels_instagram =
-      'task_builder.channels.instagram';
+  static const task_builder_channels_telegram_read_title = 'task_builder.channels.telegram.read_title';
+  static const task_builder_channels_telegram_read_description = 'task_builder.channels.telegram.read_description';
+  static const task_builder_channels_telegram_send_title = 'task_builder.channels.telegram.send_title';
+  static const task_builder_channels_telegram_send_description = 'task_builder.channels.telegram.send_description';
+  static const task_builder_channels_telegram = 'task_builder.channels.telegram';
+  static const task_builder_channels_instagram_read_title = 'task_builder.channels.instagram.read_title';
+  static const task_builder_channels_instagram_read_description = 'task_builder.channels.instagram.read_description';
+  static const task_builder_channels_instagram_send_title = 'task_builder.channels.instagram.send_title';
+  static const task_builder_channels_instagram_send_description = 'task_builder.channels.instagram.send_description';
+  static const task_builder_channels_instagram = 'task_builder.channels.instagram';
   static const task_builder_channels = 'task_builder.channels';
   static const task_builder_palette_title = 'task_builder.palette.title';
   static const task_builder_palette_search = 'task_builder.palette.search';
   static const task_builder_palette_empty = 'task_builder.palette.empty';
-  static const task_builder_palette_groups_data =
-      'task_builder.palette.groups.data';
-  static const task_builder_palette_groups_logic =
-      'task_builder.palette.groups.logic';
-  static const task_builder_palette_groups_ai =
-      'task_builder.palette.groups.ai';
-  static const task_builder_palette_groups_interaction =
-      'task_builder.palette.groups.interaction';
-  static const task_builder_palette_groups_external =
-      'task_builder.palette.groups.external';
-  static const task_builder_palette_groups_communication =
-      'task_builder.palette.groups.communication';
+  static const task_builder_palette_groups_data = 'task_builder.palette.groups.data';
+  static const task_builder_palette_groups_logic = 'task_builder.palette.groups.logic';
+  static const task_builder_palette_groups_ai = 'task_builder.palette.groups.ai';
+  static const task_builder_palette_groups_interaction = 'task_builder.palette.groups.interaction';
+  static const task_builder_palette_groups_external = 'task_builder.palette.groups.external';
+  static const task_builder_palette_groups_communication = 'task_builder.palette.groups.communication';
   static const task_builder_palette_groups = 'task_builder.palette.groups';
-  static const task_builder_palette_coming_soon =
-      'task_builder.palette.coming_soon';
+  static const task_builder_palette_coming_soon = 'task_builder.palette.coming_soon';
   static const task_builder_palette = 'task_builder.palette';
-  static const task_builder_header_menu_tooltip =
-      'task_builder.header.menu_tooltip';
+  static const task_builder_header_menu_tooltip = 'task_builder.header.menu_tooltip';
   static const task_builder_header_title = 'task_builder.header.title';
-  static const task_builder_header_task_label =
-      'task_builder.header.task_label';
+  static const task_builder_header_task_label = 'task_builder.header.task_label';
   static const task_builder_header = 'task_builder.header';
-  static const task_builder_body_blocks_button =
-      'task_builder.body.blocks_button';
+  static const task_builder_body_blocks_button = 'task_builder.body.blocks_button';
   static const task_builder_body_pick_left = 'task_builder.body.pick_left';
   static const task_builder_body_cancel_pick = 'task_builder.body.cancel_pick';
   static const task_builder_body = 'task_builder.body';
   static const task_builder_canvas_zoom_out = 'task_builder.canvas.zoom_out';
   static const task_builder_canvas_zoom_in = 'task_builder.canvas.zoom_in';
   static const task_builder_canvas_fit_all = 'task_builder.canvas.fit_all';
-  static const task_builder_canvas_connect_here =
-      'task_builder.canvas.connect_here';
-  static const task_builder_canvas_swap_block =
-      'task_builder.canvas.swap_block';
+  static const task_builder_canvas_connect_here = 'task_builder.canvas.connect_here';
+  static const task_builder_canvas_swap_block = 'task_builder.canvas.swap_block';
   static const task_builder_canvas = 'task_builder.canvas';
   static const task_builder_title_field_hint = 'task_builder.title_field.hint';
   static const task_builder_title_field = 'task_builder.title_field';
   static const task_builder_operators_equals = 'task_builder.operators.equals';
-  static const task_builder_operators_notEquals =
-      'task_builder.operators.notEquals';
-  static const task_builder_operators_greaterThan =
-      'task_builder.operators.greaterThan';
-  static const task_builder_operators_greaterThanOrEqual =
-      'task_builder.operators.greaterThanOrEqual';
-  static const task_builder_operators_lessThan =
-      'task_builder.operators.lessThan';
-  static const task_builder_operators_lessThanOrEqual =
-      'task_builder.operators.lessThanOrEqual';
-  static const task_builder_operators_contains =
-      'task_builder.operators.contains';
-  static const task_builder_operators_notContains =
-      'task_builder.operators.notContains';
-  static const task_builder_operators_startsWith =
-      'task_builder.operators.startsWith';
-  static const task_builder_operators_endsWith =
-      'task_builder.operators.endsWith';
-  static const task_builder_operators_isEmpty =
-      'task_builder.operators.isEmpty';
-  static const task_builder_operators_isNotEmpty =
-      'task_builder.operators.isNotEmpty';
+  static const task_builder_operators_notEquals = 'task_builder.operators.notEquals';
+  static const task_builder_operators_greaterThan = 'task_builder.operators.greaterThan';
+  static const task_builder_operators_greaterThanOrEqual = 'task_builder.operators.greaterThanOrEqual';
+  static const task_builder_operators_lessThan = 'task_builder.operators.lessThan';
+  static const task_builder_operators_lessThanOrEqual = 'task_builder.operators.lessThanOrEqual';
+  static const task_builder_operators_contains = 'task_builder.operators.contains';
+  static const task_builder_operators_notContains = 'task_builder.operators.notContains';
+  static const task_builder_operators_startsWith = 'task_builder.operators.startsWith';
+  static const task_builder_operators_endsWith = 'task_builder.operators.endsWith';
+  static const task_builder_operators_isEmpty = 'task_builder.operators.isEmpty';
+  static const task_builder_operators_isNotEmpty = 'task_builder.operators.isNotEmpty';
   static const task_builder_operators_isTrue = 'task_builder.operators.isTrue';
-  static const task_builder_operators_isFalse =
-      'task_builder.operators.isFalse';
-  static const task_builder_operators_sameDay =
-      'task_builder.operators.sameDay';
+  static const task_builder_operators_isFalse = 'task_builder.operators.isFalse';
+  static const task_builder_operators_sameDay = 'task_builder.operators.sameDay';
   static const task_builder_operators_before = 'task_builder.operators.before';
   static const task_builder_operators_after = 'task_builder.operators.after';
-  static const task_builder_operators_contentTypeIs =
-      'task_builder.operators.contentTypeIs';
+  static const task_builder_operators_contentTypeIs = 'task_builder.operators.contentTypeIs';
   static const task_builder_operators = 'task_builder.operators';
   static const task_builder_combinators_and = 'task_builder.combinators.and';
   static const task_builder_combinators_or = 'task_builder.combinators.or';
   static const task_builder_combinators_xor = 'task_builder.combinators.xor';
   static const task_builder_combinators = 'task_builder.combinators';
-  static const task_builder_generation_options_title =
-      'task_builder.generation_options.title';
-  static const task_builder_generation_options_summary_defaults =
-      'task_builder.generation_options.summary_defaults';
-  static const task_builder_generation_options_summary_custom =
-      'task_builder.generation_options.summary_custom';
-  static const task_builder_generation_options_temperature =
-      'task_builder.generation_options.temperature';
-  static const task_builder_generation_options_temperature_default =
-      'task_builder.generation_options.temperature_default';
-  static const task_builder_generation_options_use_model_default =
-      'task_builder.generation_options.use_model_default';
-  static const task_builder_generation_options_set_temperature =
-      'task_builder.generation_options.set_temperature';
-  static const task_builder_generation_options_max_output_tokens =
-      'task_builder.generation_options.max_output_tokens';
-  static const task_builder_generation_options_context_window =
-      'task_builder.generation_options.context_window';
-  static const task_builder_generation_options_context_window_helper =
-      'task_builder.generation_options.context_window_helper';
-  static const task_builder_generation_options_empty_means_default =
-      'task_builder.generation_options.empty_means_default';
-  static const task_builder_generation_options_thinking =
-      'task_builder.generation_options.thinking';
-  static const task_builder_generation_options_thinking_modes_modelDefault =
-      'task_builder.generation_options.thinking_modes.modelDefault';
-  static const task_builder_generation_options_thinking_modes_off =
-      'task_builder.generation_options.thinking_modes.off';
-  static const task_builder_generation_options_thinking_modes_low =
-      'task_builder.generation_options.thinking_modes.low';
-  static const task_builder_generation_options_thinking_modes_medium =
-      'task_builder.generation_options.thinking_modes.medium';
-  static const task_builder_generation_options_thinking_modes_high =
-      'task_builder.generation_options.thinking_modes.high';
-  static const task_builder_generation_options_thinking_modes =
-      'task_builder.generation_options.thinking_modes';
-  static const task_builder_generation_options =
-      'task_builder.generation_options';
-  static const task_builder_file_operators_isNotEmpty =
-      'task_builder.file_operators.isNotEmpty';
-  static const task_builder_file_operators_isEmpty =
-      'task_builder.file_operators.isEmpty';
+  static const task_builder_generation_options_title = 'task_builder.generation_options.title';
+  static const task_builder_generation_options_summary_defaults = 'task_builder.generation_options.summary_defaults';
+  static const task_builder_generation_options_summary_custom = 'task_builder.generation_options.summary_custom';
+  static const task_builder_generation_options_temperature = 'task_builder.generation_options.temperature';
+  static const task_builder_generation_options_temperature_default = 'task_builder.generation_options.temperature_default';
+  static const task_builder_generation_options_use_model_default = 'task_builder.generation_options.use_model_default';
+  static const task_builder_generation_options_set_temperature = 'task_builder.generation_options.set_temperature';
+  static const task_builder_generation_options_max_output_tokens = 'task_builder.generation_options.max_output_tokens';
+  static const task_builder_generation_options_context_window = 'task_builder.generation_options.context_window';
+  static const task_builder_generation_options_context_window_helper = 'task_builder.generation_options.context_window_helper';
+  static const task_builder_generation_options_empty_means_default = 'task_builder.generation_options.empty_means_default';
+  static const task_builder_generation_options_thinking = 'task_builder.generation_options.thinking';
+  static const task_builder_generation_options_thinking_modes_modelDefault = 'task_builder.generation_options.thinking_modes.modelDefault';
+  static const task_builder_generation_options_thinking_modes_off = 'task_builder.generation_options.thinking_modes.off';
+  static const task_builder_generation_options_thinking_modes_low = 'task_builder.generation_options.thinking_modes.low';
+  static const task_builder_generation_options_thinking_modes_medium = 'task_builder.generation_options.thinking_modes.medium';
+  static const task_builder_generation_options_thinking_modes_high = 'task_builder.generation_options.thinking_modes.high';
+  static const task_builder_generation_options_thinking_modes = 'task_builder.generation_options.thinking_modes';
+  static const task_builder_generation_options = 'task_builder.generation_options';
+  static const task_builder_file_operators_isNotEmpty = 'task_builder.file_operators.isNotEmpty';
+  static const task_builder_file_operators_isEmpty = 'task_builder.file_operators.isEmpty';
   static const task_builder_file_operators = 'task_builder.file_operators';
-  static const task_builder_table_operators_equals =
-      'task_builder.table_operators.equals';
-  static const task_builder_table_operators_notEquals =
-      'task_builder.table_operators.notEquals';
-  static const task_builder_table_operators_greaterThan =
-      'task_builder.table_operators.greaterThan';
-  static const task_builder_table_operators_greaterThanOrEqual =
-      'task_builder.table_operators.greaterThanOrEqual';
-  static const task_builder_table_operators_lessThan =
-      'task_builder.table_operators.lessThan';
-  static const task_builder_table_operators_lessThanOrEqual =
-      'task_builder.table_operators.lessThanOrEqual';
+  static const task_builder_table_operators_equals = 'task_builder.table_operators.equals';
+  static const task_builder_table_operators_notEquals = 'task_builder.table_operators.notEquals';
+  static const task_builder_table_operators_greaterThan = 'task_builder.table_operators.greaterThan';
+  static const task_builder_table_operators_greaterThanOrEqual = 'task_builder.table_operators.greaterThanOrEqual';
+  static const task_builder_table_operators_lessThan = 'task_builder.table_operators.lessThan';
+  static const task_builder_table_operators_lessThanOrEqual = 'task_builder.table_operators.lessThanOrEqual';
   static const task_builder_table_operators = 'task_builder.table_operators';
-  static const task_builder_condition_value_hints_date =
-      'task_builder.condition_value_hints.date';
-  static const task_builder_condition_value_hints_content_type =
-      'task_builder.condition_value_hints.content_type';
-  static const task_builder_condition_value_hints_row_count =
-      'task_builder.condition_value_hints.row_count';
-  static const task_builder_condition_value_hints =
-      'task_builder.condition_value_hints';
-  static const task_builder_condition_value_kinds_source =
-      'task_builder.condition_value_kinds.source';
-  static const task_builder_condition_value_kinds_fixed =
-      'task_builder.condition_value_kinds.fixed';
-  static const task_builder_condition_value_kinds_true =
-      'task_builder.condition_value_kinds.true';
-  static const task_builder_condition_value_kinds_false =
-      'task_builder.condition_value_kinds.false';
-  static const task_builder_condition_value_kinds =
-      'task_builder.condition_value_kinds';
+  static const task_builder_condition_value_hints_date = 'task_builder.condition_value_hints.date';
+  static const task_builder_condition_value_hints_content_type = 'task_builder.condition_value_hints.content_type';
+  static const task_builder_condition_value_hints_row_count = 'task_builder.condition_value_hints.row_count';
+  static const task_builder_condition_value_hints = 'task_builder.condition_value_hints';
+  static const task_builder_condition_value_kinds_source = 'task_builder.condition_value_kinds.source';
+  static const task_builder_condition_value_kinds_fixed = 'task_builder.condition_value_kinds.fixed';
+  static const task_builder_condition_value_kinds_true = 'task_builder.condition_value_kinds.true';
+  static const task_builder_condition_value_kinds_false = 'task_builder.condition_value_kinds.false';
+  static const task_builder_condition_value_kinds = 'task_builder.condition_value_kinds';
   static const task_builder = 'task_builder';
   static const settings_language_title = 'settings.language.title';
   static const settings_language_description = 'settings.language.description';
@@ -517,8 +288,7 @@ abstract class LocaleKeys {
   static const settings_tabs_language_models = 'settings.tabs.language_models';
   static const settings_tabs_communication = 'settings.tabs.communication';
   static const settings_tabs_connections = 'settings.tabs.connections';
-  static const settings_tabs_machine_learning =
-      'settings.tabs.machine_learning';
+  static const settings_tabs_machine_learning = 'settings.tabs.machine_learning';
   static const settings_tabs_import_export = 'settings.tabs.import_export';
   static const settings_tabs_users = 'settings.tabs.users';
   static const settings_tabs_plugins = 'settings.tabs.plugins';
@@ -528,8 +298,7 @@ abstract class LocaleKeys {
   static const ui_abbrechen = 'ui.abbrechen';
   static const ui_add_header = 'ui.add_header';
   static const ui_add_parameter = 'ui.add_parameter';
-  static const ui_aenderungen_werden_automatisch_gespeichert =
-      'ui.aenderungen_werden_automatisch_gespeichert';
+  static const ui_aenderungen_werden_automatisch_gespeichert = 'ui.aenderungen_werden_automatisch_gespeichert';
   static const ui_after_condition = 'ui.after_condition';
   static const ui_after_loop = 'ui.after_loop';
   static const ui_agent_failed_details = 'ui.agent_failed_details';
@@ -542,21 +311,16 @@ abstract class LocaleKeys {
   static const ui_any_condition_matches = 'ui.any_condition_matches';
   static const ui_art_des_werts_waehlen = 'ui.art_des_werts_waehlen';
   static const ui_ask_about_context = 'ui.ask_about_context';
-  static const ui_audio_transkribieren_hinzufuegen =
-      'ui.audio_transkribieren_hinzufuegen';
+  static const ui_audio_transkribieren_hinzufuegen = 'ui.audio_transkribieren_hinzufuegen';
   static const ui_audioaufnahme = 'ui.audioaufnahme';
   static const ui_audiodatei = 'ui.audiodatei';
   static const ui_aufgabe = 'ui.aufgabe';
-  static const ui_aufgabe_konnte_nicht_geaendert_werden =
-      'ui.aufgabe_konnte_nicht_geaendert_werden';
-  static const ui_aufgabe_konnte_nicht_geladen_werden =
-      'ui.aufgabe_konnte_nicht_geladen_werden';
-  static const ui_aufgabe_konnte_nicht_gespeichert_werden =
-      'ui.aufgabe_konnte_nicht_gespeichert_werden';
+  static const ui_aufgabe_konnte_nicht_geaendert_werden = 'ui.aufgabe_konnte_nicht_geaendert_werden';
+  static const ui_aufgabe_konnte_nicht_geladen_werden = 'ui.aufgabe_konnte_nicht_geladen_werden';
+  static const ui_aufgabe_konnte_nicht_gespeichert_werden = 'ui.aufgabe_konnte_nicht_gespeichert_werden';
   static const ui_aufgabe_loeschen = 'ui.aufgabe_loeschen';
   static const ui_aufgabe_umbenennen = 'ui.aufgabe_umbenennen';
-  static const ui_aufgaben_konnten_nicht_geladen_werden =
-      'ui.aufgaben_konnten_nicht_geladen_werden';
+  static const ui_aufgaben_konnten_nicht_geladen_werden = 'ui.aufgaben_konnten_nicht_geladen_werden';
   static const ui_aufgabenmenue_oeffnen = 'ui.aufgabenmenue_oeffnen';
   static const ui_aus_vorlage = 'ui.aus_vorlage';
   static const ui_ausfuehren = 'ui.ausfuehren';
@@ -564,8 +328,7 @@ abstract class LocaleKeys {
   static const ui_ausgabedatei = 'ui.ausgabedatei';
   static const ui_ausgabedatei_waehlen = 'ui.ausgabedatei_waehlen';
   static const ui_ausgabeformat = 'ui.ausgabeformat';
-  static const ui_ausgaben_inhalt_methode_query_kopfzeilen_zeitpun =
-      'ui.ausgaben_inhalt_methode_query_kopfzeilen_zeitpun';
+  static const ui_ausgaben_inhalt_methode_query_kopfzeilen_zeitpun = 'ui.ausgaben_inhalt_methode_query_kopfzeilen_zeitpun';
   static const ui_ausgabename = 'ui.ausgabename';
   static const ui_baustein_loeschen = 'ui.baustein_loeschen';
   static const ui_baustein_tauschen = 'ui.baustein_tauschen';
@@ -574,53 +337,42 @@ abstract class LocaleKeys {
   static const ui_bedingung_entfernen = 'ui.bedingung_entfernen';
   static const ui_bedingung_hinzufuegen = 'ui.bedingung_hinzufuegen';
   static const ui_bei_fehlerstatus_abbrechen = 'ui.bei_fehlerstatus_abbrechen';
-  static const ui_benachrichtigung_von_novooa =
-      'ui.benachrichtigung_von_novooa';
+  static const ui_benachrichtigung_von_novooa = 'ui.benachrichtigung_von_novooa';
   static const ui_benachrichtigungen = 'ui.benachrichtigungen';
   static const ui_bereich = 'ui.bereich';
   static const ui_beschreibung = 'ui.beschreibung';
   static const ui_bestehend = 'ui.bestehend';
   static const ui_betreff = 'ui.betreff';
   static const ui_bild = 'ui.bild';
-  static const ui_decision_answers_without_branch =
-      'ui.decision_answers_without_branch';
+  static const ui_decision_answers_without_branch = 'ui.decision_answers_without_branch';
   static const ui_add_missing_branches = 'ui.add_missing_branches';
   static const ui_cached_and_ready = 'ui.cached_and_ready';
   static const ui_catalog_unreachable = 'ui.catalog_unreachable';
   static const ui_condition_number = 'ui.condition_number';
-  static const ui_connect_block_with_output_first =
-      'ui.connect_block_with_output_first';
+  static const ui_connect_block_with_output_first = 'ui.connect_block_with_output_first';
   static const ui_constraint_no_skills = 'ui.constraint_no_skills';
   static const ui_constraint_one_skill = 'ui.constraint_one_skill';
   static const ui_constraint_skill_count = 'ui.constraint_skill_count';
   static const ui_date_and_time = 'ui.date_and_time';
   static const ui_datei_anhaengen = 'ui.datei_anhaengen';
-  static const ui_datei_auswaehlen_oder_neu_anlegen =
-      'ui.datei_auswaehlen_oder_neu_anlegen';
+  static const ui_datei_auswaehlen_oder_neu_anlegen = 'ui.datei_auswaehlen_oder_neu_anlegen';
   static const ui_datei_entfernen = 'ui.datei_entfernen';
   static const ui_datei_lesen = 'ui.datei_lesen';
   static const ui_datei_lesen_hinzufuegen = 'ui.datei_lesen_hinzufuegen';
   static const ui_datei_schreiben = 'ui.datei_schreiben';
-  static const ui_datei_schreiben_hinzufuegen =
-      'ui.datei_schreiben_hinzufuegen';
+  static const ui_datei_schreiben_hinzufuegen = 'ui.datei_schreiben_hinzufuegen';
   static const ui_dateien = 'ui.dateien';
   static const ui_dateiname = 'ui.dateiname';
   static const ui_datensatz_speichern = 'ui.datensatz_speichern';
-  static const ui_datensatz_speichern_hinzufuegen =
-      'ui.datensatz_speichern_hinzufuegen';
+  static const ui_datensatz_speichern_hinzufuegen = 'ui.datensatz_speichern_hinzufuegen';
   static const ui_datensatz_suchen = 'ui.datensatz_suchen';
-  static const ui_datensatz_suchen_hinzufuegen =
-      'ui.datensatz_suchen_hinzufuegen';
+  static const ui_datensatz_suchen_hinzufuegen = 'ui.datensatz_suchen_hinzufuegen';
   static const ui_datentyp = 'ui.datentyp';
   static const ui_delete_task_body = 'ui.delete_task_body';
-  static const ui_der_pfad_waehlt_innerhalb_der_angegebenen_liste =
-      'ui.der_pfad_waehlt_innerhalb_der_angegebenen_liste';
-  static const ui_der_sonst_pfad_und_alle_darin_enthaltenen_bauste =
-      'ui.der_sonst_pfad_und_alle_darin_enthaltenen_bauste';
-  static const ui_diese_gruppe_trifft_zu_wenn =
-      'ui.diese_gruppe_trifft_zu_wenn';
-  static const ui_dieser_baustein_ist_nicht_verfuegbar =
-      'ui.dieser_baustein_ist_nicht_verfuegbar';
+  static const ui_der_pfad_waehlt_innerhalb_der_angegebenen_liste = 'ui.der_pfad_waehlt_innerhalb_der_angegebenen_liste';
+  static const ui_der_sonst_pfad_und_alle_darin_enthaltenen_bauste = 'ui.der_sonst_pfad_und_alle_darin_enthaltenen_bauste';
+  static const ui_diese_gruppe_trifft_zu_wenn = 'ui.diese_gruppe_trifft_zu_wenn';
+  static const ui_dieser_baustein_ist_nicht_verfuegbar = 'ui.dieser_baustein_ist_nicht_verfuegbar';
   static const ui_directory_colon = 'ui.directory_colon';
   static const ui_directory_named = 'ui.directory_named';
   static const ui_duplizieren = 'ui.duplizieren';
@@ -632,15 +384,12 @@ abstract class LocaleKeys {
   static const ui_employees_load_failed = 'ui.employees_load_failed';
   static const ui_entfernen = 'ui.entfernen';
   static const ui_entscheidung = 'ui.entscheidung';
-  static const ui_entweder_ein_mitarbeiter_oder_eigene_faehigkeite =
-      'ui.entweder_ein_mitarbeiter_oder_eigene_faehigkeite';
+  static const ui_entweder_ein_mitarbeiter_oder_eigene_faehigkeite = 'ui.entweder_ein_mitarbeiter_oder_eigene_faehigkeite';
   static const ui_entwurf = 'ui.entwurf';
-  static const ui_ergebnis_fuer_naechste_bausteine =
-      'ui.ergebnis_fuer_naechste_bausteine';
+  static const ui_ergebnis_fuer_naechste_bausteine = 'ui.ergebnis_fuer_naechste_bausteine';
   static const ui_erneut_versuchen = 'ui.erneut_versuchen';
   static const ui_erste_aufgabe_erstellen = 'ui.erste_aufgabe_erstellen';
-  static const ui_exactly_one_condition_matches =
-      'ui.exactly_one_condition_matches';
+  static const ui_exactly_one_condition_matches = 'ui.exactly_one_condition_matches';
   static const ui_existing_file = 'ui.existing_file';
   static const ui_expression_copied = 'ui.expression_copied';
   static const ui_faehigkeit_anhaengen = 'ui.faehigkeit_anhaengen';
@@ -660,24 +409,18 @@ abstract class LocaleKeys {
   static const ui_folders_load_failed = 'ui.folders_load_failed';
   static const ui_for_each_hint = 'ui.for_each_hint';
   static const ui_formulareingabe = 'ui.formulareingabe';
-  static const ui_formulareingabe_hinzufuegen =
-      'ui.formulareingabe_hinzufuegen';
-  static const ui_frage_zum_aktuellen_bereich_stellen =
-      'ui.frage_zum_aktuellen_bereich_stellen';
+  static const ui_formulareingabe_hinzufuegen = 'ui.formulareingabe_hinzufuegen';
+  static const ui_frage_zum_aktuellen_bereich_stellen = 'ui.frage_zum_aktuellen_bereich_stellen';
   static const ui_freigabe = 'ui.freigabe';
   static const ui_freigabe_hinzufuegen = 'ui.freigabe_hinzufuegen';
   static const ui_freitext = 'ui.freitext';
   static const ui_fuer_jedes_element = 'ui.fuer_jedes_element';
-  static const ui_fuer_jedes_element_hinzufuegen =
-      'ui.fuer_jedes_element_hinzufuegen';
-  static const ui_fuer_jedes_gefundene_element =
-      'ui.fuer_jedes_gefundene_element';
+  static const ui_fuer_jedes_element_hinzufuegen = 'ui.fuer_jedes_element_hinzufuegen';
+  static const ui_fuer_jedes_gefundene_element = 'ui.fuer_jedes_gefundene_element';
   static const ui_gemini_quota_exceeded = 'ui.gemini_quota_exceeded';
-  static const ui_gespeicherter_ausdruck_nicht_in_der_auswahl =
-      'ui.gespeicherter_ausdruck_nicht_in_der_auswahl';
+  static const ui_gespeicherter_ausdruck_nicht_in_der_auswahl = 'ui.gespeicherter_ausdruck_nicht_in_der_auswahl';
   static const ui_gruppe_entfernen = 'ui.gruppe_entfernen';
-  static const ui_halte_fest_worauf_diese_aufgabe_hinarbeiten_soll =
-      'ui.halte_fest_worauf_diese_aufgabe_hinarbeiten_soll';
+  static const ui_halte_fest_worauf_diese_aufgabe_hinarbeiten_soll = 'ui.halte_fest_worauf_diese_aufgabe_hinarbeiten_soll';
   static const ui_hier_kommt_die_anweisung = 'ui.hier_kommt_die_anweisung';
   static const ui_hint_output_name = 'ui.hint_output_name';
   static const ui_hinweis_fuer_die_eingabe = 'ui.hinweis_fuer_die_eingabe';
@@ -690,27 +433,21 @@ abstract class LocaleKeys {
   static const ui_inhalt = 'ui.inhalt';
   static const ui_iterative_verfeinerung = 'ui.iterative_verfeinerung';
   static const ui_kein_body = 'ui.kein_body';
-  static const ui_kein_mitarbeiter_zugewiesen =
-      'ui.kein_mitarbeiter_zugewiesen';
+  static const ui_kein_mitarbeiter_zugewiesen = 'ui.kein_mitarbeiter_zugewiesen';
   static const ui_kein_modell_gefunden = 'ui.kein_modell_gefunden';
   static const ui_keine_datei_angehaengt = 'ui.keine_datei_angehaengt';
-  static const ui_keine_faehigkeit_angehaengt =
-      'ui.keine_faehigkeit_angehaengt';
+  static const ui_keine_faehigkeit_angehaengt = 'ui.keine_faehigkeit_angehaengt';
   static const ui_keine_notiz_angehaengt = 'ui.keine_notiz_angehaengt';
-  static const ui_keine_passenden_werte_verfuegbar =
-      'ui.keine_passenden_werte_verfuegbar';
+  static const ui_keine_passenden_werte_verfuegbar = 'ui.keine_passenden_werte_verfuegbar';
   static const ui_keine_sammlungen_vorhanden = 'ui.keine_sammlungen_vorhanden';
   static const ui_ki_agent = 'ui.ki_agent';
   static const ui_noovi_thinking = 'ui.noovi_thinking';
-  static const ui_ki_agent_bedient_die_oberflaeche =
-      'ui.ki_agent_bedient_die_oberflaeche';
+  static const ui_ki_agent_bedient_die_oberflaeche = 'ui.ki_agent_bedient_die_oberflaeche';
   static const ui_konfiguration_schliessen = 'ui.konfiguration_schliessen';
   static const ui_kritik = 'ui.kritik';
   static const ui_label_template = 'ui.label_template';
-  static const ui_language_models_load_failed =
-      'ui.language_models_load_failed';
-  static const ui_leer_fuer_die_gesamte_liste_z_b_regions =
-      'ui.leer_fuer_die_gesamte_liste_z_b_regions';
+  static const ui_language_models_load_failed = 'ui.language_models_load_failed';
+  static const ui_leer_fuer_die_gesamte_liste_z_b_regions = 'ui.leer_fuer_die_gesamte_liste_z_b_regions';
   static const ui_liste = 'ui.liste';
   static const ui_loeschen = 'ui.loeschen';
   static const ui_matching_records_updated = 'ui.matching_records_updated';
@@ -720,22 +457,18 @@ abstract class LocaleKeys {
   static const ui_mitarbeiter_entfernen = 'ui.mitarbeiter_entfernen';
   static const ui_mitarbeiter_zuweisen = 'ui.mitarbeiter_zuweisen';
   static const ui_modell = 'ui.modell';
-  static const ui_modell_aus_dem_katalog_auswaehlen =
-      'ui.modell_aus_dem_katalog_auswaehlen';
+  static const ui_modell_aus_dem_katalog_auswaehlen = 'ui.modell_aus_dem_katalog_auswaehlen';
   static const ui_modell_auswaehlen = 'ui.modell_auswaehlen';
   static const ui_modell_id = 'ui.modell_id';
-  static const ui_modell_inferenz_hinzufuegen =
-      'ui.modell_inferenz_hinzufuegen';
+  static const ui_modell_inferenz_hinzufuegen = 'ui.modell_inferenz_hinzufuegen';
   static const ui_modellausgabe = 'ui.modellausgabe';
   static const ui_modelleingaben = 'ui.modelleingaben';
   static const ui_modelleinstellungen = 'ui.modelleinstellungen';
   static const ui_moegliche_antworten = 'ui.moegliche_antworten';
-  static const ui_nach_name_beschreibung_oder_schlagwort_suchen =
-      'ui.nach_name_beschreibung_oder_schlagwort_suchen';
+  static const ui_nach_name_beschreibung_oder_schlagwort_suchen = 'ui.nach_name_beschreibung_oder_schlagwort_suchen';
   static const ui_nachricht = 'ui.nachricht';
   static const ui_nachricht_senden = 'ui.nachricht_senden';
-  static const ui_nachricht_senden_hinzufuegen =
-      'ui.nachricht_senden_hinzufuegen';
+  static const ui_nachricht_senden_hinzufuegen = 'ui.nachricht_senden_hinzufuegen';
   static const ui_name = 'ui.name';
   static const ui_name_des_ordners = 'ui.name_des_ordners';
   static const ui_neu = 'ui.neu';
@@ -747,8 +480,7 @@ abstract class LocaleKeys {
   static const ui_no_connection_no_auth = 'ui.no_connection_no_auth';
   static const ui_no_employees_yet = 'ui.no_employees_yet';
   static const ui_no_files_uploaded_yet = 'ui.no_files_uploaded_yet';
-  static const ui_no_knowledge_notes_imported =
-      'ui.no_knowledge_notes_imported';
+  static const ui_no_knowledge_notes_imported = 'ui.no_knowledge_notes_imported';
   static const ui_no_match_for_filters = 'ui.no_match_for_filters';
   static const ui_no_model_for_block = 'ui.no_model_for_block';
   static const ui_no_notes_in_knowledge_base = 'ui.no_notes_in_knowledge_base';
@@ -776,16 +508,14 @@ abstract class LocaleKeys {
   static const ui_previous_value = 'ui.previous_value';
   static const ui_prompt = 'ui.prompt';
   static const ui_prompt_hinzufuegen = 'ui.prompt_hinzufuegen';
-  static const ui_pruefe_werte_aus_vorherigen_bausteinen_der_erste =
-      'ui.pruefe_werte_aus_vorherigen_bausteinen_der_erste';
+  static const ui_pruefe_werte_aus_vorherigen_bausteinen_der_erste = 'ui.pruefe_werte_aus_vorherigen_bausteinen_der_erste';
   static const ui_push_benachrichtigung = 'ui.push_benachrichtigung';
   static const ui_py_expected_indent = 'ui.py_expected_indent';
   static const ui_py_indent_mismatch = 'ui.py_indent_mismatch';
   static const ui_py_missing_colon = 'ui.py_missing_colon';
   static const ui_py_mixed_tabs = 'ui.py_mixed_tabs';
   static const ui_py_unexpected_indent = 'ui.py_unexpected_indent';
-  static const ui_quelle_konnte_nicht_geoeffnet_werden =
-      'ui.quelle_konnte_nicht_geoeffnet_werden';
+  static const ui_quelle_konnte_nicht_geoeffnet_werden = 'ui.quelle_konnte_nicht_geoeffnet_werden';
   static const ui_quellen = 'ui.quellen';
   static const ui_query_parameter = 'ui.query_parameter';
   static const ui_recipient = 'ui.recipient';
@@ -825,8 +555,7 @@ abstract class LocaleKeys {
   static const ui_hide_from_canvas = 'ui.hide_from_canvas';
   static const ui_task_name = 'ui.task_name';
   static const ui_team_load_failed = 'ui.team_load_failed';
-  static const ui_template_ausdruck_verwenden =
-      'ui.template_ausdruck_verwenden';
+  static const ui_template_ausdruck_verwenden = 'ui.template_ausdruck_verwenden';
   static const ui_text = 'ui.text';
   static const ui_text_bauen = 'ui.text_bauen';
   static const ui_text_eingeben = 'ui.text_eingeben';
@@ -838,8 +567,7 @@ abstract class LocaleKeys {
   static const ui_typ = 'ui.typ';
   static const ui_uebernehmen = 'ui.uebernehmen';
   static const ui_umbenennen = 'ui.umbenennen';
-  static const ui_verfeinert_den_angegebenen_entwurf =
-      'ui.verfeinert_den_angegebenen_entwurf';
+  static const ui_verfeinert_den_angegebenen_entwurf = 'ui.verfeinert_den_angegebenen_entwurf';
   static const ui_verfeinerung_hinzufuegen = 'ui.verfeinerung_hinzufuegen';
   static const ui_vergleich = 'ui.vergleich';
   static const ui_vergleichswert = 'ui.vergleichswert';
@@ -849,22 +577,19 @@ abstract class LocaleKeys {
   static const ui_verzweigung_hinzufuegen = 'ui.verzweigung_hinzufuegen';
   static const ui_vollbild_bearbeiten = 'ui.vollbild_bearbeiten';
   static const ui_vorschlag_anwenden = 'ui.vorschlag_anwenden';
-  static const ui_waehle_einen_anderen_mitarbeiter =
-      'ui.waehle_einen_anderen_mitarbeiter';
+  static const ui_waehle_einen_anderen_mitarbeiter = 'ui.waehle_einen_anderen_mitarbeiter';
   static const ui_was_soll_geprueft_werden = 'ui.was_soll_geprueft_werden';
   static const ui_webhook_ereignis_lesen = 'ui.webhook_ereignis_lesen';
   static const ui_webhook_hint = 'ui.webhook_hint';
   static const ui_weitere_bedingung = 'ui.weitere_bedingung';
-  static const ui_weitere_bedingung_verknuepfen =
-      'ui.weitere_bedingung_verknuepfen';
+  static const ui_weitere_bedingung_verknuepfen = 'ui.weitere_bedingung_verknuepfen';
   static const ui_wert = 'ui.wert';
   static const ui_wert_aus_einem_baustein = 'ui.wert_aus_einem_baustein';
   static const ui_wert_eingeben = 'ui.wert_eingeben';
   static const ui_wert_pruefen = 'ui.wert_pruefen';
   static const ui_whatsapp_lesen_hinzufuegen = 'ui.whatsapp_lesen_hinzufuegen';
   static const ui_whatsapp_senden = 'ui.whatsapp_senden';
-  static const ui_wird_ausgefuehrt_wenn_keine_bedingung_zutrifft =
-      'ui.wird_ausgefuehrt_wenn_keine_bedingung_zutrifft';
+  static const ui_wird_ausgefuehrt_wenn_keine_bedingung_zutrifft = 'ui.wird_ausgefuehrt_wenn_keine_bedingung_zutrifft';
   static const ui_wissensbasis = 'ui.wissensbasis';
   static const ui_wo = 'ui.wo';
   static const ui_workflow_mapping = 'ui.workflow_mapping';
@@ -875,17 +600,14 @@ abstract class LocaleKeys {
   static const ui_schedule_empty_title = 'ui.schedule_empty_title';
   static const ui_schedule_empty_body = 'ui.schedule_empty_body';
   static const ui_schedule_empty_create = 'ui.schedule_empty_create';
-  static const ui_schedule_empty_no_task_title =
-      'ui.schedule_empty_no_task_title';
-  static const ui_schedule_empty_no_task_body =
-      'ui.schedule_empty_no_task_body';
+  static const ui_schedule_empty_no_task_title = 'ui.schedule_empty_no_task_title';
+  static const ui_schedule_empty_no_task_body = 'ui.schedule_empty_no_task_body';
   static const ui_schedule_empty_create_task = 'ui.schedule_empty_create_task';
   static const ui_files_initial_title = 'ui.files_initial_title';
   static const ui_files_initial_body = 'ui.files_initial_body';
   static const ui_files_initial_upload = 'ui.files_initial_upload';
   static const ui_files_initial_folder = 'ui.files_initial_folder';
-  static const ui_anmeldung_fehlgeschlagen_mit_grund =
-      'ui.anmeldung_fehlgeschlagen_mit_grund';
+  static const ui_anmeldung_fehlgeschlagen_mit_grund = 'ui.anmeldung_fehlgeschlagen_mit_grund';
   static const ui_workflow_wert_suchen = 'ui.workflow_wert_suchen';
   static const ui_script_packages_title = 'ui.script_packages_title';
   static const ui_script_packages_empty = 'ui.script_packages_empty';
@@ -897,38 +619,28 @@ abstract class LocaleKeys {
   static const ui_script_packages_detected = 'ui.script_packages_detected';
   static const ui_script_packages_adopt_all = 'ui.script_packages_adopt_all';
   static const ui_script_packages_reuse = 'ui.script_packages_reuse';
-  static const ui_script_packages_not_installed =
-      'ui.script_packages_not_installed';
+  static const ui_script_packages_not_installed = 'ui.script_packages_not_installed';
   static const ui_script_packages_install = 'ui.script_packages_install';
   static const ui_script_packages_installing = 'ui.script_packages_installing';
   static const ui_script_packages_ready = 'ui.script_packages_ready';
   static const ui_script_packages_retry = 'ui.script_packages_retry';
-  static const ui_script_packages_failed_notFound =
-      'ui.script_packages_failed_notFound';
-  static const ui_script_packages_failed_noWheel =
-      'ui.script_packages_failed_noWheel';
-  static const ui_script_packages_failed_tooLarge =
-      'ui.script_packages_failed_tooLarge';
-  static const ui_script_packages_failed_notLoadable =
-      'ui.script_packages_failed_notLoadable';
-  static const ui_script_packages_failed_failed =
-      'ui.script_packages_failed_failed';
-  static const ui_script_packages_status_unavailable =
-      'ui.script_packages_status_unavailable';
+  static const ui_script_packages_failed_notFound = 'ui.script_packages_failed_notFound';
+  static const ui_script_packages_failed_noWheel = 'ui.script_packages_failed_noWheel';
+  static const ui_script_packages_failed_tooLarge = 'ui.script_packages_failed_tooLarge';
+  static const ui_script_packages_failed_notLoadable = 'ui.script_packages_failed_notLoadable';
+  static const ui_script_packages_failed_failed = 'ui.script_packages_failed_failed';
+  static const ui_script_packages_status_unavailable = 'ui.script_packages_status_unavailable';
   static const ui_teamwork_instruction = 'ui.teamwork_instruction';
   static const ui_teamwork_instruction_hint = 'ui.teamwork_instruction_hint';
-  static const ui_teamwork_orchestrator_model =
-      'ui.teamwork_orchestrator_model';
+  static const ui_teamwork_orchestrator_model = 'ui.teamwork_orchestrator_model';
   static const ui_teamwork_tool_calls_hint = 'ui.teamwork_tool_calls_hint';
   static const ui_teamwork_team = 'ui.teamwork_team';
   static const ui_teamwork_add_member = 'ui.teamwork_add_member';
   static const ui_teamwork_no_members = 'ui.teamwork_no_members';
   static const ui_teamwork_team_full = 'ui.teamwork_team_full';
   static const ui_teamwork_responsibility = 'ui.teamwork_responsibility';
-  static const ui_teamwork_responsibility_hint =
-      'ui.teamwork_responsibility_hint';
-  static const ui_teamwork_responsibility_required =
-      'ui.teamwork_responsibility_required';
+  static const ui_teamwork_responsibility_hint = 'ui.teamwork_responsibility_hint';
+  static const ui_teamwork_responsibility_required = 'ui.teamwork_responsibility_required';
   static const ui_teamwork_member_model = 'ui.teamwork_member_model';
   static const ui_teamwork_remove_member = 'ui.teamwork_remove_member';
   static const ui_teamwork_result = 'ui.teamwork_result';
@@ -939,36 +651,21 @@ abstract class LocaleKeys {
   static const ui_teamwork_review_model = 'ui.teamwork_review_model';
   static const ui_teamwork_review_model_hint = 'ui.teamwork_review_model_hint';
   static const ui_teamwork_conversation_show = 'ui.teamwork_conversation_show';
-  static const ui_teamwork_conversation_title =
-      'ui.teamwork_conversation_title';
-  static const ui_teamwork_conversation_empty =
-      'ui.teamwork_conversation_empty';
-  static const ui_teamwork_conversation_orchestrator =
-      'ui.teamwork_conversation_orchestrator';
-  static const ui_teamwork_conversation_review =
-      'ui.teamwork_conversation_review';
-  static const ui_teamwork_conversation_from_to =
-      'ui.teamwork_conversation_from_to';
-  static const ui_teamwork_conversation_kind_task =
-      'ui.teamwork_conversation_kind_task';
-  static const ui_teamwork_conversation_kind_answer =
-      'ui.teamwork_conversation_kind_answer';
-  static const ui_teamwork_conversation_kind_failure =
-      'ui.teamwork_conversation_kind_failure';
-  static const ui_teamwork_conversation_kind_review_passed =
-      'ui.teamwork_conversation_kind_review_passed';
-  static const ui_teamwork_conversation_kind_review_rejected =
-      'ui.teamwork_conversation_kind_review_rejected';
-  static const ui_teamwork_conversation_kind_result =
-      'ui.teamwork_conversation_kind_result';
-  static const ui_teamwork_conversation_expected_result =
-      'ui.teamwork_conversation_expected_result';
-  static const ui_teamwork_conversation_boundaries =
-      'ui.teamwork_conversation_boundaries';
-  static const ui_teamwork_conversation_duration =
-      'ui.teamwork_conversation_duration';
-  static const ui_teamwork_conversation_no_findings =
-      'ui.teamwork_conversation_no_findings';
+  static const ui_teamwork_conversation_title = 'ui.teamwork_conversation_title';
+  static const ui_teamwork_conversation_empty = 'ui.teamwork_conversation_empty';
+  static const ui_teamwork_conversation_orchestrator = 'ui.teamwork_conversation_orchestrator';
+  static const ui_teamwork_conversation_review = 'ui.teamwork_conversation_review';
+  static const ui_teamwork_conversation_from_to = 'ui.teamwork_conversation_from_to';
+  static const ui_teamwork_conversation_kind_task = 'ui.teamwork_conversation_kind_task';
+  static const ui_teamwork_conversation_kind_answer = 'ui.teamwork_conversation_kind_answer';
+  static const ui_teamwork_conversation_kind_failure = 'ui.teamwork_conversation_kind_failure';
+  static const ui_teamwork_conversation_kind_review_passed = 'ui.teamwork_conversation_kind_review_passed';
+  static const ui_teamwork_conversation_kind_review_rejected = 'ui.teamwork_conversation_kind_review_rejected';
+  static const ui_teamwork_conversation_kind_result = 'ui.teamwork_conversation_kind_result';
+  static const ui_teamwork_conversation_expected_result = 'ui.teamwork_conversation_expected_result';
+  static const ui_teamwork_conversation_boundaries = 'ui.teamwork_conversation_boundaries';
+  static const ui_teamwork_conversation_duration = 'ui.teamwork_conversation_duration';
+  static const ui_teamwork_conversation_no_findings = 'ui.teamwork_conversation_no_findings';
   static const ui_field_type_string = 'ui.field_type_string';
   static const ui_field_type_number = 'ui.field_type_number';
   static const ui_field_type_boolean = 'ui.field_type_boolean';
@@ -980,251 +677,144 @@ abstract class LocaleKeys {
   static const ui_file_format_csv = 'ui.file_format_csv';
   static const ui_file_format_json = 'ui.file_format_json';
   static const ui_file_format_text = 'ui.file_format_text';
-  static const ui_authorization_page_open_failed =
-      'ui.authorization_page_open_failed';
+  static const ui_authorization_page_open_failed = 'ui.authorization_page_open_failed';
   static const ui = 'ui';
-  static const machine_learning_model_import_select_files_hint =
-      'machine_learning.model_import.select_files_hint';
-  static const machine_learning_model_import_exactly_one_model =
-      'machine_learning.model_import.exactly_one_model';
-  static const machine_learning_model_import_unreadable_file =
-      'machine_learning.model_import.unreadable_file';
+  static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
+  static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';
+  static const machine_learning_model_import_unreadable_file = 'machine_learning.model_import.unreadable_file';
   static const machine_learning_model_import = 'machine_learning.model_import';
   static const machine_learning = 'machine_learning';
   static const activity_failures_error = 'activity_failures.error';
-  static const activity_failures_technical_details =
-      'activity_failures.technical_details';
-  static const activity_failures_codes_outputSchemaViolated =
-      'activity_failures.codes.outputSchemaViolated';
-  static const activity_failures_codes_responseTruncated =
-      'activity_failures.codes.responseTruncated';
-  static const activity_failures_codes_emptyResponse =
-      'activity_failures.codes.emptyResponse';
-  static const activity_failures_codes_providerUnavailable =
-      'activity_failures.codes.providerUnavailable';
-  static const activity_failures_codes_requestRejected =
-      'activity_failures.codes.requestRejected';
-  static const activity_failures_codes_timedOut =
-      'activity_failures.codes.timedOut';
-  static const activity_failures_codes_capabilityMissing =
-      'activity_failures.codes.capabilityMissing';
-  static const activity_failures_codes_conditionOperandMismatch =
-      'activity_failures.codes.conditionOperandMismatch';
-  static const activity_failures_codes_configurationMissing =
-      'activity_failures.codes.configurationMissing';
-  static const activity_failures_codes_settingMissing =
-      'activity_failures.codes.settingMissing';
-  static const activity_failures_codes_settingInvalid =
-      'activity_failures.codes.settingInvalid';
-  static const activity_failures_codes_valueTypeMismatch =
-      'activity_failures.codes.valueTypeMismatch';
-  static const activity_failures_codes_tensorShapeMismatch =
-      'activity_failures.codes.tensorShapeMismatch';
-  static const activity_failures_codes_modelOutputInvalid =
-      'activity_failures.codes.modelOutputInvalid';
-  static const activity_failures_codes_triggerMismatch =
-      'activity_failures.codes.triggerMismatch';
-  static const activity_failures_codes_capabilityUnavailable =
-      'activity_failures.codes.capabilityUnavailable';
-  static const activity_failures_codes_httpBodyInvalidJson =
-      'activity_failures.codes.httpBodyInvalidJson';
-  static const activity_failures_codes_httpStatusFailed =
-      'activity_failures.codes.httpStatusFailed';
-  static const activity_failures_codes_forEachUnsupported =
-      'activity_failures.codes.forEachUnsupported';
-  static const activity_failures_codes_scriptFailed =
-      'activity_failures.codes.scriptFailed';
-  static const activity_failures_codes_scriptOutputInvalid =
-      'activity_failures.codes.scriptOutputInvalid';
-  static const activity_failures_codes_scriptPackagesUnavailable =
-      'activity_failures.codes.scriptPackagesUnavailable';
-  static const activity_failures_codes_pluginDisabled =
-      'activity_failures.codes.pluginDisabled';
+  static const activity_failures_technical_details = 'activity_failures.technical_details';
+  static const activity_failures_codes_outputSchemaViolated = 'activity_failures.codes.outputSchemaViolated';
+  static const activity_failures_codes_responseTruncated = 'activity_failures.codes.responseTruncated';
+  static const activity_failures_codes_emptyResponse = 'activity_failures.codes.emptyResponse';
+  static const activity_failures_codes_providerUnavailable = 'activity_failures.codes.providerUnavailable';
+  static const activity_failures_codes_requestRejected = 'activity_failures.codes.requestRejected';
+  static const activity_failures_codes_timedOut = 'activity_failures.codes.timedOut';
+  static const activity_failures_codes_capabilityMissing = 'activity_failures.codes.capabilityMissing';
+  static const activity_failures_codes_conditionOperandMismatch = 'activity_failures.codes.conditionOperandMismatch';
+  static const activity_failures_codes_configurationMissing = 'activity_failures.codes.configurationMissing';
+  static const activity_failures_codes_settingMissing = 'activity_failures.codes.settingMissing';
+  static const activity_failures_codes_settingInvalid = 'activity_failures.codes.settingInvalid';
+  static const activity_failures_codes_valueTypeMismatch = 'activity_failures.codes.valueTypeMismatch';
+  static const activity_failures_codes_tensorShapeMismatch = 'activity_failures.codes.tensorShapeMismatch';
+  static const activity_failures_codes_modelOutputInvalid = 'activity_failures.codes.modelOutputInvalid';
+  static const activity_failures_codes_triggerMismatch = 'activity_failures.codes.triggerMismatch';
+  static const activity_failures_codes_capabilityUnavailable = 'activity_failures.codes.capabilityUnavailable';
+  static const activity_failures_codes_httpBodyInvalidJson = 'activity_failures.codes.httpBodyInvalidJson';
+  static const activity_failures_codes_httpStatusFailed = 'activity_failures.codes.httpStatusFailed';
+  static const activity_failures_codes_forEachUnsupported = 'activity_failures.codes.forEachUnsupported';
+  static const activity_failures_codes_scriptFailed = 'activity_failures.codes.scriptFailed';
+  static const activity_failures_codes_scriptOutputInvalid = 'activity_failures.codes.scriptOutputInvalid';
+  static const activity_failures_codes_scriptPackagesUnavailable = 'activity_failures.codes.scriptPackagesUnavailable';
+  static const activity_failures_codes_pluginDisabled = 'activity_failures.codes.pluginDisabled';
   static const activity_failures_codes = 'activity_failures.codes';
-  static const activity_failures_operand_kinds_number =
-      'activity_failures.operand_kinds.number';
-  static const activity_failures_operand_kinds_date =
-      'activity_failures.operand_kinds.date';
-  static const activity_failures_operand_kinds_boolean =
-      'activity_failures.operand_kinds.boolean';
-  static const activity_failures_operand_kinds_text =
-      'activity_failures.operand_kinds.text';
-  static const activity_failures_operand_kinds_file =
-      'activity_failures.operand_kinds.file';
-  static const activity_failures_operand_kinds =
-      'activity_failures.operand_kinds';
+  static const activity_failures_operand_kinds_number = 'activity_failures.operand_kinds.number';
+  static const activity_failures_operand_kinds_date = 'activity_failures.operand_kinds.date';
+  static const activity_failures_operand_kinds_boolean = 'activity_failures.operand_kinds.boolean';
+  static const activity_failures_operand_kinds_text = 'activity_failures.operand_kinds.text';
+  static const activity_failures_operand_kinds_file = 'activity_failures.operand_kinds.file';
+  static const activity_failures_operand_kinds = 'activity_failures.operand_kinds';
   static const activity_failures_name_suffix = 'activity_failures.name_suffix';
-  static const activity_failures_iteration_suffix =
-      'activity_failures.iteration_suffix';
-  static const activity_failures_settings_model =
-      'activity_failures.settings.model';
-  static const activity_failures_settings_modelInputMapping =
-      'activity_failures.settings.modelInputMapping';
-  static const activity_failures_settings_inputFile =
-      'activity_failures.settings.inputFile';
-  static const activity_failures_settings_outputFile =
-      'activity_failures.settings.outputFile';
-  static const activity_failures_settings_audioInput =
-      'activity_failures.settings.audioInput';
-  static const activity_failures_settings_recipient =
-      'activity_failures.settings.recipient';
-  static const activity_failures_settings_messageBody =
-      'activity_failures.settings.messageBody';
-  static const activity_failures_settings_notificationText =
-      'activity_failures.settings.notificationText';
-  static const activity_failures_settings_mailbox =
-      'activity_failures.settings.mailbox';
-  static const activity_failures_settings_modelInputDuplicate =
-      'activity_failures.settings.modelInputDuplicate';
-  static const activity_failures_settings_modelParameter =
-      'activity_failures.settings.modelParameter';
-  static const activity_failures_settings_documentFilterValue =
-      'activity_failures.settings.documentFilterValue';
-  static const activity_failures_settings_documentFieldValue =
-      'activity_failures.settings.documentFieldValue';
-  static const activity_failures_settings_documentFieldDuplicate =
-      'activity_failures.settings.documentFieldDuplicate';
-  static const activity_failures_settings_jsonPointer =
-      'activity_failures.settings.jsonPointer';
-  static const activity_failures_settings_teamMembers =
-      'activity_failures.settings.teamMembers';
-  static const activity_failures_settings_resultFields =
-      'activity_failures.settings.resultFields';
+  static const activity_failures_iteration_suffix = 'activity_failures.iteration_suffix';
+  static const activity_failures_settings_model = 'activity_failures.settings.model';
+  static const activity_failures_settings_modelInputMapping = 'activity_failures.settings.modelInputMapping';
+  static const activity_failures_settings_inputFile = 'activity_failures.settings.inputFile';
+  static const activity_failures_settings_outputFile = 'activity_failures.settings.outputFile';
+  static const activity_failures_settings_audioInput = 'activity_failures.settings.audioInput';
+  static const activity_failures_settings_recipient = 'activity_failures.settings.recipient';
+  static const activity_failures_settings_messageBody = 'activity_failures.settings.messageBody';
+  static const activity_failures_settings_notificationText = 'activity_failures.settings.notificationText';
+  static const activity_failures_settings_mailbox = 'activity_failures.settings.mailbox';
+  static const activity_failures_settings_modelInputDuplicate = 'activity_failures.settings.modelInputDuplicate';
+  static const activity_failures_settings_modelParameter = 'activity_failures.settings.modelParameter';
+  static const activity_failures_settings_documentFilterValue = 'activity_failures.settings.documentFilterValue';
+  static const activity_failures_settings_documentFieldValue = 'activity_failures.settings.documentFieldValue';
+  static const activity_failures_settings_documentFieldDuplicate = 'activity_failures.settings.documentFieldDuplicate';
+  static const activity_failures_settings_jsonPointer = 'activity_failures.settings.jsonPointer';
+  static const activity_failures_settings_teamMembers = 'activity_failures.settings.teamMembers';
+  static const activity_failures_settings_resultFields = 'activity_failures.settings.resultFields';
   static const activity_failures_settings = 'activity_failures.settings';
-  static const activity_failures_targets_modelInput =
-      'activity_failures.targets.modelInput';
-  static const activity_failures_targets_documentFilter =
-      'activity_failures.targets.documentFilter';
-  static const activity_failures_targets_forEachItems =
-      'activity_failures.targets.forEachItems';
+  static const activity_failures_targets_modelInput = 'activity_failures.targets.modelInput';
+  static const activity_failures_targets_documentFilter = 'activity_failures.targets.documentFilter';
+  static const activity_failures_targets_forEachItems = 'activity_failures.targets.forEachItems';
   static const activity_failures_targets = 'activity_failures.targets';
-  static const activity_failures_expected_image =
-      'activity_failures.expected.image';
-  static const activity_failures_expected_audio =
-      'activity_failures.expected.audio';
-  static const activity_failures_expected_file =
-      'activity_failures.expected.file';
-  static const activity_failures_expected_number =
-      'activity_failures.expected.number';
-  static const activity_failures_expected_boolean =
-      'activity_failures.expected.boolean';
-  static const activity_failures_expected_json =
-      'activity_failures.expected.json';
-  static const activity_failures_expected_textList =
-      'activity_failures.expected.textList';
-  static const activity_failures_expected_numberList =
-      'activity_failures.expected.numberList';
-  static const activity_failures_expected_list =
-      'activity_failures.expected.list';
-  static const activity_failures_expected_tensor =
-      'activity_failures.expected.tensor';
+  static const activity_failures_expected_image = 'activity_failures.expected.image';
+  static const activity_failures_expected_audio = 'activity_failures.expected.audio';
+  static const activity_failures_expected_file = 'activity_failures.expected.file';
+  static const activity_failures_expected_number = 'activity_failures.expected.number';
+  static const activity_failures_expected_boolean = 'activity_failures.expected.boolean';
+  static const activity_failures_expected_json = 'activity_failures.expected.json';
+  static const activity_failures_expected_textList = 'activity_failures.expected.textList';
+  static const activity_failures_expected_numberList = 'activity_failures.expected.numberList';
+  static const activity_failures_expected_list = 'activity_failures.expected.list';
+  static const activity_failures_expected_tensor = 'activity_failures.expected.tensor';
   static const activity_failures_expected = 'activity_failures.expected';
-  static const activity_failures_outputs_image =
-      'activity_failures.outputs.image';
-  static const activity_failures_outputs_audio =
-      'activity_failures.outputs.audio';
+  static const activity_failures_outputs_image = 'activity_failures.outputs.image';
+  static const activity_failures_outputs_audio = 'activity_failures.outputs.audio';
   static const activity_failures_outputs = 'activity_failures.outputs';
-  static const activity_failures_triggers_email =
-      'activity_failures.triggers.email';
-  static const activity_failures_triggers_whatsapp =
-      'activity_failures.triggers.whatsapp';
-  static const activity_failures_triggers_sms =
-      'activity_failures.triggers.sms';
-  static const activity_failures_triggers_telegram =
-      'activity_failures.triggers.telegram';
-  static const activity_failures_triggers_instagram =
-      'activity_failures.triggers.instagram';
-  static const activity_failures_triggers_webhook =
-      'activity_failures.triggers.webhook';
+  static const activity_failures_triggers_email = 'activity_failures.triggers.email';
+  static const activity_failures_triggers_whatsapp = 'activity_failures.triggers.whatsapp';
+  static const activity_failures_triggers_sms = 'activity_failures.triggers.sms';
+  static const activity_failures_triggers_telegram = 'activity_failures.triggers.telegram';
+  static const activity_failures_triggers_instagram = 'activity_failures.triggers.instagram';
+  static const activity_failures_triggers_webhook = 'activity_failures.triggers.webhook';
   static const activity_failures_triggers = 'activity_failures.triggers';
-  static const activity_failures_capabilities_speechSynthesis =
-      'activity_failures.capabilities.speechSynthesis';
-  static const activity_failures_capabilities_speechTranscription =
-      'activity_failures.capabilities.speechTranscription';
-  static const activity_failures_capabilities_httpRequests =
-      'activity_failures.capabilities.httpRequests';
-  static const activity_failures_capabilities_float16Tensors =
-      'activity_failures.capabilities.float16Tensors';
-  static const activity_failures_capabilities =
-      'activity_failures.capabilities';
-  static const activity_failures_for_each_reasons_nestedForEach =
-      'activity_failures.for_each_reasons.nestedForEach';
-  static const activity_failures_for_each_reasons_pausingBlock =
-      'activity_failures.for_each_reasons.pausingBlock';
-  static const activity_failures_for_each_reasons =
-      'activity_failures.for_each_reasons';
-  static const activity_failures_script_output_reasons_duplicateName =
-      'activity_failures.script_output_reasons.duplicateName';
-  static const activity_failures_script_output_reasons_invalidEntry =
-      'activity_failures.script_output_reasons.invalidEntry';
-  static const activity_failures_script_output_reasons_invalidName =
-      'activity_failures.script_output_reasons.invalidName';
-  static const activity_failures_script_output_reasons_unknownType =
-      'activity_failures.script_output_reasons.unknownType';
-  static const activity_failures_script_output_reasons_wrongValueType =
-      'activity_failures.script_output_reasons.wrongValueType';
-  static const activity_failures_script_output_reasons =
-      'activity_failures.script_output_reasons';
-  static const activity_failures_script_packages_reasons_notInstalled =
-      'activity_failures.script_packages_reasons.notInstalled';
-  static const activity_failures_script_packages_reasons_unsupported =
-      'activity_failures.script_packages_reasons.unsupported';
-  static const activity_failures_script_packages_reasons =
-      'activity_failures.script_packages_reasons';
+  static const activity_failures_capabilities_speechSynthesis = 'activity_failures.capabilities.speechSynthesis';
+  static const activity_failures_capabilities_speechTranscription = 'activity_failures.capabilities.speechTranscription';
+  static const activity_failures_capabilities_httpRequests = 'activity_failures.capabilities.httpRequests';
+  static const activity_failures_capabilities_float16Tensors = 'activity_failures.capabilities.float16Tensors';
+  static const activity_failures_capabilities = 'activity_failures.capabilities';
+  static const activity_failures_for_each_reasons_nestedForEach = 'activity_failures.for_each_reasons.nestedForEach';
+  static const activity_failures_for_each_reasons_pausingBlock = 'activity_failures.for_each_reasons.pausingBlock';
+  static const activity_failures_for_each_reasons = 'activity_failures.for_each_reasons';
+  static const activity_failures_script_output_reasons_duplicateName = 'activity_failures.script_output_reasons.duplicateName';
+  static const activity_failures_script_output_reasons_invalidEntry = 'activity_failures.script_output_reasons.invalidEntry';
+  static const activity_failures_script_output_reasons_invalidName = 'activity_failures.script_output_reasons.invalidName';
+  static const activity_failures_script_output_reasons_unknownType = 'activity_failures.script_output_reasons.unknownType';
+  static const activity_failures_script_output_reasons_wrongValueType = 'activity_failures.script_output_reasons.wrongValueType';
+  static const activity_failures_script_output_reasons = 'activity_failures.script_output_reasons';
+  static const activity_failures_script_packages_reasons_notInstalled = 'activity_failures.script_packages_reasons.notInstalled';
+  static const activity_failures_script_packages_reasons_unsupported = 'activity_failures.script_packages_reasons.unsupported';
+  static const activity_failures_script_packages_reasons = 'activity_failures.script_packages_reasons';
   static const activity_failures = 'activity_failures';
   static const knowledge_graph_title = 'knowledge_graph.title';
   static const knowledge_graph_reset_view = 'knowledge_graph.reset_view';
   static const knowledge_graph_context_notes = 'knowledge_graph.context_notes';
   static const knowledge_graph_context_hint = 'knowledge_graph.context_hint';
   static const knowledge_graph = 'knowledge_graph';
-  static const runtime_access_activation_failed =
-      'runtime.access.activation_failed';
-  static const runtime_access_activation_timeout =
-      'runtime.access.activation_timeout';
-  static const runtime_access_admin_not_found =
-      'runtime.access.admin_not_found';
-  static const runtime_access_certificate_invalid =
-      'runtime.access.certificate_invalid';
+  static const runtime_access_activation_failed = 'runtime.access.activation_failed';
+  static const runtime_access_activation_timeout = 'runtime.access.activation_timeout';
+  static const runtime_access_admin_not_found = 'runtime.access.admin_not_found';
+  static const runtime_access_certificate_invalid = 'runtime.access.certificate_invalid';
   static const runtime_access_display_name = 'runtime.access.display_name';
-  static const runtime_access_failed_with_status =
-      'runtime.access.failed_with_status';
+  static const runtime_access_failed_with_status = 'runtime.access.failed_with_status';
   static const runtime_access_hide_password = 'runtime.access.hide_password';
-  static const runtime_access_invalid_address =
-      'runtime.access.invalid_address';
-  static const runtime_access_invalid_credentials =
-      'runtime.access.invalid_credentials';
-  static const runtime_access_invalid_invitation =
-      'runtime.access.invalid_invitation';
-  static const runtime_access_invalid_password =
-      'runtime.access.invalid_password';
-  static const runtime_access_license_token_mismatch =
-      'runtime.access.license_token_mismatch';
+  static const runtime_access_invalid_address = 'runtime.access.invalid_address';
+  static const runtime_access_invalid_credentials = 'runtime.access.invalid_credentials';
+  static const runtime_access_invalid_invitation = 'runtime.access.invalid_invitation';
+  static const runtime_access_invalid_password = 'runtime.access.invalid_password';
+  static const runtime_access_license_token_mismatch = 'runtime.access.license_token_mismatch';
   static const runtime_access_login_name = 'runtime.access.login_name';
   static const runtime_access_new_password = 'runtime.access.new_password';
   static const runtime_access_no_token = 'runtime.access.no_token';
   static const runtime_access_not_licensed = 'runtime.access.not_licensed';
   static const runtime_access_password = 'runtime.access.password';
   static const runtime_access_password_hint = 'runtime.access.password_hint';
-  static const runtime_access_passwords_differ =
-      'runtime.access.passwords_differ';
-  static const runtime_access_repeat_password =
-      'runtime.access.repeat_password';
-  static const runtime_access_saved_address_unreadable =
-      'runtime.access.saved_address_unreadable';
+  static const runtime_access_passwords_differ = 'runtime.access.passwords_differ';
+  static const runtime_access_repeat_password = 'runtime.access.repeat_password';
+  static const runtime_access_saved_address_unreadable = 'runtime.access.saved_address_unreadable';
   static const runtime_access_session_ended = 'runtime.access.session_ended';
   static const runtime_access_show_password = 'runtime.access.show_password';
-  static const runtime_access_sign_out_failed =
-      'runtime.access.sign_out_failed';
-  static const runtime_access_token_incomplete =
-      'runtime.access.token_incomplete';
-  static const runtime_access_too_many_attempts =
-      'runtime.access.too_many_attempts';
+  static const runtime_access_sign_out_failed = 'runtime.access.sign_out_failed';
+  static const runtime_access_token_incomplete = 'runtime.access.token_incomplete';
+  static const runtime_access_too_many_attempts = 'runtime.access.too_many_attempts';
   static const runtime_access_unreachable = 'runtime.access.unreachable';
   static const runtime_access = 'runtime.access';
   static const runtime_invitation_action = 'runtime.invitation.action';
   static const runtime_invitation_code = 'runtime.invitation.code';
-  static const runtime_invitation_description =
-      'runtime.invitation.description';
+  static const runtime_invitation_description = 'runtime.invitation.description';
   static const runtime_invitation_link = 'runtime.invitation.link';
   static const runtime_invitation_title = 'runtime.invitation.title';
   static const runtime_invitation = 'runtime.invitation';
@@ -1254,41 +844,28 @@ abstract class LocaleKeys {
   static const runtime_users_delete_title = 'runtime_users.delete_title';
   static const runtime_users_deleted = 'runtime_users.deleted';
   static const runtime_users_empty = 'runtime_users.empty';
-  static const runtime_users_failure_admin_required =
-      'runtime_users.failure.admin_required';
-  static const runtime_users_failure_last_admin =
-      'runtime_users.failure.last_admin';
-  static const runtime_users_failure_login_name_taken =
-      'runtime_users.failure.login_name_taken';
-  static const runtime_users_failure_not_found =
-      'runtime_users.failure.not_found';
-  static const runtime_users_failure_own_account =
-      'runtime_users.failure.own_account';
-  static const runtime_users_failure_unavailable =
-      'runtime_users.failure.unavailable';
-  static const runtime_users_failure_user_limit_reached =
-      'runtime_users.failure.user_limit_reached';
-  static const runtime_users_failure_workspace_owner =
-      'runtime_users.failure.workspace_owner';
+  static const runtime_users_failure_admin_required = 'runtime_users.failure.admin_required';
+  static const runtime_users_failure_last_admin = 'runtime_users.failure.last_admin';
+  static const runtime_users_failure_login_name_taken = 'runtime_users.failure.login_name_taken';
+  static const runtime_users_failure_not_found = 'runtime_users.failure.not_found';
+  static const runtime_users_failure_own_account = 'runtime_users.failure.own_account';
+  static const runtime_users_failure_unavailable = 'runtime_users.failure.unavailable';
+  static const runtime_users_failure_user_limit_reached = 'runtime_users.failure.user_limit_reached';
+  static const runtime_users_failure_workspace_owner = 'runtime_users.failure.workspace_owner';
   static const runtime_users_failure = 'runtime_users.failure';
   static const runtime_users_invitation_copy = 'runtime_users.invitation.copy';
-  static const runtime_users_invitation_description =
-      'runtime_users.invitation.description';
+  static const runtime_users_invitation_description = 'runtime_users.invitation.description';
   static const runtime_users_invitation_done = 'runtime_users.invitation.done';
-  static const runtime_users_invitation_expires =
-      'runtime_users.invitation.expires';
-  static const runtime_users_invitation_pending =
-      'runtime_users.invitation.pending';
-  static const runtime_users_invitation_title =
-      'runtime_users.invitation.title';
+  static const runtime_users_invitation_expires = 'runtime_users.invitation.expires';
+  static const runtime_users_invitation_pending = 'runtime_users.invitation.pending';
+  static const runtime_users_invitation_title = 'runtime_users.invitation.title';
   static const runtime_users_invitation = 'runtime_users.invitation';
   static const runtime_users_limit_hint = 'runtime_users.limit_hint';
   static const runtime_users_load_failed = 'runtime_users.load_failed';
   static const runtime_users_login_name_hint = 'runtime_users.login_name_hint';
   static const runtime_users_make_admin = 'runtime_users.make_admin';
   static const runtime_users_make_member = 'runtime_users.make_member';
-  static const runtime_users_own_password_description =
-      'runtime_users.own_password_description';
+  static const runtime_users_own_password_description = 'runtime_users.own_password_description';
   static const runtime_users_reset_password = 'runtime_users.reset_password';
   static const runtime_users_retry = 'runtime_users.retry';
   static const runtime_users_role_admin = 'runtime_users.role.admin';
@@ -1305,8 +882,7 @@ abstract class LocaleKeys {
   static const activity_origin_trigger = 'activity_origin.trigger';
   static const activity_origin = 'activity_origin';
   static const google_drive_section_title = 'google_drive.section_title';
-  static const google_drive_section_description =
-      'google_drive.section_description';
+  static const google_drive_section_description = 'google_drive.section_description';
   static const google_drive_connect = 'google_drive.connect';
   static const google_drive_share_more = 'google_drive.share_more';
   static const google_drive_reconnect = 'google_drive.reconnect';
@@ -1315,8 +891,7 @@ abstract class LocaleKeys {
   static const google_drive_retry = 'google_drive.retry';
   static const google_drive_start_failed = 'google_drive.start_failed';
   static const google_drive_shared_count = 'google_drive.shared_count';
-  static const google_drive_reauthorization_required =
-      'google_drive.reauthorization_required';
+  static const google_drive_reauthorization_required = 'google_drive.reauthorization_required';
   static const google_drive_account = 'google_drive.account';
   static const google_drive_account_missing = 'google_drive.account_missing';
   static const google_drive_no_accounts_hint = 'google_drive.no_accounts_hint';
@@ -1330,136 +905,90 @@ abstract class LocaleKeys {
   static const google_drive_content = 'google_drive.content';
   static const google_drive_content_helper = 'google_drive.content_helper';
   static const google_drive_upload_title = 'google_drive.upload_title';
-  static const google_drive_upload_description =
-      'google_drive.upload_description';
+  static const google_drive_upload_description = 'google_drive.upload_description';
   static const google_drive_read_title = 'google_drive.read_title';
   static const google_drive_read_description = 'google_drive.read_description';
   static const google_drive_search_title = 'google_drive.search_title';
-  static const google_drive_search_description =
-      'google_drive.search_description';
+  static const google_drive_search_description = 'google_drive.search_description';
   static const google_drive_search_folder = 'google_drive.search_folder';
-  static const google_drive_search_everywhere =
-      'google_drive.search_everywhere';
+  static const google_drive_search_everywhere = 'google_drive.search_everywhere';
   static const google_drive_search_name = 'google_drive.search_name';
   static const google_drive_search_limit = 'google_drive.search_limit';
-  static const google_drive_search_limit_helper =
-      'google_drive.search_limit_helper';
+  static const google_drive_search_limit_helper = 'google_drive.search_limit_helper';
   static const google_drive_search_helper = 'google_drive.search_helper';
   static const google_drive_unknown_action = 'google_drive.unknown_action';
   static const google_drive_plugin_title = 'google_drive.plugin.title';
-  static const google_drive_plugin_description =
-      'google_drive.plugin.description';
+  static const google_drive_plugin_description = 'google_drive.plugin.description';
   static const google_drive_plugin = 'google_drive.plugin';
   static const google_drive = 'google_drive';
-  static const shopware_actions_search_orders_title =
-      'shopware.actions.search_orders.title';
-  static const shopware_actions_search_orders_description =
-      'shopware.actions.search_orders.description';
-  static const shopware_actions_search_orders =
-      'shopware.actions.search_orders';
-  static const shopware_actions_get_order_title =
-      'shopware.actions.get_order.title';
-  static const shopware_actions_get_order_description =
-      'shopware.actions.get_order.description';
+  static const shopware_actions_search_orders_title = 'shopware.actions.search_orders.title';
+  static const shopware_actions_search_orders_description = 'shopware.actions.search_orders.description';
+  static const shopware_actions_search_orders = 'shopware.actions.search_orders';
+  static const shopware_actions_get_order_title = 'shopware.actions.get_order.title';
+  static const shopware_actions_get_order_description = 'shopware.actions.get_order.description';
   static const shopware_actions_get_order = 'shopware.actions.get_order';
-  static const shopware_actions_change_order_status_title =
-      'shopware.actions.change_order_status.title';
-  static const shopware_actions_change_order_status_description =
-      'shopware.actions.change_order_status.description';
-  static const shopware_actions_change_order_status =
-      'shopware.actions.change_order_status';
-  static const shopware_actions_search_products_title =
-      'shopware.actions.search_products.title';
-  static const shopware_actions_search_products_description =
-      'shopware.actions.search_products.description';
-  static const shopware_actions_search_products =
-      'shopware.actions.search_products';
-  static const shopware_actions_update_product_title =
-      'shopware.actions.update_product.title';
-  static const shopware_actions_update_product_description =
-      'shopware.actions.update_product.description';
-  static const shopware_actions_update_product =
-      'shopware.actions.update_product';
-  static const shopware_actions_search_customers_title =
-      'shopware.actions.search_customers.title';
-  static const shopware_actions_search_customers_description =
-      'shopware.actions.search_customers.description';
-  static const shopware_actions_search_customers =
-      'shopware.actions.search_customers';
+  static const shopware_actions_change_order_status_title = 'shopware.actions.change_order_status.title';
+  static const shopware_actions_change_order_status_description = 'shopware.actions.change_order_status.description';
+  static const shopware_actions_change_order_status = 'shopware.actions.change_order_status';
+  static const shopware_actions_search_products_title = 'shopware.actions.search_products.title';
+  static const shopware_actions_search_products_description = 'shopware.actions.search_products.description';
+  static const shopware_actions_search_products = 'shopware.actions.search_products';
+  static const shopware_actions_update_product_title = 'shopware.actions.update_product.title';
+  static const shopware_actions_update_product_description = 'shopware.actions.update_product.description';
+  static const shopware_actions_update_product = 'shopware.actions.update_product';
+  static const shopware_actions_search_customers_title = 'shopware.actions.search_customers.title';
+  static const shopware_actions_search_customers_description = 'shopware.actions.search_customers.description';
+  static const shopware_actions_search_customers = 'shopware.actions.search_customers';
   static const shopware_actions_query_title = 'shopware.actions.query.title';
-  static const shopware_actions_query_description =
-      'shopware.actions.query.description';
+  static const shopware_actions_query_description = 'shopware.actions.query.description';
   static const shopware_actions_query = 'shopware.actions.query';
-  static const shopware_actions_read_event_title =
-      'shopware.actions.read_event.title';
-  static const shopware_actions_read_event_description =
-      'shopware.actions.read_event.description';
+  static const shopware_actions_read_event_title = 'shopware.actions.read_event.title';
+  static const shopware_actions_read_event_description = 'shopware.actions.read_event.description';
   static const shopware_actions_read_event = 'shopware.actions.read_event';
   static const shopware_actions = 'shopware.actions';
   static const shopware_fields_created_from = 'shopware.fields.created_from';
-  static const shopware_fields_created_from_hint =
-      'shopware.fields.created_from_hint';
-  static const shopware_fields_created_from_helper =
-      'shopware.fields.created_from_helper';
+  static const shopware_fields_created_from_hint = 'shopware.fields.created_from_hint';
+  static const shopware_fields_created_from_helper = 'shopware.fields.created_from_helper';
   static const shopware_fields_created_to = 'shopware.fields.created_to';
-  static const shopware_fields_created_to_hint =
-      'shopware.fields.created_to_hint';
-  static const shopware_fields_no_lower_limit =
-      'shopware.fields.no_lower_limit';
-  static const shopware_fields_no_upper_limit =
-      'shopware.fields.no_upper_limit';
+  static const shopware_fields_created_to_hint = 'shopware.fields.created_to_hint';
+  static const shopware_fields_no_lower_limit = 'shopware.fields.no_lower_limit';
+  static const shopware_fields_no_upper_limit = 'shopware.fields.no_upper_limit';
   static const shopware_fields_order_status = 'shopware.fields.order_status';
-  static const shopware_fields_payment_status =
-      'shopware.fields.payment_status';
-  static const shopware_fields_delivery_status =
-      'shopware.fields.delivery_status';
-  static const shopware_fields_customer_email =
-      'shopware.fields.customer_email';
+  static const shopware_fields_payment_status = 'shopware.fields.payment_status';
+  static const shopware_fields_delivery_status = 'shopware.fields.delivery_status';
+  static const shopware_fields_customer_email = 'shopware.fields.customer_email';
   static const shopware_fields_order_number = 'shopware.fields.order_number';
-  static const shopware_fields_order_number_hint =
-      'shopware.fields.order_number_hint';
+  static const shopware_fields_order_number_hint = 'shopware.fields.order_number_hint';
   static const shopware_fields_order_id = 'shopware.fields.order_id';
-  static const shopware_fields_order_id_helper =
-      'shopware.fields.order_id_helper';
+  static const shopware_fields_order_id_helper = 'shopware.fields.order_id_helper';
   static const shopware_fields_sort = 'shopware.fields.sort';
   static const shopware_fields_limit = 'shopware.fields.limit';
   static const shopware_fields_limit_helper = 'shopware.fields.limit_helper';
   static const shopware_fields_transition = 'shopware.fields.transition';
-  static const shopware_fields_transition_helper =
-      'shopware.fields.transition_helper';
+  static const shopware_fields_transition_helper = 'shopware.fields.transition_helper';
   static const shopware_fields_send_mail = 'shopware.fields.send_mail';
-  static const shopware_fields_send_mail_helper =
-      'shopware.fields.send_mail_helper';
+  static const shopware_fields_send_mail_helper = 'shopware.fields.send_mail_helper';
   static const shopware_fields_name_contains = 'shopware.fields.name_contains';
-  static const shopware_fields_customer_name_helper =
-      'shopware.fields.customer_name_helper';
-  static const shopware_fields_product_number =
-      'shopware.fields.product_number';
+  static const shopware_fields_customer_name_helper = 'shopware.fields.customer_name_helper';
+  static const shopware_fields_product_number = 'shopware.fields.product_number';
   static const shopware_fields_active = 'shopware.fields.active';
   static const shopware_fields_stock_min = 'shopware.fields.stock_min';
   static const shopware_fields_stock_max = 'shopware.fields.stock_max';
   static const shopware_fields_product_id = 'shopware.fields.product_id';
-  static const shopware_fields_product_id_helper =
-      'shopware.fields.product_id_helper';
+  static const shopware_fields_product_id_helper = 'shopware.fields.product_id_helper';
   static const shopware_fields_new_stock = 'shopware.fields.new_stock';
-  static const shopware_fields_unchanged_if_empty =
-      'shopware.fields.unchanged_if_empty';
+  static const shopware_fields_unchanged_if_empty = 'shopware.fields.unchanged_if_empty';
   static const shopware_fields_new_price = 'shopware.fields.new_price';
-  static const shopware_fields_new_price_hint =
-      'shopware.fields.new_price_hint';
-  static const shopware_fields_new_price_helper =
-      'shopware.fields.new_price_helper';
-  static const shopware_fields_email_contains =
-      'shopware.fields.email_contains';
-  static const shopware_fields_customer_number =
-      'shopware.fields.customer_number';
+  static const shopware_fields_new_price_hint = 'shopware.fields.new_price_hint';
+  static const shopware_fields_new_price_helper = 'shopware.fields.new_price_helper';
+  static const shopware_fields_email_contains = 'shopware.fields.email_contains';
+  static const shopware_fields_customer_number = 'shopware.fields.customer_number';
   static const shopware_fields_entity = 'shopware.fields.entity';
   static const shopware_fields_entity_hint = 'shopware.fields.entity_hint';
   static const shopware_fields_entity_helper = 'shopware.fields.entity_helper';
   static const shopware_fields_criteria = 'shopware.fields.criteria';
   static const shopware_fields_criteria_hint = 'shopware.fields.criteria_hint';
-  static const shopware_fields_criteria_helper =
-      'shopware.fields.criteria_helper';
+  static const shopware_fields_criteria_helper = 'shopware.fields.criteria_helper';
   static const shopware_fields_page = 'shopware.fields.page';
   static const shopware_fields = 'shopware.fields';
   static const shopware_options_any = 'shopware.options.any';
@@ -1467,14 +996,10 @@ abstract class LocaleKeys {
   static const shopware_options_no = 'shopware.options.no';
   static const shopware_options_newest_first = 'shopware.options.newest_first';
   static const shopware_options_oldest_first = 'shopware.options.oldest_first';
-  static const shopware_options_name_ascending =
-      'shopware.options.name_ascending';
-  static const shopware_options_lowest_stock_first =
-      'shopware.options.lowest_stock_first';
-  static const shopware_options_last_name_ascending =
-      'shopware.options.last_name_ascending';
-  static const shopware_options_please_choose =
-      'shopware.options.please_choose';
+  static const shopware_options_name_ascending = 'shopware.options.name_ascending';
+  static const shopware_options_lowest_stock_first = 'shopware.options.lowest_stock_first';
+  static const shopware_options_last_name_ascending = 'shopware.options.last_name_ascending';
+  static const shopware_options_please_choose = 'shopware.options.please_choose';
   static const shopware_options_unchanged = 'shopware.options.unchanged';
   static const shopware_options_active = 'shopware.options.active';
   static const shopware_options_inactive = 'shopware.options.inactive';
@@ -1482,143 +1007,91 @@ abstract class LocaleKeys {
   static const shopware_states_open = 'shopware.states.open';
   static const shopware_states_in_progress = 'shopware.states.in_progress';
   static const shopware_states_completed = 'shopware.states.completed';
-  static const shopware_states_order_cancelled =
-      'shopware.states.order_cancelled';
+  static const shopware_states_order_cancelled = 'shopware.states.order_cancelled';
   static const shopware_states_cancelled = 'shopware.states.cancelled';
   static const shopware_states_paid = 'shopware.states.paid';
-  static const shopware_states_paid_partially =
-      'shopware.states.paid_partially';
+  static const shopware_states_paid_partially = 'shopware.states.paid_partially';
   static const shopware_states_refunded = 'shopware.states.refunded';
-  static const shopware_states_refunded_partially =
-      'shopware.states.refunded_partially';
+  static const shopware_states_refunded_partially = 'shopware.states.refunded_partially';
   static const shopware_states_reminded = 'shopware.states.reminded';
   static const shopware_states_failed = 'shopware.states.failed';
   static const shopware_states_authorized = 'shopware.states.authorized';
   static const shopware_states_chargeback = 'shopware.states.chargeback';
   static const shopware_states_unconfirmed = 'shopware.states.unconfirmed';
   static const shopware_states_shipped = 'shopware.states.shipped';
-  static const shopware_states_shipped_partially =
-      'shopware.states.shipped_partially';
+  static const shopware_states_shipped_partially = 'shopware.states.shipped_partially';
   static const shopware_states_returned = 'shopware.states.returned';
-  static const shopware_states_returned_partially =
-      'shopware.states.returned_partially';
+  static const shopware_states_returned_partially = 'shopware.states.returned_partially';
   static const shopware_states = 'shopware.states';
-  static const shopware_transitions_order_process =
-      'shopware.transitions.order_process';
-  static const shopware_transitions_order_complete =
-      'shopware.transitions.order_complete';
-  static const shopware_transitions_order_cancel =
-      'shopware.transitions.order_cancel';
-  static const shopware_transitions_order_reopen =
-      'shopware.transitions.order_reopen';
-  static const shopware_transitions_payment_paid =
-      'shopware.transitions.payment_paid';
-  static const shopware_transitions_payment_paid_partially =
-      'shopware.transitions.payment_paid_partially';
-  static const shopware_transitions_payment_refund =
-      'shopware.transitions.payment_refund';
-  static const shopware_transitions_payment_refund_partially =
-      'shopware.transitions.payment_refund_partially';
-  static const shopware_transitions_payment_cancel =
-      'shopware.transitions.payment_cancel';
-  static const shopware_transitions_payment_reopen =
-      'shopware.transitions.payment_reopen';
-  static const shopware_transitions_payment_remind =
-      'shopware.transitions.payment_remind';
-  static const shopware_transitions_payment_fail =
-      'shopware.transitions.payment_fail';
-  static const shopware_transitions_payment_authorize =
-      'shopware.transitions.payment_authorize';
-  static const shopware_transitions_payment_chargeback =
-      'shopware.transitions.payment_chargeback';
-  static const shopware_transitions_delivery_ship =
-      'shopware.transitions.delivery_ship';
-  static const shopware_transitions_delivery_ship_partially =
-      'shopware.transitions.delivery_ship_partially';
-  static const shopware_transitions_delivery_retour =
-      'shopware.transitions.delivery_retour';
-  static const shopware_transitions_delivery_cancel =
-      'shopware.transitions.delivery_cancel';
-  static const shopware_transitions_delivery_reopen =
-      'shopware.transitions.delivery_reopen';
+  static const shopware_transitions_order_process = 'shopware.transitions.order_process';
+  static const shopware_transitions_order_complete = 'shopware.transitions.order_complete';
+  static const shopware_transitions_order_cancel = 'shopware.transitions.order_cancel';
+  static const shopware_transitions_order_reopen = 'shopware.transitions.order_reopen';
+  static const shopware_transitions_payment_paid = 'shopware.transitions.payment_paid';
+  static const shopware_transitions_payment_paid_partially = 'shopware.transitions.payment_paid_partially';
+  static const shopware_transitions_payment_refund = 'shopware.transitions.payment_refund';
+  static const shopware_transitions_payment_refund_partially = 'shopware.transitions.payment_refund_partially';
+  static const shopware_transitions_payment_cancel = 'shopware.transitions.payment_cancel';
+  static const shopware_transitions_payment_reopen = 'shopware.transitions.payment_reopen';
+  static const shopware_transitions_payment_remind = 'shopware.transitions.payment_remind';
+  static const shopware_transitions_payment_fail = 'shopware.transitions.payment_fail';
+  static const shopware_transitions_payment_authorize = 'shopware.transitions.payment_authorize';
+  static const shopware_transitions_payment_chargeback = 'shopware.transitions.payment_chargeback';
+  static const shopware_transitions_delivery_ship = 'shopware.transitions.delivery_ship';
+  static const shopware_transitions_delivery_ship_partially = 'shopware.transitions.delivery_ship_partially';
+  static const shopware_transitions_delivery_retour = 'shopware.transitions.delivery_retour';
+  static const shopware_transitions_delivery_cancel = 'shopware.transitions.delivery_cancel';
+  static const shopware_transitions_delivery_reopen = 'shopware.transitions.delivery_reopen';
   static const shopware_transitions = 'shopware.transitions';
-  static const shopware_triggers_order_placed_label =
-      'shopware.triggers.order_placed.label';
-  static const shopware_triggers_order_placed_description =
-      'shopware.triggers.order_placed.description';
-  static const shopware_triggers_order_placed =
-      'shopware.triggers.order_placed';
-  static const shopware_triggers_order_status_label =
-      'shopware.triggers.order_status.label';
-  static const shopware_triggers_order_status_description =
-      'shopware.triggers.order_status.description';
-  static const shopware_triggers_order_status =
-      'shopware.triggers.order_status';
-  static const shopware_triggers_customer_registered_label =
-      'shopware.triggers.customer_registered.label';
-  static const shopware_triggers_customer_registered_description =
-      'shopware.triggers.customer_registered.description';
-  static const shopware_triggers_customer_registered =
-      'shopware.triggers.customer_registered';
-  static const shopware_triggers_stock_low_label =
-      'shopware.triggers.stock_low.label';
-  static const shopware_triggers_stock_low_description =
-      'shopware.triggers.stock_low.description';
+  static const shopware_triggers_order_placed_label = 'shopware.triggers.order_placed.label';
+  static const shopware_triggers_order_placed_description = 'shopware.triggers.order_placed.description';
+  static const shopware_triggers_order_placed = 'shopware.triggers.order_placed';
+  static const shopware_triggers_order_status_label = 'shopware.triggers.order_status.label';
+  static const shopware_triggers_order_status_description = 'shopware.triggers.order_status.description';
+  static const shopware_triggers_order_status = 'shopware.triggers.order_status';
+  static const shopware_triggers_customer_registered_label = 'shopware.triggers.customer_registered.label';
+  static const shopware_triggers_customer_registered_description = 'shopware.triggers.customer_registered.description';
+  static const shopware_triggers_customer_registered = 'shopware.triggers.customer_registered';
+  static const shopware_triggers_stock_low_label = 'shopware.triggers.stock_low.label';
+  static const shopware_triggers_stock_low_description = 'shopware.triggers.stock_low.description';
   static const shopware_triggers_stock_low = 'shopware.triggers.stock_low';
-  static const shopware_triggers_newsletter_subscribed_label =
-      'shopware.triggers.newsletter_subscribed.label';
-  static const shopware_triggers_newsletter_subscribed_description =
-      'shopware.triggers.newsletter_subscribed.description';
-  static const shopware_triggers_newsletter_subscribed =
-      'shopware.triggers.newsletter_subscribed';
+  static const shopware_triggers_newsletter_subscribed_label = 'shopware.triggers.newsletter_subscribed.label';
+  static const shopware_triggers_newsletter_subscribed_description = 'shopware.triggers.newsletter_subscribed.description';
+  static const shopware_triggers_newsletter_subscribed = 'shopware.triggers.newsletter_subscribed';
   static const shopware_triggers = 'shopware.triggers';
   static const shopware_scopes_order = 'shopware.scopes.order';
   static const shopware_scopes_payment = 'shopware.scopes.payment';
   static const shopware_scopes_delivery = 'shopware.scopes.delivery';
   static const shopware_scopes = 'shopware.scopes';
-  static const shopware_ui_summary_stock_at_most =
-      'shopware.ui.summary_stock_at_most';
-  static const shopware_ui_summary_newsletter_confirmed =
-      'shopware.ui.summary_newsletter_confirmed';
-  static const shopware_ui_create_connection_hint =
-      'shopware.ui.create_connection_hint';
-  static const shopware_ui_trigger_connection_helper =
-      'shopware.ui.trigger_connection_helper';
+  static const shopware_ui_summary_stock_at_most = 'shopware.ui.summary_stock_at_most';
+  static const shopware_ui_summary_newsletter_confirmed = 'shopware.ui.summary_newsletter_confirmed';
+  static const shopware_ui_create_connection_hint = 'shopware.ui.create_connection_hint';
+  static const shopware_ui_trigger_connection_helper = 'shopware.ui.trigger_connection_helper';
   static const shopware_ui_trigger_when = 'shopware.ui.trigger_when';
   static const shopware_ui_trigger_app_hint = 'shopware.ui.trigger_app_hint';
   static const shopware_ui_trigger_scope = 'shopware.ui.trigger_scope';
   static const shopware_ui_trigger_state = 'shopware.ui.trigger_state';
   static const shopware_ui_trigger_threshold = 'shopware.ui.trigger_threshold';
-  static const shopware_ui_trigger_threshold_helper =
-      'shopware.ui.trigger_threshold_helper';
-  static const shopware_ui_trigger_confirmed_only =
-      'shopware.ui.trigger_confirmed_only';
-  static const shopware_ui_trigger_confirmed_only_helper =
-      'shopware.ui.trigger_confirmed_only_helper';
+  static const shopware_ui_trigger_threshold_helper = 'shopware.ui.trigger_threshold_helper';
+  static const shopware_ui_trigger_confirmed_only = 'shopware.ui.trigger_confirmed_only';
+  static const shopware_ui_trigger_confirmed_only_helper = 'shopware.ui.trigger_confirmed_only_helper';
   static const shopware_ui_unknown_action = 'shopware.ui.unknown_action';
   static const shopware_ui_read_event_hint = 'shopware.ui.read_event_hint';
   static const shopware_ui_app_title = 'shopware.ui.app_title';
   static const shopware_ui_app_intro = 'shopware.ui.app_intro';
   static const shopware_ui_app_address = 'shopware.ui.app_address';
-  static const shopware_ui_app_address_helper =
-      'shopware.ui.app_address_helper';
-  static const shopware_ui_app_address_localhost =
-      'shopware.ui.app_address_localhost';
+  static const shopware_ui_app_address_helper = 'shopware.ui.app_address_helper';
+  static const shopware_ui_app_address_localhost = 'shopware.ui.app_address_localhost';
   static const shopware_ui_app_step_folder = 'shopware.ui.app_step_folder';
-  static const shopware_ui_app_step_folder_text =
-      'shopware.ui.app_step_folder_text';
-  static const shopware_ui_app_manifest_copied =
-      'shopware.ui.app_manifest_copied';
+  static const shopware_ui_app_step_folder_text = 'shopware.ui.app_step_folder_text';
+  static const shopware_ui_app_manifest_copied = 'shopware.ui.app_manifest_copied';
   static const shopware_ui_app_step_install = 'shopware.ui.app_step_install';
-  static const shopware_ui_app_step_install_text =
-      'shopware.ui.app_step_install_text';
-  static const shopware_ui_app_command_copied =
-      'shopware.ui.app_command_copied';
+  static const shopware_ui_app_step_install_text = 'shopware.ui.app_step_install_text';
+  static const shopware_ui_app_command_copied = 'shopware.ui.app_command_copied';
   static const shopware_ui_app_permissions = 'shopware.ui.app_permissions';
   static const shopware_ui_app_copy = 'shopware.ui.app_copy';
   static const shopware_ui_app_close = 'shopware.ui.app_close';
-  static const shopware_ui_app_manifest_description =
-      'shopware.ui.app_manifest_description';
+  static const shopware_ui_app_manifest_description = 'shopware.ui.app_manifest_description';
   static const shopware_ui = 'shopware.ui';
   static const shopware_plugin_title = 'shopware.plugin.title';
   static const shopware_plugin_description = 'shopware.plugin.description';
@@ -1638,48 +1111,30 @@ abstract class LocaleKeys {
   static const runtime_sessions_retry = 'runtime_sessions.retry';
   static const runtime_sessions_loading = 'runtime_sessions.loading';
   static const runtime_sessions_this_device = 'runtime_sessions.this_device';
-  static const runtime_sessions_unknown_device =
-      'runtime_sessions.unknown_device';
-  static const runtime_sessions_browser_on_os =
-      'runtime_sessions.browser_on_os';
+  static const runtime_sessions_unknown_device = 'runtime_sessions.unknown_device';
+  static const runtime_sessions_browser_on_os = 'runtime_sessions.browser_on_os';
   static const runtime_sessions_native_app = 'runtime_sessions.native_app';
   static const runtime_sessions_signed_in_on = 'runtime_sessions.signed_in_on';
-  static const runtime_sessions_active_recently =
-      'runtime_sessions.active_recently';
-  static const runtime_sessions_active_hours_ago =
-      'runtime_sessions.active_hours_ago';
-  static const runtime_sessions_active_one_day_ago =
-      'runtime_sessions.active_one_day_ago';
-  static const runtime_sessions_active_days_ago =
-      'runtime_sessions.active_days_ago';
+  static const runtime_sessions_active_recently = 'runtime_sessions.active_recently';
+  static const runtime_sessions_active_hours_ago = 'runtime_sessions.active_hours_ago';
+  static const runtime_sessions_active_one_day_ago = 'runtime_sessions.active_one_day_ago';
+  static const runtime_sessions_active_days_ago = 'runtime_sessions.active_days_ago';
   static const runtime_sessions_revoke = 'runtime_sessions.revoke';
   static const runtime_sessions_revoke_title = 'runtime_sessions.revoke_title';
-  static const runtime_sessions_revoke_message =
-      'runtime_sessions.revoke_message';
-  static const runtime_sessions_revoke_confirm =
-      'runtime_sessions.revoke_confirm';
+  static const runtime_sessions_revoke_message = 'runtime_sessions.revoke_message';
+  static const runtime_sessions_revoke_confirm = 'runtime_sessions.revoke_confirm';
   static const runtime_sessions_cancel = 'runtime_sessions.cancel';
   static const runtime_sessions_revoked = 'runtime_sessions.revoked';
-  static const runtime_sessions_revoke_others =
-      'runtime_sessions.revoke_others';
-  static const runtime_sessions_revoke_others_title =
-      'runtime_sessions.revoke_others_title';
-  static const runtime_sessions_revoke_others_message =
-      'runtime_sessions.revoke_others_message';
-  static const runtime_sessions_others_revoked_none =
-      'runtime_sessions.others_revoked_none';
-  static const runtime_sessions_others_revoked_one =
-      'runtime_sessions.others_revoked_one';
-  static const runtime_sessions_others_revoked_many =
-      'runtime_sessions.others_revoked_many';
-  static const runtime_sessions_only_this_device =
-      'runtime_sessions.only_this_device';
-  static const runtime_sessions_failure_runtime_unavailable =
-      'runtime_sessions.failure.runtime_unavailable';
-  static const runtime_sessions_failure_not_found =
-      'runtime_sessions.failure.not_found';
-  static const runtime_sessions_failure_unexpected =
-      'runtime_sessions.failure.unexpected';
+  static const runtime_sessions_revoke_others = 'runtime_sessions.revoke_others';
+  static const runtime_sessions_revoke_others_title = 'runtime_sessions.revoke_others_title';
+  static const runtime_sessions_revoke_others_message = 'runtime_sessions.revoke_others_message';
+  static const runtime_sessions_others_revoked_none = 'runtime_sessions.others_revoked_none';
+  static const runtime_sessions_others_revoked_one = 'runtime_sessions.others_revoked_one';
+  static const runtime_sessions_others_revoked_many = 'runtime_sessions.others_revoked_many';
+  static const runtime_sessions_only_this_device = 'runtime_sessions.only_this_device';
+  static const runtime_sessions_failure_runtime_unavailable = 'runtime_sessions.failure.runtime_unavailable';
+  static const runtime_sessions_failure_not_found = 'runtime_sessions.failure.not_found';
+  static const runtime_sessions_failure_unexpected = 'runtime_sessions.failure.unexpected';
   static const runtime_sessions_failure = 'runtime_sessions.failure';
   static const runtime_sessions = 'runtime_sessions';
   static const plugins_title = 'plugins.title';
@@ -1696,12 +1151,11 @@ abstract class LocaleKeys {
   static const plugins_disable_confirm = 'plugins.disable_confirm';
   static const plugins_cancel = 'plugins.cancel';
   static const plugins_disabled_hint = 'plugins.disabled_hint';
-  static const plugins_failure_runtime_unavailable =
-      'plugins.failure.runtime_unavailable';
-  static const plugins_failure_admin_required =
-      'plugins.failure.admin_required';
+  static const plugins_failure_runtime_unavailable = 'plugins.failure.runtime_unavailable';
+  static const plugins_failure_admin_required = 'plugins.failure.admin_required';
   static const plugins_failure_not_found = 'plugins.failure.not_found';
   static const plugins_failure_unexpected = 'plugins.failure.unexpected';
   static const plugins_failure = 'plugins.failure';
   static const plugins = 'plugins';
+
 }

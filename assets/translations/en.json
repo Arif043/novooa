@@ -1,7 +1,11 @@
 {
   "navigation": {
-    "greeting": "Hello!",
-    "greeting_named": "Hello, {name}!",
+    "greeting_morning": "Good morning!",
+    "greeting_morning_named": "Good morning, {name}!",
+    "greeting_day": "Good afternoon!",
+    "greeting_day_named": "Good afternoon, {name}!",
+    "greeting_evening": "Good evening!",
+    "greeting_evening_named": "Good evening, {name}!",
     "sign_out": "Sign out"
   },
   "task_builder": {

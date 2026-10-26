@@ -1,7 +1,11 @@
 {
   "navigation": {
-    "greeting": "Merhaba!",
-    "greeting_named": "Merhaba, {name}!",
+    "greeting_morning": "Günaydın!",
+    "greeting_morning_named": "Günaydın, {name}!",
+    "greeting_day": "İyi günler!",
+    "greeting_day_named": "İyi günler, {name}!",
+    "greeting_evening": "İyi akşamlar!",
+    "greeting_evening_named": "İyi akşamlar, {name}!",
     "sign_out": "Çıkış yap"
   },
   "task_builder": {

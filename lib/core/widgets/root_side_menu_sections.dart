@@ -1,17 +1,21 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../generated/assets.dart';
 import '../../root_tab.dart';
-import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
+import 'user_greeting.dart';
 
 class SideMenuHeader extends StatelessWidget {
-  const SideMenuHeader({super.key, this.currentUserName});
+  const SideMenuHeader({
+    super.key,
+    this.currentUserName,
+    this.clock = DateTime.now,
+  });
 
   final String? currentUserName;
+  final DateTime Function() clock;
 
   @override
   Widget build(BuildContext context) {
@@ -22,16 +26,19 @@ class SideMenuHeader extends StatelessWidget {
         AppSpacing.sm,
         AppSpacing.xs,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      // Wrap: Der Gruß steht rechts neben dem Logo und rutscht nur bei
+      // schmalem Menü oder großer Schrift darunter.
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.sm,
         children: [
           Image.asset(
             Assets.iconsFullv2Transparent,
             width: 180,
             semanticLabel: 'novooa',
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _UserGreeting(displayName: currentUserName),
+          UserGreeting(displayName: currentUserName, now: clock()),
         ],
       ),
     );
@@ -63,23 +70,6 @@ class SideMenuTabList extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _UserGreeting extends StatelessWidget {
-  const _UserGreeting({this.displayName});
-
-  final String? displayName;
-
-  @override
-  Widget build(BuildContext context) {
-    final name = displayName?.trim() ?? '';
-    return Text(
-      name.isEmpty
-          ? LocaleKeys.navigation_greeting.tr()
-          : LocaleKeys.navigation_greeting_named.tr(namedArgs: {'name': name}),
-      style: Theme.of(context).textTheme.titleMedium,
     );
   }
 }
