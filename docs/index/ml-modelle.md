@@ -66,6 +66,8 @@
 
 ## Katalogbetrieb
 
+- [Modell-Journal](../notes/modell-journal.md) — Ablauf beim Import, ein Eintrag je Modell
+- [Übersicht des Modellkatalogs](./modellkatalog.md)
 - [Modelle veröffentlichen](../notes/modelle-veroeffentlichen.md)
 
 ## Offene Punkte

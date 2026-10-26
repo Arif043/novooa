@@ -183,6 +183,7 @@ Inhaltsverzeichnis, dann nur die Notizen, die du brauchst.
 | Mitarbeiter | [`docs/index/mitarbeiter.md`](./docs/index/mitarbeiter.md) | Subagenten aus Rahmenbedingung und Skills |
 | ML-Modelle | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md) | Katalog, Verträge, Transformationen, ML-Dienst |
 | Transformationen | [`docs/index/transformationen.md`](./docs/index/transformationen.md) | Jede Transformation des ML-Dienstes als eigene Notiz, Regeln |
+| Modellkatalog | [`docs/index/modellkatalog.md`](./docs/index/modellkatalog.md) | Journal je Modell: Herkunft, Lizenz, Prüfungen, Verlauf; Ablauf beim Import |
 | Sprachausgabe | [`docs/index/sprachausgabe.md`](./docs/index/sprachausgabe.md) | Vorlesen, Stimmen, Transkription |
 | Dokumentenscanner | [`docs/index/dokumentscanner.md`](./docs/index/dokumentscanner.md) | Plattformen, Browser-Scanner, Grenzen |
 | Kommunikation | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | SendGrid, Mail-Connectoren, Twilio, Kanäle |
