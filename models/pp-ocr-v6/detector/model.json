@@ -2,6 +2,8 @@
   "id": "pp-ocr-v6-text-detector-small",
   "title": "PP-OCRv6 Small Texterkennung",
   "description": "Erkennt Textregionen in Dokumenten und Belegen.",
+  "task": "optical-character-recognition",
+  "languages": [],
   "tags": [
     "ocr",
     "text",

@@ -1,39 +1,59 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
+import {type ModelContractCheck} from "../../domain/repositories/system-model-source.js";
 import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
+import {type PublishSystemModelRequest} from "../../domain/usecases/publish-system-model.js";
 import {
   publishSystemModelCommand,
+  type ModelPublishCommandDependencies,
   type OnnxModelValidator,
   type SystemModelPublisher,
 } from "./model-publish-command.js";
 import {type ModelPublishOptions} from "./model-publish-options.js";
 
-test("validates a model without persisting during a dry run", async () => {
-  const publisher = new Publisher();
-  const validator = new Validator();
-  const outcome = await publishSystemModelCommand(options(true), dependencies(publisher, validator));
+test("checks a model without persisting during a dry run", async () => {
+  const events: string[] = [];
+  const outcome = await publishSystemModelCommand(options({dryRun: true}), dependencies(events));
 
   assert.equal(outcome.dryRun, true);
-  assert.equal(validator.calls, 1);
-  assert.equal(publisher.calls, 0);
+  assert.deepEqual(events, ["contract", "onnx", "artifact", "check"]);
 });
 
 test("publishes a verified system model", async () => {
-  const publisher = new Publisher();
-  const outcome = await publishSystemModelCommand(options(false), dependencies(publisher, new Validator()));
+  const events: string[] = [];
+  const outcome = await publishSystemModelCommand(options(), dependencies(events));
 
   assert.equal(outcome.entry.id, "model");
-  assert.equal(publisher.calls, 1);
+  assert.deepEqual(events, ["contract", "onnx", "artifact", "publish"]);
+});
+
+test("stops before reading the artifact when the contract check fails", async () => {
+  const events: string[] = [];
+  const failing: ModelContractCheck = {
+    validate: async () => {
+      throw new Error("Eingang input: image.resize: Der Parameter width fehlt.");
+    },
+  };
+
+  await assert.rejects(publishSystemModelCommand(options(), {...dependencies(events), contractValidator: failing}), /width fehlt/);
+  assert.deepEqual(events, []);
+});
+
+test("passes the replace-version choice to the publisher", async () => {
+  const publisher = new Publisher([]);
+  await publishSystemModelCommand(options({replaceVersion: true}), {...dependencies([]), publisher});
+
+  assert.equal(publisher.requests[0]?.replaceVersion, true);
 });
 
 test("passes weight files and resources of the options to the artifact", async () => {
-  const requested: Parameters<typeof dependencies>[0][] = [];
-  await publishSystemModelCommand({...options(false), externalDataPaths: ["dir/weights.bin"], resources: [{name: "labels", path: "labels.json"}]}, {
-    ...dependencies(new Publisher(), new Validator()),
+  const requested: unknown[] = [];
+  await publishSystemModelCommand({...options(), externalDataPaths: ["dir/weights.bin"], resources: [{name: "labels", path: "labels.json"}]}, {
+    ...dependencies([]),
     artifactFromFile: async (file) => {
-      requested.push(file as never);
-      return dependencies(new Publisher(), new Validator()).artifactFromFile();
+      requested.push(file);
+      return artifact();
     },
   });
 
@@ -44,33 +64,43 @@ test("passes weight files and resources of the options to the artifact", async (
 });
 
 class Publisher implements SystemModelPublisher {
-  calls = 0;
+  readonly requests: PublishSystemModelRequest[] = [];
 
-  async execute(request: {entry: ModelCatalogEntry}): Promise<ModelCatalogEntry> {
-    this.calls += 1;
+  constructor(private readonly events: string[]) {}
+
+  async check(request: PublishSystemModelRequest): Promise<void> {
+    this.requests.push(request);
+    this.events.push("check");
+  }
+
+  async execute(request: PublishSystemModelRequest): Promise<ModelCatalogEntry> {
+    this.requests.push(request);
+    this.events.push("publish");
     return request.entry;
   }
 }
 
-class Validator implements OnnxModelValidator {
-  calls = 0;
-
-  async validate(): Promise<void> {
-    this.calls += 1;
-  }
+function dependencies(events: string[]): ModelPublishCommandDependencies {
+  const onnxValidator: OnnxModelValidator = {validate: async () => void events.push("onnx")};
+  return {
+    publisher: new Publisher(events),
+    contractValidator: {validate: async () => void events.push("contract")},
+    onnxValidator,
+    manifestFromFile: async () => manifest(),
+    artifactFromFile: async () => {
+      events.push("artifact");
+      return artifact();
+    },
+  };
 }
 
-function dependencies(publisher: Publisher, validator: Validator) {
+function artifact(): ModelArtifactPublication {
   return {
-    publisher, onnxValidator: validator,
-    manifestFromFile: async () => manifest(),
-    artifactFromFile: async (): Promise<ModelArtifactPublication> => ({
-      reference: {
-        artifactId: "model", versionId: "1", format: "onnx", contentType: "application/onnx",
-        sizeBytes: 1, sha256: "0".repeat(64),
-      },
-      content: bytes(),
-    }),
+    reference: {
+      artifactId: "model", versionId: "1", format: "onnx", contentType: "application/onnx",
+      sizeBytes: 1, sha256: "0".repeat(64),
+    },
+    content: bytes(),
   };
 }
 
@@ -81,10 +111,11 @@ function manifest() {
   };
 }
 
-function options(dryRun: boolean): ModelPublishOptions {
+function options(overrides: Partial<ModelPublishOptions> = {}): ModelPublishOptions {
   return {
     projectId: "project", manifestPath: "model.json", artifactPath: "model.onnx",
-    externalDataPaths: [], resources: [], pythonExecutable: "python3", dryRun,
+    externalDataPaths: [], resources: [], pythonExecutable: "python3", dryRun: false, replaceVersion: false,
+    ...overrides,
   };
 }
 

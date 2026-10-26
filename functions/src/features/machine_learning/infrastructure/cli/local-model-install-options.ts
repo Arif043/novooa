@@ -11,7 +11,7 @@ export function localModelInstallOptionsFromArguments(arguments_: readonly strin
 export const localModelInstallUsage = [
   "Verwendung: npm --prefix functions run models:install-local -- --runtime-root <ordner>",
   "  --manifest <model.json> --artifact <model.onnx> [--external-data <datei>]... [--resource <name>=<datei>]...",
-  "  [--python <pfad>] [--dry-run]",
+  "  [--python <pfad>] [--dry-run] [--replace-version]",
 ].join("\n");
 
 function optionValue(arguments_: readonly string[], name: string): string {

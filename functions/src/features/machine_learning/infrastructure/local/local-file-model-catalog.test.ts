@@ -22,6 +22,22 @@ test("persists model entries and filters team-scoped entries", async () => {
   }
 });
 
+test("finds only published system entries by id", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-catalog-"));
+  const catalog = new LocalFileModelCatalog(directory);
+
+  try {
+    await catalog.save(systemEntry());
+    await catalog.save({...systemEntry(), id: "team-model", scope: {type: "team", teamId: "team-2"}});
+
+    assert.equal((await catalog.findSystemEntry("system-model"))?.artifactReference.versionId, "v1");
+    assert.equal(await catalog.findSystemEntry("team-model"), null);
+    assert.equal(await catalog.findSystemEntry("missing"), null);
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
 function systemEntry(): ModelCatalogEntry {
   return {
     id: "system-model", title: "Systemmodell", description: "Testmodell", task: "image-classification", languages: [], tags: ["test"],

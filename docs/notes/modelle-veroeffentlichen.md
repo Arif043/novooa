@@ -15,24 +15,37 @@ npm --prefix functions run models:publish -- \
   --manifest models/mobilenet-v3/model.json \
   --artifact models/mobilenet-v3/model.onnx \
   [--external-data models/mobilenet-v3/model.onnx.data] [--resource labels=models/mobilenet-v3/labels.json] \
-  --dry-run
+  [--replace-version] --dry-run
 ```
 
-1. Manifest und Modell validieren; eine ONNX-Runtime-Session öffnen und Namen,
-   Datentypen und statische Formen mit dem Manifest vergleichen (`--python
-   <pfad>`, sonst `PYTHON_EXECUTABLE` oder `python3`).
-2. Größe und SHA-256 aller Dateien berechnen.
-3. Ohne `--dry-run`: Multipart-Upload (Prüfsumme in den Objekt-Metadaten),
+1. Manifest lesen (`task` ist Pflicht) und den Vertrag mit derselben
+   [Vertragsprüfung](./ml-vertragspruefung.md) wie beim Cachen prüfen: Kette,
+   Parameter und Setting-Bindungen aller Ein- und Ausgänge
+   (`contract_validation_worker.py`).
+2. Eine ONNX-Runtime-Session öffnen und Namen, Datentypen und feste Formen mit
+   dem Manifest vergleichen (`onnx_validation_worker.py`). Dynamische Achsen
+   des Modells nehmen jede Größe an; ZipMap-Ausgänge gelten als `float32`.
+3. Größe und SHA-256 aller Dateien berechnen.
+4. Im Katalog nachsehen: Steht unter der Modell-ID schon eine andere
+   Artefaktversion, bricht die CLI ab, außer mit `--replace-version`.
+5. Ohne `--dry-run`: Multipart-Upload (Prüfsumme in den Objekt-Metadaten),
    danach Katalogeintrag schreiben.
+
+Beide Python-Prüfungen nutzen `--python <pfad>`, sonst `PYTHON_EXECUTABLE`
+oder `python3`, mit den Paketen aus `local-runtime/python/requirements.txt`.
 
 - Versionen sind unveränderlich: gleiche Prüfsumme wird übersprungen,
   abweichende ist ein Fehler.
+- Warum `--replace-version`: Der Katalog führt je Modell-ID eine Version. Eine
+  neue ersetzt sie für alle Runtimes, die das Modell noch nicht gecacht haben;
+  das soll nie versehentlich geschehen. Dieselbe Version erneut zu
+  veröffentlichen (etwa für korrigierte Texte) ist ohne Option erlaubt.
 - Gewichtsdateien liegen im Modellordner; ihr Dateiname ist der erwartete
   Name.
-- Der S3-Schlüssel bleibt beim Betreiber. Die Identität braucht
+- Der S3-Schlüssel bleibt beim Betreiber. Die Identität braucht Lese- und
   Schreibzugriff auf `modelCatalog`.
-- Die CLI akzeptiert derzeit Bild- und Tensoreingänge, die registrierten
-  Bildtransformationen und keine Ausgangsnachverarbeitung.
+- `models:install-local -- --runtime-root <ordner>` prüft genauso und schreibt
+  in den lokalen Modellspeicher einer Runtime.
 
 ## Siehe auch
 

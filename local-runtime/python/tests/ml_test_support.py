@@ -15,6 +15,15 @@ from novooa_ml.transformations.default_registry import default_transformation_re
 
 REGISTRY = default_transformation_registry()
 
+_REPOSITORY = Path(__file__).resolve().parents[3]
+
+
+def shipped_model_manifests():
+    """Alle mitgelieferten Manifeste: Systemmodelle der Runtime und Katalogmodelle unter `models/`."""
+    system_models = (_REPOSITORY / "local-runtime" / "system-models").glob("*.json")
+    catalog_models = (_REPOSITORY / "models").rglob("model.json")
+    return sorted([*system_models, *catalog_models])
+
 
 def context(**options):
     return TransformationContext(numpy, image_module=Image, **options)

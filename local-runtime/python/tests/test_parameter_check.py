@@ -6,10 +6,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import json
 
-from ml_test_support import REGISTRY
+from ml_test_support import REGISTRY, shipped_model_manifests
 from novooa_ml.transformations.pipeline_check import check_contract
-
-SYSTEM_MODELS = Path(__file__).resolve().parents[2] / "system-models"
 
 
 def contract(input_steps=(), output_steps=(), settings=()):
@@ -74,11 +72,11 @@ class ParameterCheckTest(unittest.TestCase):
 
 
 class ShippedManifestTest(unittest.TestCase):
-    def test_every_system_model_manifest_passes_the_parameter_check(self):
-        manifests = sorted(SYSTEM_MODELS.glob("*.json"))
-        self.assertTrue(manifests)
+    def test_every_shipped_model_manifest_passes_the_parameter_check(self):
+        manifests = shipped_model_manifests()
+        self.assertTrue(any(path.name == "model.json" for path in manifests))
         for path in manifests:
-            with self.subTest(manifest=path.name):
+            with self.subTest(manifest=str(path)):
                 check_contract(json.loads(path.read_text(encoding="utf-8"))["contract"], REGISTRY)
 
     def test_documented_classifier_and_ocr_examples_pass(self):

@@ -1,6 +1,7 @@
 import {localModelInstallDependencies} from "./local-model-install-composition.js";
 import {localModelInstallOptionsFromArguments, localModelInstallUsage} from "./local-model-install-options.js";
 import {publishSystemModelCommand} from "./model-publish-command.js";
+import {cliErrorMessage} from "./cli-error-message.js";
 
 async function main(): Promise<void> {
   if (process.argv.includes("--help")) return console.info(localModelInstallUsage);
@@ -15,6 +16,6 @@ function messageFor(modelId: string, versionId: string, dryRun: boolean): string
 }
 
 void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : "Die lokale Modellinstallation ist fehlgeschlagen.");
+  console.error(cliErrorMessage(error, "Die lokale Modellinstallation ist fehlgeschlagen."));
   process.exitCode = 1;
 });

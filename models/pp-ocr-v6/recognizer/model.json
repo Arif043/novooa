@@ -2,6 +2,8 @@
   "id": "pp-ocr-v6-text-recognizer-small",
   "title": "PP-OCRv6 Small Texterkennung",
   "description": "Liest Text aus einer einzelnen erkannten Dokumentregion.",
+  "task": "optical-character-recognition",
+  "languages": [],
   "tags": [
     "ocr",
     "text",

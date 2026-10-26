@@ -9,6 +9,8 @@
       "tags": ["bild", "klassifikation", "imagenet", "leichtgewichtig"]
     }
   },
+  "task": "image-classification",
+  "languages": [],
   "tags": [
     "image",
     "classification",

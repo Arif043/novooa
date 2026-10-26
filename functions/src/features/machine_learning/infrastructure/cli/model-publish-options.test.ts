@@ -13,6 +13,13 @@ test("accepts the dry-run flag", () => {
   assert.equal(options.dryRun, true);
 });
 
+test("replaces a published version only with the replace-version flag", () => {
+  assert.equal(modelPublishOptionsFromArguments(argumentsFor()).replaceVersion, false);
+  const options = modelPublishOptionsFromArguments([...argumentsFor(), "--replace-version", "--dry-run"]);
+  assert.equal(options.replaceVersion, true);
+  assert.equal(options.dryRun, true);
+});
+
 test("rejects a missing required option", () => {
   assert.throws(() => modelPublishOptionsFromArguments(["--project", "project-1"]), /--manifest fehlt/);
 });

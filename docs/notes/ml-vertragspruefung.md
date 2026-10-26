@@ -1,11 +1,14 @@
 # Vertragsprüfung
 
-> Beim Import und Cachen prüft der Python-Dienst Kette, Parameter und Setting-Bindungen jedes Modellvertrags und lehnt Fehler mit verständlicher Meldung ab.
+> Beim Veröffentlichen, Import und Cachen prüft der Python-Transformationskatalog Kette, Parameter und Setting-Bindungen jedes Modellvertrags und lehnt Fehler mit verständlicher Meldung ab.
 
 Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 
 `PythonModelContractValidator` ruft `POST /v1/contract-validations` mit
-`{contract}`. Je Ein- und Ausgang:
+`{contract}`. Die CLI der [Veröffentlichung](./modelle-veroeffentlichen.md)
+braucht keinen Dienst: `PythonProcessModelContractValidator` startet
+`local-runtime/python/contract_validation_worker.py`, der dieselbe Prüfung
+ausführt. Je Ein- und Ausgang:
 
 1. **Kette:** *„Eingang bild: audio.melSpectrogram erwartet audio, erhält
    image.“*

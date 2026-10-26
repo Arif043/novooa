@@ -1,6 +1,7 @@
 import {cloudModelPublishDependencies} from "./model-publish-composition.js";
 import {publishSystemModelCommand} from "./model-publish-command.js";
 import {modelPublishOptionsFromArguments, modelPublishUsage} from "./model-publish-options.js";
+import {cliErrorMessage} from "./cli-error-message.js";
 
 async function main(): Promise<void> {
   if (process.argv.includes("--help")) return console.info(modelPublishUsage);
@@ -15,6 +16,6 @@ function messageFor(modelId: string, versionId: string, dryRun: boolean): string
 }
 
 void main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : "Die Modellveröffentlichung ist fehlgeschlagen.");
+  console.error(cliErrorMessage(error, "Die Modellveröffentlichung ist fehlgeschlagen."));
   process.exitCode = 1;
 });

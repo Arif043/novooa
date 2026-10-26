@@ -1,6 +1,15 @@
 import json
 import sys
 
+ONNX_TYPES = {
+    "float32": "tensor(float)", "float16": "tensor(float16)", "float64": "tensor(double)",
+    "int64": "tensor(int64)", "int32": "tensor(int32)",
+    "int16": "tensor(int16)", "int8": "tensor(int8)",
+    "uint8": "tensor(uint8)", "bool": "tensor(bool)", "string": "tensor(string)",
+}
+# ZipMap-Ausgänge (skl2onnx) macht der Ausgabe-Worker zu einem dichten float32-Tensor.
+ZIPMAP_TYPE_PREFIX = "seq(map("
+
 
 def runtime():
     try:
@@ -19,28 +28,29 @@ def session_for(payload, onnxruntime):
     )
 
 
-def model_types():
-    return {
-        "float32": "tensor(float)", "float64": "tensor(double)",
-        "int64": "tensor(int64)", "int32": "tensor(int32)",
-        "int16": "tensor(int16)", "int8": "tensor(int8)",
-        "uint8": "tensor(uint8)", "bool": "tensor(bool)",
-    }
-
-
 def validate_definition(definition, node, kind):
-    if definition["name"] != node.name:
-        raise ValueError(f"Der {kind}-Tensor {definition['name']} fehlt im ONNX-Modell.")
-    if model_types()[definition["dataType"]] != node.type:
-        raise ValueError(f"Der Datentyp von {definition['name']} stimmt nicht mit dem ONNX-Modell überein.")
+    if is_zipmap(definition, node):
+        return
+    if ONNX_TYPES.get(definition["dataType"]) != node.type:
+        raise ValueError(
+            f"Der Datentyp von {definition['name']} stimmt nicht mit dem ONNX-Modell überein "
+            f"(Vertrag {definition['dataType']}, Modell {node.type})."
+        )
     validate_shape(definition["shape"], node.shape, definition["name"])
+
+
+def is_zipmap(definition, node):
+    return definition["dataType"] == "float32" and node.type.startswith(ZIPMAP_TYPE_PREFIX)
 
 
 def validate_shape(expected, actual, name):
     if len(expected) != len(actual):
         raise ValueError(f"Die Tensor-Form von {name} stimmt nicht mit dem ONNX-Modell überein.")
     for expected_dimension, actual_dimension in zip(expected, actual, strict=True):
-        if expected_dimension != "dynamic" and expected_dimension != actual_dimension:
+        # Dynamische Achsen des Modells (None oder symbolisch) nehmen jede Größe an.
+        if not isinstance(actual_dimension, int) or expected_dimension == "dynamic":
+            continue
+        if expected_dimension != actual_dimension:
             raise ValueError(f"Die Tensor-Form von {name} stimmt nicht mit dem ONNX-Modell überein.")
 
 

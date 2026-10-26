@@ -3,12 +3,13 @@ import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {type SystemModelCatalog} from "../../domain/repositories/system-model-catalog.js";
+import {type SystemModelRegistry} from "../../domain/repositories/system-model-registry.js";
 import {
   modelCatalogEntryData,
   modelCatalogEntryFromData,
 } from "../model-catalog-entry-codec.js";
 
-export class FirestoreModelCatalog implements ModelCatalog, SystemModelCatalog {
+export class FirestoreModelCatalog implements ModelCatalog, SystemModelCatalog, SystemModelRegistry {
   async save(entry: ModelCatalogEntry): Promise<void> {
     const reference = modelsReference().doc(entry.id);
     await getDatabase().runTransaction(async (transaction) => {
@@ -38,6 +39,13 @@ export class FirestoreModelCatalog implements ModelCatalog, SystemModelCatalog {
     if (!snapshot.exists) return null;
     const entry = documentToEntry(snapshot);
     return availableFor(entry, teamId) ? entry : null;
+  }
+
+  async findSystemEntry(modelId: string): Promise<ModelCatalogEntry | null> {
+    const snapshot = await modelsReference().doc(modelId).get();
+    if (!snapshot.exists) return null;
+    const entry = documentToEntry(snapshot);
+    return entry.scope.type === "system" ? entry : null;
   }
 }
 

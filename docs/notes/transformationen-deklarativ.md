@@ -25,11 +25,11 @@ inputs: [{
 - Python entdeckt Strategien über ihre Kennung automatisch. Eine neue
   Transformation ergänzt nur ihr eigenes Modul; Worker, Registry und andere
   Strategien bleiben unverändert (OCP).
-- TypeScript validiert Verträge über injizierte Fähigkeiten; das Deployment
-  entscheidet als Composition Root, welche es freigibt. Die Prüfung beim
-  Veröffentlichen (`models:publish`) pflegt ihre Bildtransformationen noch als
-  feste Liste in `model-contract-capabilities.ts` und kennt neuere Typen
-  nicht.
+- TypeScript prüft nur den Aufbau eines Vertrags. Welche Transformationen es
+  gibt und wie sie zusammenpassen, entscheidet allein der Python-Katalog —
+  beim Cachen und Import über den ML-Dienst, beim Veröffentlichen
+  (`models:publish`) über `contract_validation_worker.py`. Eine neue
+  Transformation braucht deshalb keine Änderung in TypeScript.
 - Parameter dürfen Kontext referenzieren (`$iteration.value.bounds`,
   `$global.detektor.value.bounds`); die Runtime löst sie direkt vor der
   Inferenz auf, Python sieht nur konkrete Werte.

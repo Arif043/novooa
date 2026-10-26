@@ -86,13 +86,6 @@ class ContractCheckTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Eingang roh: Tensor-Quellen erlauben keine Transformationen."):
             check_contract(contract, REGISTRY)
 
-    def test_validates_the_shipped_system_model_manifests(self):
-        import json
-
-        for path in sorted((Path(__file__).resolve().parents[2] / "system-models").glob("*.json")):
-            with self.subTest(manifest=path.name):
-                check_contract(json.loads(path.read_text(encoding="utf-8"))["contract"], REGISTRY)
-
 
 if __name__ == "__main__":
     unittest.main()

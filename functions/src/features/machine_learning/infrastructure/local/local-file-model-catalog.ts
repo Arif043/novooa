@@ -2,13 +2,14 @@ import {mkdir, readFile, readdir, rename, writeFile} from "node:fs/promises";
 import path from "node:path";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelCatalog} from "../../domain/repositories/model-catalog.js";
+import {type SystemModelRegistry} from "../../domain/repositories/system-model-registry.js";
 import {
   modelCatalogEntryData,
   modelCatalogEntryFromData,
   type ModelCatalogEntryData,
 } from "../model-catalog-entry-codec.js";
 
-export class LocalFileModelCatalog implements ModelCatalog {
+export class LocalFileModelCatalog implements ModelCatalog, SystemModelRegistry {
   constructor(private readonly directory: string) {}
 
   async save(entry: ModelCatalogEntry): Promise<void> {
@@ -28,6 +29,11 @@ export class LocalFileModelCatalog implements ModelCatalog {
   async findAvailableFor(teamId: string, modelId: string): Promise<ModelCatalogEntry | null> {
     const entry = await this.entryFromFile(this.fileNameFor(modelId)).catch(fileNotFoundAsNull);
     return entry !== null && availableFor(entry, teamId) ? entry : null;
+  }
+
+  async findSystemEntry(modelId: string): Promise<ModelCatalogEntry | null> {
+    const entry = await this.entryFromFile(this.fileNameFor(modelId)).catch(fileNotFoundAsNull);
+    return entry?.scope.type === "system" ? entry : null;
   }
 
   private async entryFromFile(name: string): Promise<ModelCatalogEntry> {

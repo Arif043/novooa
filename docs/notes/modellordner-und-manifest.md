@@ -37,7 +37,11 @@ models/mobilenet-v3/
 }
 ```
 
-Dazu kommen `task`, optional `languages`, `translations` und `settings`.
+Pflicht ist außerdem `task`
+([Modellaufgaben](./modellaufgaben-und-sprachen.md)); optional sind
+`languages`, `translations` und `settings`. Kuratierte Modelle liegen unter
+`models/`, Systemmodelle der Runtime unter `local-runtime/system-models/`;
+Tests prüfen beide Ordner mit der Veröffentlichungslogik.
 
 ## Siehe auch
 

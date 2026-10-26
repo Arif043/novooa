@@ -2,6 +2,8 @@
   "id": "pp-ocr-v3-latin-text-recognizer",
   "title": "PP-OCRv3 Latin Texterkennung",
   "description": "Liest Text aus einer einzelnen, erkannten Dokumentregion.",
+  "task": "optical-character-recognition",
+  "languages": [],
   "tags": [
     "ocr",
     "text",

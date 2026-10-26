@@ -2,6 +2,8 @@
   "id": "pp-ocr-v3-text-detector",
   "title": "PP-OCRv3 Texterkennung",
   "description": "Erkennt zusammenhängende Textbereiche in Dokumentbildern.",
+  "task": "optical-character-recognition",
+  "languages": [],
   "tags": [
     "ocr",
     "dokument",

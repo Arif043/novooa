@@ -39,8 +39,11 @@ parameters = {
   Parameter ist deklariert, und der
   [Transformationskatalog](./transformationskatalog.md) nennt jeden Typ mit
   allen Parametern.
-- `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten
-  Systemmodell-Manifeste.
+- `tests/test_parameter_check.py` prüft alle mitgelieferten Manifeste
+  (`local-runtime/system-models/` und `models/**/model.json`).
+- `contract_validation_worker.py` und `onnx_validation_worker.py` sind die
+  Prüfungen der [Veröffentlichung](./modelle-veroeffentlichen.md); sie laufen
+  ohne ML-Dienst (`tests/test_validation_workers.py`).
 
 ## Siehe auch
 

@@ -2,6 +2,10 @@
   "id": "pp-ocr-v5-server-text-recognizer",
   "title": "PP-OCRv5 Server Texterkennung",
   "description": "Liest deutsche Textzeilen aus erkannten Dokumentregionen mit hoher Genauigkeit.",
+  "task": "optical-character-recognition",
+  "languages": [
+    "de"
+  ],
   "tags": [
     "ocr",
     "text",
