@@ -23,6 +23,7 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 | Fähigkeiten | [`index/faehigkeiten.md`](./index/faehigkeiten.md) |
 | Mitarbeiter | [`index/mitarbeiter.md`](./index/mitarbeiter.md) |
 | ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
+| Transformationen | [`index/transformationen.md`](./index/transformationen.md) |
 | Sprachausgabe | [`index/sprachausgabe.md`](./index/sprachausgabe.md) |
 | Dokumentenscanner | [`index/dokumentscanner.md`](./index/dokumentscanner.md) |
 | Kommunikation | [`index/kommunikation.md`](./index/kommunikation.md) |

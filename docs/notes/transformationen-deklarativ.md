@@ -36,6 +36,6 @@ inputs: [{
 
 ## Siehe auch
 
-- [Transformationskatalog](./transformationskatalog.md)
+- [Transformationen](../index/transformationen.md)
 - [Wertarten und Kettenregeln](./ml-wertarten-und-ketten.md)
 - [Aufbau des Python-ML-Dienstes](./python-ml-dienst-aufbau.md)

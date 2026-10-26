@@ -32,7 +32,8 @@
 ## Transformationen
 
 - [Deklarative Transformationen](../notes/transformationen-deklarativ.md)
-- [Transformationskatalog](../notes/transformationskatalog.md)
+- [Alle Transformationen](./transformationen.md) — je Transformation eine Notiz
+- [Regeln für Transformationen](../notes/regeln-fuer-transformationen.md)
 - [Wertarten und Kettenregeln](../notes/ml-wertarten-und-ketten.md)
 - [Vertragsprüfung](../notes/ml-vertragspruefung.md)
 - [Modellquellen im Worker](../notes/modellquellen-im-worker.md)

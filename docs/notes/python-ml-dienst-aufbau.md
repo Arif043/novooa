@@ -36,9 +36,10 @@ parameters = {
   mit `accepts`/`produces` in einem Bereichsordner.
 - `tests/test_transformation_architecture.py` sichert: eine Strategie je
   Datei, Ordner nach Bereich, Wertarten, Typ-Snapshot, jeder gelesene
-  Parameter ist deklariert, und der
-  [Transformationskatalog](./transformationskatalog.md) nennt jeden Typ mit
-  allen Parametern.
+  Parameter ist deklariert, und jeder Typ hat eine eigene Notiz im
+  Inhaltsverzeichnis [Transformationen](../index/transformationen.md) mit
+  allen Parametern und fachlichen Tests
+  ([Regeln für Transformationen](./regeln-fuer-transformationen.md)).
 - `tests/test_parameter_check.py` prüft alle mitgelieferten Manifeste
   (`local-runtime/system-models/` und `models/**/model.json`).
 - `contract_validation_worker.py` und `onnx_validation_worker.py` sind die

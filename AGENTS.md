@@ -182,6 +182,7 @@ Inhaltsverzeichnis, dann nur die Notizen, die du brauchst.
 | Fähigkeiten | [`docs/index/faehigkeiten.md`](./docs/index/faehigkeiten.md) | Skills-Ordner, Import, skills.sh, Bausteine |
 | Mitarbeiter | [`docs/index/mitarbeiter.md`](./docs/index/mitarbeiter.md) | Subagenten aus Rahmenbedingung und Skills |
 | ML-Modelle | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md) | Katalog, Verträge, Transformationen, ML-Dienst |
+| Transformationen | [`docs/index/transformationen.md`](./docs/index/transformationen.md) | Jede Transformation des ML-Dienstes als eigene Notiz, Regeln |
 | Sprachausgabe | [`docs/index/sprachausgabe.md`](./docs/index/sprachausgabe.md) | Vorlesen, Stimmen, Transkription |
 | Dokumentenscanner | [`docs/index/dokumentscanner.md`](./docs/index/dokumentscanner.md) | Plattformen, Browser-Scanner, Grenzen |
 | Kommunikation | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | SendGrid, Mail-Connectoren, Twilio, Kanäle |
@@ -210,6 +211,12 @@ Designsystem (Farben, Typografie, Abstände): [`docs/DESIGN.md`](./docs/DESIGN.m
   denselben Commit. Insbesondere: neuer `WorkflowPrimitive` →
   Zeile in [`docs/notes/bausteinkatalog.md`](./docs/notes/bausteinkatalog.md)
   und Outputs in [`docs/notes/executor-outputs.md`](./docs/notes/executor-outputs.md).
+- **Transformationen allgemein halten.** Neue Transformationen des ML-Dienstes
+  beschreiben ein Verfahren, nicht ein Modell (Ausnahmen wie Piper oder
+  Kokoro nur im Worst Case), kommen mit fachlichen Testfällen gegen eine
+  Referenz und bekommen eine eigene Notiz `transformation-<typ>.md` im
+  Inhaltsverzeichnis [Transformationen](./docs/index/transformationen.md) —
+  siehe [Regeln für Transformationen](./docs/notes/regeln-fuer-transformationen.md).
 - **Notizen statt Abschnitte.** Neues Wissen als atomare Notiz in
   `docs/notes/` anlegen und im passenden Inhaltsverzeichnis verlinken;
   bestehende Notizen ändern statt Wissen zu wiederholen. Nicht Umgesetztes als

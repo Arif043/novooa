@@ -96,25 +96,52 @@ class ParameterSchemaLayoutTest(unittest.TestCase):
 
 
 class DocumentationTest(unittest.TestCase):
-    """Die Transformationstabelle der Doku nennt jeden Typ mit allen Parametern."""
+    """Jede Transformation hat eine eigene Notiz im Inhaltsverzeichnis, mit allen Parametern und Tests."""
 
-    def test_documents_every_type_and_parameter(self):
-        rows = documentation_rows()
+    def test_every_type_has_a_note_with_all_parameters(self):
         for transformation_type, parameters in transformation_capabilities()["parameters"].items():
             with self.subTest(transformation_type=transformation_type):
-                self.assertIn(transformation_type, rows)
+                note = note_path(transformation_type)
+                self.assertTrue(note.exists(), f"Notiz fehlt: docs/notes/{note.name}")
+                text = note.read_text(encoding="utf-8")
+                self.assertIn(f"# Transformation `{transformation_type}`", text)
                 for name in parameters:
-                    self.assertIn(f"`{name}`", rows[transformation_type], f"{transformation_type}: {name}")
+                    self.assertIn(f"`{name}`", text, f"{transformation_type}: {name}")
+
+    def test_every_note_is_listed_in_the_transformation_index(self):
+        index = (DOCS / "index" / "transformationen.md").read_text(encoding="utf-8")
+        for transformation_type in ALL_TYPES:
+            with self.subTest(transformation_type=transformation_type):
+                self.assertIn(f"](../notes/{note_path(transformation_type).name})", index)
+
+    def test_every_note_names_existing_tests_that_cover_the_type(self):
+        for transformation_type in ALL_TYPES:
+            with self.subTest(transformation_type=transformation_type):
+                tests = named_tests(note_path(transformation_type).read_text(encoding="utf-8"))
+                self.assertTrue(tests, f"{transformation_type}: Abschnitt „Fachliche Tests“ ohne Testdatei")
+                for name in tests:
+                    path = Path(__file__).resolve().parent / name
+                    self.assertTrue(path.exists(), f"{transformation_type}: {name} fehlt")
+                    self.assertIn(f'"{transformation_type}"', path.read_text(encoding="utf-8"), name)
+
+    def test_no_note_exists_for_a_removed_type(self):
+        notes = {path.name for path in (DOCS / "notes").glob("transformation-*.md")}
+        self.assertEqual(notes, {note_path(transformation_type).name for transformation_type in ALL_TYPES})
 
 
-def documentation_rows():
-    text = (PACKAGE.parents[2] / "docs" / "notes" / "transformationskatalog.md").read_text(encoding="utf-8")
-    rows = {}
-    for line in text.splitlines():
-        cells = [cell.strip() for cell in line.split("|")]
-        if len(cells) > 3 and cells[1].startswith("`") and cells[1].endswith("`"):
-            rows.setdefault(cells[1].strip("`"), line)
-    return rows
+DOCS = PACKAGE.parents[2] / "docs"
+
+
+def note_path(transformation_type):
+    """`image.resizePad` → `docs/notes/transformation-image-resize-pad.md`."""
+    kebab = re.sub(r"(?<=[a-z0-9])([A-Z])", r"-\1", transformation_type.replace(".", "-")).lower()
+    return DOCS / "notes" / f"transformation-{kebab}.md"
+
+
+def named_tests(text):
+    """Testdateien, die der Abschnitt „Fachliche Tests“ einer Notiz verlinkt."""
+    section = text.split("## Fachliche Tests", 1)[-1].split("\n## ", 1)[0] if "## Fachliche Tests" in text else ""
+    return re.findall(r"\[`(test_\w+\.py)`\]", section)
 
 
 def class_attributes(path):
