@@ -4,13 +4,15 @@
  * `speaker-diarization`, `anomaly-detection`, `clustering`) ergänzen Aufgaben, die dort fehlen.
  * Ein Katalogeintrag hat genau eine Aufgabe; kann ein Modell mehrere, bekommt jede einen eigenen
  * Eintrag mit eigenem Vertrag und geteiltem Artefakt.
+ *
+ * Generative Aufgaben (Text erzeugen, übersetzen, zusammenfassen, Bilder beschreiben) fehlen bewusst:
+ * Sie laufen über Sprachmodelle im Prompt-Baustein, nicht über den ML-Dienst.
  */
 export const modelTasks = [
   // Bild & Video
   "image-classification",
   "object-detection",
   "image-segmentation",
-  "image-to-text",
   "optical-character-recognition",
   "document-question-answering",
   "depth-estimation",
@@ -28,12 +30,9 @@ export const modelTasks = [
   // Text
   "text-classification",
   "token-classification",
-  "translation",
-  "summarization",
   "question-answering",
   "zero-shot-classification",
   "sentence-similarity",
-  "text-generation",
   "feature-extraction",
   // Daten & Zeitreihen
   "tabular-classification",

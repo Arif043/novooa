@@ -105,9 +105,9 @@ void main() {
     });
 
     test('ein erneuter Tipp hebt die Aufgabe wieder auf', () {
-      const selection = ModelSearchSelection(task: ModelTask.translation);
+      const selection = ModelSearchSelection(task: ModelTask.textClassification);
 
-      expect(selection.toggleTask(ModelTask.translation).isActive, isFalse);
+      expect(selection.toggleTask(ModelTask.textClassification).isActive, isFalse);
       expect(
         selection.toggleLanguage('de').toggleLanguage('de').languages,
         isEmpty,

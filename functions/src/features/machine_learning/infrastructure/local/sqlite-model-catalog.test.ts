@@ -71,6 +71,16 @@ test("stores task and languages and reads older rows as language independent „
   assert.deepEqual(older?.languages, []);
 });
 
+test("reads a row with a removed task as „other“ instead of failing the whole catalog", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  await database.insert(modelCatalog).values({...modelRow("team", "team-1"), task: "text-generation"});
+  const catalog = new SQLiteModelCatalog(database);
+
+  const entries = await catalog.listAvailableFor("team-1");
+
+  assert.deepEqual(entries.map((entry) => entry.task), ["other"]);
+});
+
 function modelRow(scope: "system" | "team", teamId: string | null): NewModelCatalog {
   return {
     id: `${scope}-model`,

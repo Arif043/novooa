@@ -12,7 +12,7 @@ const systemEntries = [
   entry("mobilenet", "image-classification", [], ["bild", "klassifikation"]),
   entry("sentiment-en", "text-classification", ["en"], ["stimmung"]),
 ];
-const teamEntry = entry("team-ocr", "image-to-text", [], ["rechnung", "ocr"]);
+const teamEntry = entry("team-ocr", "optical-character-recognition", [], ["rechnung", "ocr"]);
 
 test("searches only the global catalog without a team", async () => {
   const found = await search(new ModelSearchCriteria(null, [], "", 10), null);

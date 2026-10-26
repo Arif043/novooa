@@ -68,11 +68,13 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
   };
 }
 
-/** Einträge von vor der Aufgabe als Pflichtfeld gelten als „Sonstige“. */
+/**
+ * Gespeicherte Einträge ohne Aufgabe, mit einer entfernten oder einer noch unbekannten Aufgabe (neuerer
+ * Katalog) gelten als „Sonstige“: Ein einzelner Eintrag darf das Lesen des Katalogs nicht verhindern.
+ * Veröffentlichung und Import prüfen die Aufgabe streng.
+ */
 function taskFrom(value: unknown): ModelTask {
-  if (value === undefined || value === null) return "other";
-  if (isModelTask(value)) return value;
-  throw new Error("Die Modellaufgabe ist ungültig.");
+  return isModelTask(value) ? value : "other";
 }
 
 function languagesFrom(value: unknown): readonly string[] {

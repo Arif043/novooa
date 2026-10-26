@@ -10,7 +10,8 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 | MLP | `ai.onnx` | unterstützt |
 | SVM, Random Forest, Gradient Boosting, lineare/logistische Regression | `ai.onnx.ml` | unterstützt ([Klassisches ML](./klassisches-ml-onnx.md)) |
 | XGBoost, LightGBM (`onnxmltools`) | `ai.onnx.ml` | unterstützt |
-| Transformer, Text-Embedding | `ai.onnx` | Tokenizer fehlt |
+| Encoder-Transformer (Text-Embedding, Text-Klassifikation) | `ai.onnx` | Tokenizer fehlt |
+| Generative Transformer (Decoder) | `ai.onnx` | nicht vorgesehen, siehe [Entscheidung](./generative-modelle-ueber-sprachmodelle-entscheidung.md) |
 
 Die früher genannten Lücken für klassisches ML sind geschlossen:
 `string`-Tensoren gibt es, Tabellenmerkmale liefert `json.features`, und
@@ -24,8 +25,9 @@ Default-Domäne nur `Cast`, `Concat`, `Reshape`, `Identity`, `Transpose`,
 nur der Domäne genügt nicht, weil `ai.onnx.ml`-Modelle fast immer auch die
 Default-Domäne importieren. Kuratierte Deep-Learning-Modelle sind ausgenommen.
 
-Offen: Tokenisierung für Textmodelle (`onnxruntime-extensions`, eigenes
-Vokabular als Strategie oder vortokenisierte Eingaben).
+Offen: Tokenisierung für Encoder-Modelle (`onnxruntime-extensions`, eigenes
+Vokabular als Strategie oder vortokenisierte Eingaben) — erst, wenn lokale
+Embeddings oder Text-Klassifikation in hoher Stückzahl gebraucht werden.
 
 ## Siehe auch
 

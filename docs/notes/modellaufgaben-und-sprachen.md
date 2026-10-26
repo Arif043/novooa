@@ -10,14 +10,18 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 
 | Bereich | Aufgaben |
 | --- | --- |
-| Bild & Video | `image-classification`, `object-detection`, `image-segmentation`, `image-to-text`, `optical-character-recognition` ★, `document-question-answering`, `depth-estimation`, `keypoint-detection`, `zero-shot-image-classification`, `image-to-image`, `video-classification` |
+| Bild & Video | `image-classification`, `object-detection`, `image-segmentation`, `optical-character-recognition` ★, `document-question-answering`, `depth-estimation`, `keypoint-detection`, `zero-shot-image-classification`, `image-to-image`, `video-classification` |
 | Audio | `text-to-speech`, `automatic-speech-recognition`, `audio-classification`, `voice-activity-detection`, `speaker-diarization` ★, `audio-to-audio` |
-| Text | `text-classification`, `token-classification`, `translation`, `summarization`, `question-answering`, `zero-shot-classification`, `sentence-similarity`, `text-generation`, `feature-extraction` |
+| Text | `text-classification`, `token-classification`, `question-answering`, `zero-shot-classification`, `sentence-similarity`, `feature-extraction` |
 | Daten & Zeitreihen | `tabular-classification`, `tabular-regression`, `time-series-forecasting`, `anomaly-detection` ★, `clustering` ★ |
 | Sonstige | `other` |
 
-- Unbekannte Werte lehnen Publishing und Import ab. Ältere Einträge und
-  unbekannte Schlüssel einer neueren Runtime zeigt die App als „Sonstige“.
+- Unbekannte Werte lehnen Publishing und Import ab. Gespeicherte Einträge ohne,
+  mit entfernter oder noch unbekannter Aufgabe lesen Runtime und App als
+  „Sonstige“, damit ein einzelner Eintrag den Katalog nicht blockiert.
+- Generative Aufgaben (`text-generation`, `translation`, `summarization`,
+  `image-to-text`) fehlen bewusst; sie laufen über Sprachmodelle
+  ([Entscheidung](./generative-modelle-ueber-sprachmodelle-entscheidung.md)).
 - Neue Aufgabe: `model-task.ts` (Runtime), `model_task.dart` und Bezeichnung
   in `model_task_label.dart` (App).
 

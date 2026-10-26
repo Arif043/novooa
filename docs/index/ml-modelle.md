@@ -5,6 +5,7 @@
 ## Entscheidungen
 
 - [Entscheidung: ML-Inferenz nur lokal](../notes/ml-nur-lokal-entscheidung.md)
+- [Entscheidung: Generative Modelle über Sprachmodelle](../notes/generative-modelle-ueber-sprachmodelle-entscheidung.md)
 - [Auflagen an den Modellkatalog](../notes/modellkatalog-auflagen.md)
 - [Modellversionierung](../notes/modellversionierung.md) (geplant)
 - [ONNX-Domänen und Modellklassen](../notes/onnx-domaenen-und-modellklassen.md)
@@ -70,7 +71,7 @@
 - Weitere Eingabe- und Ausgangstransformationen als Strategien ergänzen.
 - Labels von Settings sind noch nicht übersetzbar.
 - Format des Offline-Bundles; Katalogdienst als Function oder im Relay.
-- Tokenisierung für Textmodelle.
+- Tokenisierung nur, falls lokale Encoder-Modelle (Embeddings, Text-Klassifikation) gebraucht werden.
 - OCR-Nachweis: kuratierte PaddleOCR-Detektor- und Erkenner-Modelle,
   Manifeste mit Zeichenliste, datenschutzgeprüfte Beleg-Fixture,
   End-to-End-Tests.

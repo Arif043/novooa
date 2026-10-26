@@ -149,7 +149,7 @@ void main() {
       ModelTask.depthEstimation,
       ModelTask.textToSpeech,
       ModelTask.automaticSpeechRecognition,
-      ModelTask.translation,
+      ModelTask.textClassification,
     ];
     final repository = FakeModelCatalogRepository()
       ..globalEntries = [

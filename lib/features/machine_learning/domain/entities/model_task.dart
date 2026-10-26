@@ -3,12 +3,12 @@ import 'model_task_area.dart';
 export 'model_task_area.dart';
 
 /// Was ein Modell löst — unabhängig vom Verfahren. Die Schlüssel entsprechen den Werten der
-/// Runtime (überwiegend Pipeline-Tags von Hugging Face).
+/// Runtime (überwiegend Pipeline-Tags von Hugging Face). Generative Aufgaben fehlen bewusst: Sie
+/// laufen über Sprachmodelle im Prompt-Baustein.
 enum ModelTask {
   imageClassification('image-classification', ModelTaskArea.imageVideo),
   objectDetection('object-detection', ModelTaskArea.imageVideo),
   imageSegmentation('image-segmentation', ModelTaskArea.imageVideo),
-  imageToText('image-to-text', ModelTaskArea.imageVideo),
   opticalCharacterRecognition(
     'optical-character-recognition',
     ModelTaskArea.imageVideo,
@@ -36,12 +36,9 @@ enum ModelTask {
   audioToAudio('audio-to-audio', ModelTaskArea.audio),
   textClassification('text-classification', ModelTaskArea.text),
   tokenClassification('token-classification', ModelTaskArea.text),
-  translation('translation', ModelTaskArea.text),
-  summarization('summarization', ModelTaskArea.text),
   questionAnswering('question-answering', ModelTaskArea.text),
   zeroShotClassification('zero-shot-classification', ModelTaskArea.text),
   sentenceSimilarity('sentence-similarity', ModelTaskArea.text),
-  textGeneration('text-generation', ModelTaskArea.text),
   featureExtraction('feature-extraction', ModelTaskArea.text),
   tabularClassification('tabular-classification', ModelTaskArea.data),
   tabularRegression('tabular-regression', ModelTaskArea.data),
