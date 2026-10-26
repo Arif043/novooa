@@ -6,12 +6,13 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 
 ```json
 "translations": {
-  "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild.", "tags": ["bild"]}
+  "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild."}
 }
 ```
 
-- Ohne `tags` gelten die Tags der Rückfallsprache; übersetzte Tags folgen
-  denselben Regeln (nicht leer, eindeutig).
+- Tags werden nicht je Manifest übersetzt; ihre Bezeichnungen stehen einmal
+  im [Tag-Vokabular](./modell-tag-vokabular.md). Früher übersetzte `tags`
+  werden beim Lesen ignoriert.
 - Auflösung: exakter Code, dann reine Sprache (`pt-BR` → `pt`), sonst
   Englisch.
 - Persistiert in Firestore, SQLite (`model_catalog.translations_json`) und

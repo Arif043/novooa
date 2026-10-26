@@ -17,6 +17,7 @@ const hitSchema = z.object({
   titel: z.string(),
   beschreibung: z.string(),
   aufgabe: z.string(),
+  themen: z.array(z.string()),
   sprachen: z.array(z.string()),
   eingaben: z.array(z.string()),
   ausgaben: z.array(z.string()),
@@ -31,7 +32,8 @@ export function defineModelCatalogSearchTool(
   return ai.dynamicTool(
     {
       name: "sucheModelle",
-      description: "Durchsucht den Modellkatalog nach ML-Modellen (Aufgabe, Sprache, Suchbegriffe).",
+      description: "Durchsucht den Modellkatalog nach ML-Modellen (Aufgabe, Sprache, Suchbegriffe). "
+        + "Suchbegriffe treffen auch Fachthemen samt Oberthemen und Synonymen, z. B. „Tiere“ oder „Rechnung“.",
       inputSchema: z.object({
         aufgabe: z.enum(modelTasks).optional(),
         sprachen: z.array(z.string().max(20)).max(5).optional(),
@@ -42,8 +44,8 @@ export function defineModelCatalogSearchTool(
     async ({aufgabe, sprachen, suchbegriffe}, options) => {
       const criteria = new ModelSearchCriteria(aufgabe ?? null, sprachen ?? [], suchbegriffe ?? "", maxModelSearchResults);
       const teamId = await dependencies.teamIdForActor(assistantActorIdFromContext(options.context));
-      const entries = await dependencies.searchModelCatalog.execute(criteria, teamId);
-      return {treffer: entries.map(modelSearchHitFrom)};
+      const {entries, vocabulary} = await dependencies.searchModelCatalog.execute(criteria, teamId);
+      return {treffer: entries.map((entry) => modelSearchHitFrom(entry, vocabulary))};
     },
   ) as ToolAction;
 }

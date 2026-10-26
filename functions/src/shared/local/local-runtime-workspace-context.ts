@@ -1,6 +1,7 @@
 import {type FastifyInstance} from "fastify";
 import {type FileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
 import {type LocalModelCache} from "../../features/machine_learning/infrastructure/local/local-model-cache.js";
+import {type ModelTagVocabularySource} from "../../features/machine_learning/domain/repositories/model-tag-vocabulary-source.js";
 import {type RuntimeSystemModelCatalog} from "../../features/machine_learning/infrastructure/local/runtime-system-model-catalog.js";
 import {type WebhookReceiver} from "../../features/webhooks/domain/usecases/receive-webhook.js";
 import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
@@ -26,6 +27,8 @@ export type LocalRuntimeWorkspaceContext = {
   systemModelCatalog: RuntimeSystemModelCatalog | undefined;
   /** Lädt Katalogmodelle in den lokalen Cache; wie der Katalog nur mit Firebase-Sitzung. */
   modelCache: LocalModelCache | undefined;
+  /** Das Tag-Vokabular; ohne Firebase-Sitzung der zuletzt gespiegelte Stand (anfangs leer). */
+  modelTagVocabulary: ModelTagVocabularySource;
 };
 
 declare module "fastify" {

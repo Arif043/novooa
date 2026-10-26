@@ -26,8 +26,10 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
   in `model_task_label.dart` (App).
 
 **`languages`** (optional): BCP-47-Codes; leer bei sprachunabhängigen
-Modellen. **`tags`**: nur Feinheiten (`emotionen`, `hohe-qualitaet`), nie
-Aufgabe oder Sprache.
+Modellen. **`tags`**: Schlüssel aus dem
+[Tag-Vokabular](./modell-tag-vokabular.md) für Fachthemen und Merkmale
+(`invoices`, `animals`, `lightweight`); Aufgabe und Sprache stehen in
+`task` und `languages`.
 
 **Mehrere Aufgaben** (z. B. transkribieren und übersetzen) → je Aufgabe ein
 eigener Eintrag mit eigenem Vertrag. Alle verweisen auf dieselbe

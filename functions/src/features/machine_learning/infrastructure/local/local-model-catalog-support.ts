@@ -1,3 +1,5 @@
+import {UnknownModelTagError} from "../../domain/entities/model-tag-vocabulary.js";
+import {type ModelTagVocabularySource} from "../../domain/repositories/model-tag-vocabulary-source.js";
 import {type systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
 import {type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
 import {LocalModelCatalogRequestError} from "./local-model-catalog-errors.js";
@@ -27,6 +29,16 @@ export async function validateContract(
     await validator.validate(contract);
   } catch (error) {
     throw new LocalModelCatalogRequestError(error instanceof Error ? error.message : "Das Manifest ist ungültig.");
+  }
+}
+
+/** Eigene Modelle nutzen nur Tags des Vokabulars; ein unbekannter Tag ist ein fachlicher Fehler (400). */
+export async function requireKnownTags(source: ModelTagVocabularySource, tags: readonly string[]): Promise<void> {
+  try {
+    (await source.load()).requireKnown(tags);
+  } catch (error) {
+    if (error instanceof UnknownModelTagError) throw new LocalModelCatalogRequestError(error.message);
+    throw error;
   }
 }
 

@@ -678,6 +678,7 @@ abstract class  LocaleKeys {
   static const ui_file_format_json = 'ui.file_format_json';
   static const ui_file_format_text = 'ui.file_format_text';
   static const ui_authorization_page_open_failed = 'ui.authorization_page_open_failed';
+  static const ui_themen = 'ui.themen';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
   static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';

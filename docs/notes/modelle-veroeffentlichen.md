@@ -18,6 +18,10 @@ npm --prefix functions run models:publish -- \
   [--replace-version] --dry-run
 ```
 
+Neue Tags zuerst eintragen und veröffentlichen:
+`npm --prefix functions run models:tags:publish -- --project syscat-90bff [--dry-run]`
+(liest `models/tags.json`, siehe [Tag-Vokabular](./modell-tag-vokabular.md)).
+
 1. Manifest lesen (`task` ist Pflicht) und den Vertrag mit derselben
    [Vertragsprüfung](./ml-vertragspruefung.md) wie beim Cachen prüfen: Kette,
    Parameter und Setting-Bindungen aller Ein- und Ausgänge
@@ -26,8 +30,10 @@ npm --prefix functions run models:publish -- \
    dem Manifest vergleichen (`onnx_validation_worker.py`). Dynamische Achsen
    des Modells nehmen jede Größe an; ZipMap-Ausgänge gelten als `float32`.
 3. Größe und SHA-256 aller Dateien berechnen.
-4. Im Katalog nachsehen: Steht unter der Modell-ID schon eine andere
-   Artefaktversion, bricht die CLI ab, außer mit `--replace-version`.
+4. Im Katalog nachsehen: Jeder Tag muss im globalen Vokabular stehen
+   (`models:install-local` prüft gegen `models/tags.json`). Steht unter der
+   Modell-ID schon eine andere Artefaktversion, bricht die CLI ab, außer mit
+   `--replace-version`.
 5. Ohne `--dry-run`: Multipart-Upload (Prüfsumme in den Objekt-Metadaten),
    danach Katalogeintrag schreiben.
 

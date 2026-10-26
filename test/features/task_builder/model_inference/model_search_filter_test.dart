@@ -1,20 +1,37 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
+import 'package:syscat2/features/machine_learning/domain/entities/model_tag_vocabulary.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference/model_search_filter.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference/model_search_selection.dart';
 
 import 'model_catalog_test_support.dart';
 
+const vocabulary = ModelTagVocabulary([
+  ModelTag(
+    key: 'transcription',
+    labels: {'en': 'Transcription', 'de': 'Transkription'},
+  ),
+  ModelTag(key: 'animals', labels: {'en': 'Animals', 'de': 'Tiere'}),
+  ModelTag(
+    key: 'pets',
+    parent: 'animals',
+    labels: {'en': 'Pets', 'de': 'Haustiere'},
+    synonyms: {
+      'de': ['Hund'],
+    },
+  ),
+  ModelTag(key: 'documents', labels: {'en': 'Documents', 'de': 'Dokumente'}),
+]);
+
 void main() {
   final whisper = modelEntry(
     'whisper',
     title: 'Speech recognition',
-    tags: ['audio'],
+    tags: ['transcription'],
     translations: const {
       'de': ModelTranslation(
         title: 'Spracherkennung',
         description: 'Wandelt Sprache in Text um.',
-        tags: ['transkription'],
       ),
     },
     inputs: const [
@@ -33,7 +50,10 @@ void main() {
   );
 
   test('sucht in deutschem Titel, Beschreibung und Schlagworten', () {
-    const filter = ModelSearchFilter(languageTag: 'de-DE');
+    const filter = ModelSearchFilter(
+      languageTag: 'de-DE',
+      vocabulary: vocabulary,
+    );
 
     expect(filter.apply([whisper, classifier], 'sprach'), [whisper]);
     expect(filter.apply([whisper, classifier], 'TRANSKRIPTION'), [whisper]);
@@ -48,6 +68,38 @@ void main() {
     );
 
     expect(filter.apply([whisper, classifier], ''), [whisper]);
+  });
+
+  group('Themen', () {
+    final dogs = modelEntry('dogs', title: 'Hunderassen', tags: ['pets']);
+    final birds = modelEntry('birds', title: 'Vögel', tags: ['animals']);
+    final scans = modelEntry('scans', title: 'Scans', tags: ['documents']);
+    final legacy = modelEntry('legacy', title: 'Alt', tags: ['rechnung']);
+    const filter = ModelSearchFilter(languageTag: 'de', vocabulary: vocabulary);
+
+    test('findet ein Modell über sein Thema, den Obertag und Synonyme', () {
+      expect(filter.apply([dogs, scans], 'haustiere'), [dogs]);
+      expect(filter.apply([dogs, birds, scans], 'tiere'), [dogs, birds]);
+      expect(filter.apply([dogs, scans], 'animals'), [dogs]);
+    });
+
+    test('zählt Obertags als Themen, unbekannte Freitext-Tags nicht', () {
+      final facets = filter.facets(
+        [dogs, birds, scans, legacy],
+        '',
+        const ModelSearchSelection(),
+      );
+
+      expect(facets.topics, {'animals': 2, 'documents': 1});
+    });
+
+    test('grenzt auf ein Thema ein, Untertags eingeschlossen', () {
+      const selection = ModelSearchSelection(topic: 'animals');
+
+      expect(filter.apply([dogs, birds, scans], '', selection), [dogs, birds]);
+      expect(selection.toggleTopic('animals').isActive, isFalse);
+      expect(selection.toggleTask(ModelTask.other).topic, 'animals');
+    });
   });
 
   group('Filter-Chips', () {
@@ -105,9 +157,14 @@ void main() {
     });
 
     test('ein erneuter Tipp hebt die Aufgabe wieder auf', () {
-      const selection = ModelSearchSelection(task: ModelTask.textClassification);
+      const selection = ModelSearchSelection(
+        task: ModelTask.textClassification,
+      );
 
-      expect(selection.toggleTask(ModelTask.textClassification).isActive, isFalse);
+      expect(
+        selection.toggleTask(ModelTask.textClassification).isActive,
+        isFalse,
+      );
       expect(
         selection.toggleLanguage('de').toggleLanguage('de').languages,
         isEmpty,

@@ -29,9 +29,9 @@ void main() {
     expect(entries.single.title, 'Sample model');
     expect(entries.single.titleFor('de-DE'), 'Beispielmodell');
     expect(entries.single.descriptionFor('de'), 'Klassifiziert Testdaten.');
-    expect(entries.single.tagsFor('de'), ['testen']);
     expect(entries.single.titleFor('fr'), 'Sample model');
-    expect(entries.single.tagsFor('fr'), ['test']);
+    // Früher übersetzte Tags werden ignoriert; es gelten die Schlüssel des Eintrags.
+    expect(entries.single.tags, ['test']);
     expect(entries.single.inputs.single.name, 'image');
     expect(entries.single.outputs.single.workflowName, 'classifications');
     expect(entries.single.outputs.single.workflowType, 'json');

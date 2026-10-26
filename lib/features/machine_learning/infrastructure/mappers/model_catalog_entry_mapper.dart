@@ -59,9 +59,6 @@ class ModelCatalogEntryMapper {
         entry.key: ModelTranslation(
           title: jsonText(jsonObject(entry.value), 'title'),
           description: jsonText(jsonObject(entry.value), 'description'),
-          tags: jsonObject(entry.value)['tags'] == null
-              ? null
-              : jsonStrings(jsonObject(entry.value)['tags']),
         ),
     };
   }

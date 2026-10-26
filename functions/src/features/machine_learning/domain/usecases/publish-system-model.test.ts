@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
+import {ModelTagVocabulary, UnknownModelTagError} from "../entities/model-tag-vocabulary.js";
 import {type ModelArtifactPublisher} from "../repositories/model-artifact-publisher.js";
 import {type SystemModelRegistry} from "../repositories/system-model-registry.js";
 import {PublishSystemModel, SystemModelVersionConflictError} from "./publish-system-model.js";
@@ -9,7 +10,7 @@ test("publishes the artifact before registering a system model", async () => {
   const events: string[] = [];
   const entry = systemEntry();
 
-  const published = await new PublishSystemModel(new Publisher(events), new Registry(events)).execute(requestFor(entry));
+  const published = await publisher(events, new Registry(events)).execute(requestFor(entry));
 
   assert.equal(published.id, entry.id);
   assert.deepEqual(events, ["artifact", "catalog"]);
@@ -20,7 +21,7 @@ test("rejects a team model before uploading its artifact", async () => {
   const entry = {...systemEntry(), scope: {type: "team" as const, teamId: "team-1"}};
 
   await assert.rejects(
-    new PublishSystemModel(new Publisher(events), new Registry(events)).execute(requestFor(entry)),
+    publisher(events, new Registry(events)).execute(requestFor(entry)),
     /nur Systemmodelle/,
   );
   assert.deepEqual(events, []);
@@ -30,7 +31,7 @@ test("republishes the same version of a published model", async () => {
   const events: string[] = [];
   const registry = new Registry(events, systemEntry());
 
-  await new PublishSystemModel(new Publisher(events), registry).execute(requestFor(systemEntry()));
+  await publisher(events, registry).execute(requestFor(systemEntry()));
 
   assert.deepEqual(events, ["artifact", "catalog"]);
 });
@@ -41,7 +42,7 @@ test("refuses to replace a published version without confirmation", async () => 
   const newer = systemEntry("2");
 
   await assert.rejects(
-    new PublishSystemModel(new Publisher(events), registry).execute(requestFor(newer)),
+    publisher(events, registry).execute(requestFor(newer)),
     (error) => error instanceof SystemModelVersionConflictError && /classifier@1/.test(error.message),
   );
   assert.deepEqual(events, []);
@@ -51,19 +52,36 @@ test("replaces a published version when confirmed", async () => {
   const events: string[] = [];
   const registry = new Registry(events, systemEntry());
 
-  await new PublishSystemModel(new Publisher(events), registry).execute({...requestFor(systemEntry("2")), replaceVersion: true});
+  await publisher(events, registry).execute({...requestFor(systemEntry("2")), replaceVersion: true});
 
   assert.deepEqual(events, ["artifact", "catalog"]);
 });
 
 test("reports a version conflict when only checking", async () => {
   const events: string[] = [];
-  const useCase = new PublishSystemModel(new Publisher(events), new Registry(events, systemEntry()));
+  const useCase = publisher(events, new Registry(events, systemEntry()));
 
   await assert.rejects(useCase.check(requestFor(systemEntry("2"))), SystemModelVersionConflictError);
   await useCase.check(requestFor(systemEntry()));
   assert.deepEqual(events, []);
 });
+
+test("rejects a tag that is not in the vocabulary before uploading", async () => {
+  const events: string[] = [];
+  const entry = {...systemEntry(), tags: ["test", "cars"]};
+
+  await assert.rejects(
+    publisher(events, new Registry(events)).execute(requestFor(entry)),
+    (error) => error instanceof UnknownModelTagError && error.keys.join() === "cars",
+  );
+  assert.deepEqual(events, []);
+});
+
+const vocabulary = new ModelTagVocabulary([{key: "test", labels: {en: "Test"}}]);
+
+function publisher(events: string[], registry: SystemModelRegistry): PublishSystemModel {
+  return new PublishSystemModel(new Publisher(events), registry, {load: async () => vocabulary});
+}
 
 class Publisher implements ModelArtifactPublisher {
   constructor(private readonly events: string[]) {}

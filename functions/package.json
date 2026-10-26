@@ -28,6 +28,7 @@
     "local-runtime:docker:down-all": "npm run local-runtime:docker:down && npm run ml:docker:down",
     "models:publish": "npm run build && node lib/features/machine_learning/infrastructure/cli/model-publish-cli.js",
     "models:install-local": "npm run build && node lib/features/machine_learning/infrastructure/cli/local-model-install-cli.js",
+    "models:tags:publish": "npm run build && node lib/features/machine_learning/infrastructure/cli/tag-publish-cli.js",
     "licenses:issue-local": "npm run build && node lib/features/licensing/infrastructure/cli/local-runtime-license-issue-cli.js",
     "licenses:set-max-users": "npm run build && node lib/features/licensing/infrastructure/cli/local-runtime-license-max-users-cli.js"
   },

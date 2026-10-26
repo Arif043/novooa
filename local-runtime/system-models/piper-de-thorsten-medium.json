@@ -4,7 +4,7 @@
   "description": "Erzeugt natürlichere gesprochene deutsche Sprache lokal aus Text.",
   "task": "text-to-speech",
   "languages": ["de"],
-  "tags": ["hohe-qualitaet"],
+  "tags": ["high-quality"],
   "artifact": {
     "artifactId": "piper-de-thorsten-medium",
     "versionId": "c10ece1aade47bb51c153c893d14e5bf8e5b7117"

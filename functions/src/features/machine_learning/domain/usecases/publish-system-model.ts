@@ -4,6 +4,7 @@ import {
   type ModelArtifactPublication,
   type ModelArtifactPublisher,
 } from "../repositories/model-artifact-publisher.js";
+import {type ModelTagVocabularySource} from "../repositories/model-tag-vocabulary-source.js";
 import {type SystemModelRegistry} from "../repositories/system-model-registry.js";
 import {requirePublicationMatchesEntry} from "../services/artifact-publication-match.js";
 
@@ -29,11 +30,13 @@ export class PublishSystemModel {
   constructor(
     private readonly artifactPublisher: ModelArtifactPublisher,
     private readonly registry: SystemModelRegistry,
+    private readonly tagVocabulary: ModelTagVocabularySource,
   ) {}
 
   /** Prüft die Veröffentlichung vollständig, ohne Dateien oder Katalog zu verändern. */
   async check(request: PublishSystemModelRequest): Promise<void> {
     validatePublication(request);
+    (await this.tagVocabulary.load()).requireKnown(request.entry.tags);
     const published = await this.registry.findSystemEntry(request.entry.id);
     if (published === null || request.replaceVersion === true) return;
     if (!sameVersion(published.artifactReference, request.entry.artifactReference)) {

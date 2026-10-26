@@ -44,6 +44,8 @@ class ModelCatalogEntry extends Equatable {
 
   /// BCP-47-Codes; leer bei sprachunabhängigen Modellen.
   final List<String> languages;
+
+  /// Schlüssel aus dem Tag-Vokabular, das auch ihre Bezeichnungen liefert.
   final List<String> tags;
   final List<ModelManifestInput> inputs;
   final List<ModelManifestSetting> settings;
@@ -84,9 +86,6 @@ class ModelCatalogEntry extends Equatable {
   String descriptionFor(String languageTag) =>
       _translationFor(languageTag)?.description ?? description;
 
-  List<String> tagsFor(String languageTag) =>
-      _translationFor(languageTag)?.tags ?? tags;
-
   /// Exakter Treffer (`pt-BR`), danach nur die Sprache (`pt`), sonst keine Übersetzung.
   ModelTranslation? _translationFor(String languageTag) {
     final normalized = languageTag.replaceAll('_', '-');
@@ -95,21 +94,15 @@ class ModelCatalogEntry extends Equatable {
   }
 }
 
+/// Tags werden nicht übersetzt; ihre Bezeichnungen stehen einmal im Tag-Vokabular.
 class ModelTranslation extends Equatable {
-  const ModelTranslation({
-    required this.title,
-    required this.description,
-    this.tags,
-  });
+  const ModelTranslation({required this.title, required this.description});
 
   final String title;
   final String description;
 
-  /// `null` übernimmt die Tags der Rückfallsprache.
-  final List<String>? tags;
-
   @override
-  List<Object?> get props => [title, description, tags];
+  List<Object?> get props => [title, description];
 }
 
 class ModelManifestOutput extends Equatable {

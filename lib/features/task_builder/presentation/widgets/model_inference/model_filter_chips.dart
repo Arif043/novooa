@@ -7,7 +7,7 @@ import '../../../../machine_learning/presentation/widgets/model_language_label.d
 import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
 import 'model_search_selection.dart';
 
-/// Chips zum Eingrenzen der Modellsuche nach Bereich, Aufgabe (je eine) und Sprache (mehrere).
+/// Chips zum Eingrenzen der Modellsuche nach Bereich, Aufgabe, Thema (je eins) und Sprache (mehrere).
 /// Gezeigt werden nur Chips mit Treffern; eine Zeile mit nur einer Option entfällt. Bei vielen
 /// Aufgaben erscheint davor eine Bereichsebene (Bild & Video, Audio, Text …).
 class ModelFilterChips extends StatelessWidget {
@@ -16,12 +16,16 @@ class ModelFilterChips extends StatelessWidget {
     required this.facets,
     required this.selection,
     required this.showTasks,
+    required this.topicLabel,
     required this.onChanged,
   });
 
   final ModelSearchFacets facets;
   final ModelSearchSelection selection;
   final bool showTasks;
+
+  /// Bezeichnung eines Themas (Obertag) in der Sprache der Oberfläche.
+  final String Function(String topic) topicLabel;
   final ValueChanged<ModelSearchSelection> onChanged;
 
   /// Ab so vielen Aufgaben-Chips hilft die vorgeschaltete Bereichsebene beim Überblick.
@@ -31,6 +35,7 @@ class ModelFilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final areas = _visible(facets.areas, {?selection.area});
     final tasks = _visible(facets.tasks, {?selection.task});
+    final topics = _visible(facets.topics, {?selection.topic});
     final languages = _visible(facets.languages, selection.languages);
     final showAreas =
         showTasks &&
@@ -64,6 +69,19 @@ class ModelFilterChips extends StatelessWidget {
                   count: facets.tasks[task] ?? 0,
                   selected: selection.task == task,
                   onTap: () => onChanged(selection.toggleTask(task)),
+                ),
+            ],
+          ),
+        if (topics.length > 1 || selection.topic != null)
+          _ChipRow(
+            label: LocaleKeys.ui_themen.tr(),
+            chips: [
+              for (final topic in topics)
+                _CountChip(
+                  label: topicLabel(topic),
+                  count: facets.topics[topic] ?? 0,
+                  selected: selection.topic == topic,
+                  onTap: () => onChanged(selection.toggleTopic(topic)),
                 ),
             ],
           ),

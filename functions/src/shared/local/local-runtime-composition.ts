@@ -22,7 +22,10 @@ import {
   RuntimeFirebaseSession,
   runtimeFirebaseConfigurationFromEnvironment,
 } from "../../features/licensing/infrastructure/local/runtime-firebase-session.js";
+import {CachedModelTagVocabulary} from "../../features/machine_learning/infrastructure/local/cached-model-tag-vocabulary.js";
 import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-catalog.js";
+import {FirebaseRuntimeModelTagVocabulary} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-tag-vocabulary.js";
+import {SQLiteModelTagVocabulary} from "../../features/machine_learning/infrastructure/local/sqlite-model-tag-vocabulary.js";
 import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {runDueTaskTriggers} from "../../features/scheduling/domain/usecases/run-due-task-triggers.js";
@@ -150,6 +153,11 @@ export function createLocalRuntimeComposition(
     new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
   ));
   const systemModelCatalog = firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession);
+  const modelTagVocabulary = new CachedModelTagVocabulary(
+    firebaseSession === undefined ? undefined : new FirebaseRuntimeModelTagVocabulary(firebaseSession),
+    new SQLiteModelTagVocabulary(options.database),
+    (error) => applicationLogger.exception("model_tags.global_read_failed", error, {teamId: options.workspace.teamId}),
+  );
   const modelCache = systemModelCatalog === undefined ? undefined : createLocalModelCache({
     database: options.database, runtimeRoot: options.runtimeRoot, teamId: options.workspace.teamId,
     systemModelCatalog, notifier: realtimeNotifier, logger: applicationLogger, mlService: options.mlService?.client,
@@ -192,6 +200,7 @@ export function createLocalRuntimeComposition(
     webhooks,
     systemModelCatalog,
     modelCache,
+    modelTagVocabulary,
   };
   return {
     workspaceContext,

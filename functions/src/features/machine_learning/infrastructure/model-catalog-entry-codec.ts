@@ -89,7 +89,10 @@ function originFrom(value: unknown): {origin?: ModelOrigin} {
   throw new Error("Die Herkunft des Modells ist ungültig.");
 }
 
-/** `undefined`/`null` (ältere Einträge ohne Übersetzungen) ergibt keine Übersetzungen. */
+/**
+ * `undefined`/`null` (ältere Einträge ohne Übersetzungen) ergibt keine Übersetzungen. Früher übersetzte
+ * Tags (`tags` je Sprache) werden ignoriert; Bezeichnungen kommen jetzt aus dem Tag-Vokabular.
+ */
 export function modelTranslationsFromUnknown(value: unknown): ModelTranslations | undefined {
   if (value === undefined || value === null) return undefined;
   const data = record(value, "Die Modellübersetzungen sind ungültig.");
@@ -98,7 +101,6 @@ export function modelTranslationsFromUnknown(value: unknown): ModelTranslations 
     return [locale, {
       title: text(translation.title, `Der übersetzte Modellname (${locale}) fehlt.`),
       description: text(translation.description, `Die übersetzte Modellbeschreibung (${locale}) fehlt.`),
-      ...(translation.tags === undefined ? {} : {tags: tagsFrom(translation.tags)}),
     }];
   }));
 }

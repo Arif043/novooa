@@ -3,6 +3,7 @@ import {type FastifyReply} from "fastify";
 import {ErrorResponse} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {type LocalRuntimeWorkspaceContext} from "../../../../shared/local/local-runtime-workspace-context.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
+import {type ModelTag} from "../../domain/entities/model-tag.js";
 import {isRequestError} from "./local-model-catalog-support.js";
 
 export const ModelEntry = Type.Object({
@@ -11,6 +12,19 @@ export const ModelEntry = Type.Object({
   scope: Type.Unknown(), runtime: Type.String(), artifactReference: Type.Unknown(), contract: Type.Unknown(),
   origin: Type.Optional(Type.String()),
 });
+
+export const ModelTagEntry = Type.Object({
+  key: Type.String(), parent: Type.Optional(Type.String()),
+  labels: Type.Record(Type.String(), Type.String()),
+  synonyms: Type.Record(Type.String(), Type.Array(Type.String())),
+});
+
+export function tagDto(tag: ModelTag) {
+  return {
+    key: tag.key, ...(tag.parent === undefined ? {} : {parent: tag.parent}), labels: {...tag.labels},
+    synonyms: Object.fromEntries(Object.entries(tag.synonyms ?? {}).map(([locale, words]) => [locale, [...words]])),
+  };
+}
 
 export const failures = {400: ErrorResponse, 404: ErrorResponse, 415: ErrorResponse, 500: ErrorResponse, 503: ErrorResponse};
 

@@ -13,6 +13,9 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 - SQLite-Spalten: `origin` (`catalog` oder `import`, Migration
   `0020_model_catalog_origin.sql`; ältere Einträge gelten als Import),
   `task`, `languages_json`, `translations_json`.
+- Das [Tag-Vokabular](./modell-tag-vokabular.md) liegt in Firestore
+  `modelTags/{key}` und in der Runtime als Spiegel in `model_tags`
+  (Migration `0029_model_tags.sql`); `GET /v1/ml-models/tags`.
 - Systemmodell vs. Teammodell über `team_id`
   ([Normalisierung 0015](./sqlite-modellkatalog-normalisiert.md)).
 

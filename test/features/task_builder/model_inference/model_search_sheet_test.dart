@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
+import 'package:syscat2/features/machine_learning/domain/entities/model_tag_vocabulary.dart';
 import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference/model_search_filter.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference/model_search_sheet.dart';
@@ -165,7 +166,40 @@ void main() {
 
     expect(find.widgetWithText(FilterChip, 'Text vorlesen 1'), findsOneWidget);
     expect(find.widgetWithText(FilterChip, 'Objekte erkennen 1'), findsNothing);
-    expect(find.text('Modell translation'), findsNothing);
+    expect(find.text('Modell text-classification'), findsNothing);
+  });
+
+  testWidgets('filtert über Themen-Chips und zeigt Tag-Bezeichnungen', (
+    tester,
+  ) async {
+    final repository = FakeModelCatalogRepository()
+      ..globalEntries = [
+        modelEntry('dogs', title: 'Hunderassen', tags: ['pets']),
+        modelEntry('scans', title: 'Belegscanner', tags: ['receipts']),
+      ];
+    final cubit = await loadedCatalogCubit(
+      tester,
+      repository,
+      vocabulary: const ModelTagVocabulary([
+        ModelTag(key: 'animals', labels: {'en': 'Animals', 'de': 'Tiere'}),
+        ModelTag(
+          key: 'pets',
+          parent: 'animals',
+          labels: {'en': 'Pets', 'de': 'Haustiere'},
+        ),
+        ModelTag(key: 'receipts', labels: {'en': 'Receipts', 'de': 'Belege'}),
+      ]),
+    );
+    await _openSheet(tester, cubit);
+
+    // Tag-Bezeichnungen folgen wie Titel der Flutter-Locale (im Test en-US).
+    expect(find.text('Themen'), findsOneWidget);
+    expect(find.textContaining('Pets'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilterChip, 'Animals 1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hunderassen'), findsOneWidget);
+    expect(find.text('Belegscanner'), findsNothing);
   });
 
   testWidgets('zeigt bei wenigen Aufgaben keine Bereichsebene', (tester) async {

@@ -729,7 +729,8 @@
     "file_format_csv": "Tablo (.csv)",
     "file_format_json": "JSON (.json)",
     "file_format_text": "Metin (.txt)",
-    "authorization_page_open_failed": "Oturum açma sayfası açılamadı."
+    "authorization_page_open_failed": "Oturum açma sayfası açılamadı.",
+    "themen": "Konular"
   },
   "machine_learning": {
     "model_import": {

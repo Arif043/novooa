@@ -9,6 +9,7 @@ import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/usecases/cache_global_model.dart';
 import '../../domain/usecases/import_model_catalog_entry.dart';
 import '../../domain/usecases/load_global_model_catalog.dart';
+import '../../domain/usecases/load_model_tag_vocabulary.dart';
 import '../../domain/usecases/remove_model_catalog_entry.dart';
 import '../../domain/usecases/watch_model_cache_statuses.dart';
 import '../../domain/usecases/watch_model_catalog_entries.dart';
@@ -22,6 +23,7 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
     this._loadGlobal,
     this._cacheGlobal,
     this._watchCacheStatuses,
+    this._loadTagVocabulary,
   ]) : super(const ModelCatalogState());
 
   final WatchModelCatalogEntries _watchEntries;
@@ -30,6 +32,7 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
   final LoadGlobalModelCatalog? _loadGlobal;
   final CacheGlobalModel? _cacheGlobal;
   final WatchModelCacheStatuses? _watchCacheStatuses;
+  final LoadModelTagVocabulary? _loadTagVocabulary;
   StreamSubscription<List<ModelCatalogEntry>>? _subscription;
   StreamSubscription<List<ModelCacheStatus>>? _cacheSubscription;
 
@@ -66,6 +69,7 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
   }
 
   Future<void> loadGlobal() async {
+    unawaited(_loadTags());
     final loader = _loadGlobal;
     if (loader == null) return;
     emit(state.copyWith(globalStatus: ModelCatalogStatus.loading));
@@ -80,6 +84,16 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
     } on Object catch (_) {
       emit(state.copyWith(globalStatus: ModelCatalogStatus.failure));
     }
+  }
+
+  /// Ohne Vokabular zeigen Suche und Treffer die Tag-Schlüssel; den Katalogfehler meldet [loadGlobal].
+  Future<void> _loadTags() async {
+    final loader = _loadTagVocabulary;
+    if (loader == null) return;
+    try {
+      final vocabulary = await loader();
+      if (!isClosed) emit(state.copyWith(tagVocabulary: vocabulary));
+    } on Object catch (_) {}
   }
 
   /// Lässt die Runtime ein Katalogmodell im Hintergrund laden; ohne Wirkung, wenn es schon lokal ist.

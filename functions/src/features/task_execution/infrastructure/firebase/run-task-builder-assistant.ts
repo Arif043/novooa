@@ -5,6 +5,7 @@ import {RemoteConfigAssistantModel} from "../../../language_models/infrastructur
 import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 import {SearchModelCatalog} from "../../../machine_learning/domain/usecases/search-model-catalog.js";
 import {FirestoreModelCatalog} from "../../../machine_learning/infrastructure/firebase/firestore-model-catalog.js";
+import {FirestoreModelTagVocabulary} from "../../../machine_learning/infrastructure/firebase/firestore-model-tag-vocabulary.js";
 import {type TeamIdForActor} from "../../../machine_learning/infrastructure/genkit/model-catalog-search-tool.js";
 import {createTaskBuilderAssistantResponder} from "../genkit/assistant/task-builder-assistant-responder.js";
 import {createTaskBuilderAssistant} from "../genkit/task-builder-assistant.js";
@@ -12,7 +13,7 @@ import {logTaskBuilderAssistantProposal} from "./task-builder-assistant-audit-ev
 
 const assistantModel = new RemoteConfigAssistantModel();
 const modelCatalog = new FirestoreModelCatalog();
-const searchModelCatalog = new SearchModelCatalog(modelCatalog, modelCatalog);
+const searchModelCatalog = new SearchModelCatalog(modelCatalog, modelCatalog, new FirestoreModelTagVocabulary());
 
 /**
  * Der Aufgabenstudio-Agent in der Cloud — gemeinsam für die App (Callable)

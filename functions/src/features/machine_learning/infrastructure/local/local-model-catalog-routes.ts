@@ -9,7 +9,7 @@ import {type LocalModelArtifactPublisher} from "./local-model-artifact-publisher
 import {type LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
 import {validateContract} from "./local-model-catalog-support.js";
 import {modelImportRoutes} from "./local-model-import-routes.js";
-import {entryDto, failures, guarded, ModelEntry} from "./local-model-route-support.js";
+import {entryDto, failures, guarded, ModelEntry, ModelTagEntry, tagDto} from "./local-model-route-support.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 
 export type ModelCatalogRoutesOptions = {
@@ -37,6 +37,11 @@ export const modelCatalogRoutes: FastifyPluginAsyncTypebox<ModelCatalogRoutesOpt
 
   app.get("/v1/ml-models", {schema: {response: {200: ItemsOf(ModelEntry)}}},
     async (request) => ({items: (await options.catalog.listAvailableFor(request.workspace.teamId)).map(entryDto)}));
+
+  /** Das Tag-Vokabular für Suche und Anzeige; ohne Firebase-Sitzung der zuletzt gespiegelte Stand. */
+  app.get("/v1/ml-models/tags", {schema: {response: {...failures, 200: ItemsOf(ModelTagEntry)}}}, async (request, reply) =>
+    guarded(request.workspace, "tags_failed", reply, async () =>
+      ({items: (await request.workspace.modelTagVocabulary.load()).tags.map(tagDto)})));
 
   app.get("/v1/ml-models/catalog", {schema: {response: {...failures, 200: ItemsOf(ModelEntry)}}}, async (request, reply) => {
     const {systemModelCatalog} = request.workspace;

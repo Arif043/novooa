@@ -15,7 +15,8 @@ models/mobilenet-v3/
   "id": "mobilenet-v3",
   "title": "MobileNet V3",
   "description": "Klassifiziert Bilder.",
-  "tags": ["bild", "klassifikation"],
+  "task": "image-classification",
+  "tags": ["everyday-objects", "lightweight"],
   "artifact": {"artifactId": "mobilenet-v3", "versionId": "2026-08"},
   "contract": {
     "inputs": [{

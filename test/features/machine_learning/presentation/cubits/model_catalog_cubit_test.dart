@@ -5,14 +5,18 @@ import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_cache_status.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
+import 'package:syscat2/features/machine_learning/domain/entities/model_tag_vocabulary.dart';
+import 'package:syscat2/features/machine_learning/domain/repositories/model_tag_repository.dart';
 import 'package:syscat2/features/machine_learning/domain/repositories/model_catalog_repository.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/import_model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/cache_global_model.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/load_global_model_catalog.dart';
+import 'package:syscat2/features/machine_learning/domain/usecases/load_model_tag_vocabulary.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/watch_model_cache_statuses.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
 import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
+import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_state.dart';
 
 void main() {
   test('imports a model through the catalog use case', () async {
@@ -113,16 +117,60 @@ void main() {
     );
     await cubit.close();
   });
+
+  test('lädt mit dem globalen Katalog das Tag-Vokabular', () async {
+    final repository = _Repository()..globalEntries = [catalogEntry()];
+    final cubit = _cacheCubit(repository, _Tags(_animals));
+
+    await cubit.loadGlobal();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.tagVocabulary, _animals);
+    expect(cubit.state.globalEntries, [catalogEntry()]);
+    await cubit.close();
+  });
+
+  test(
+    'bleibt ohne Vokabular nutzbar, wenn es nicht geladen werden kann',
+    () async {
+      final repository = _Repository()..globalEntries = [catalogEntry()];
+      final cubit = _cacheCubit(repository, _Tags(null));
+
+      await cubit.loadGlobal();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.tagVocabulary, ModelTagVocabulary.empty);
+      expect(cubit.state.globalStatus, ModelCatalogStatus.ready);
+      await cubit.close();
+    },
+  );
 }
 
-ModelCatalogCubit _cacheCubit(_Repository repository) => ModelCatalogCubit(
-  WatchModelCatalogEntries(repository),
-  ImportModelCatalogEntry(repository),
-  RemoveModelCatalogEntry(repository),
-  LoadGlobalModelCatalog(repository),
-  CacheGlobalModel(repository),
-  WatchModelCacheStatuses(repository),
-);
+const _animals = ModelTagVocabulary([
+  ModelTag(key: 'animals', labels: {'en': 'Animals'}),
+]);
+
+class _Tags implements ModelTagRepository {
+  _Tags(this.vocabulary);
+
+  /// `null` lässt das Laden scheitern.
+  final ModelTagVocabulary? vocabulary;
+
+  @override
+  Future<ModelTagVocabulary> loadVocabulary() async =>
+      vocabulary ?? (throw StateError('offline'));
+}
+
+ModelCatalogCubit _cacheCubit(_Repository repository, [_Tags? tags]) =>
+    ModelCatalogCubit(
+      WatchModelCatalogEntries(repository),
+      ImportModelCatalogEntry(repository),
+      RemoveModelCatalogEntry(repository),
+      LoadGlobalModelCatalog(repository),
+      CacheGlobalModel(repository),
+      WatchModelCacheStatuses(repository),
+      tags == null ? null : LoadModelTagVocabulary(tags),
+    );
 
 ModelCatalogEntry cachedEntry() => const ModelCatalogEntry(
   id: 'system-model',

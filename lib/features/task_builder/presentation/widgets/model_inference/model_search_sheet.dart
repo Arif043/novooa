@@ -113,6 +113,7 @@ class _FilteredResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final models = state.selectableEntries;
+    final filter = this.filter.withVocabulary(state.tagVocabulary);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -120,6 +121,8 @@ class _FilteredResults extends StatelessWidget {
           facets: filter.facets(models, query, selection),
           selection: selection,
           showTasks: filter.fixedTask == null,
+          topicLabel: (topic) =>
+              state.tagVocabulary.labelFor(topic, filter.languageTag),
           onChanged: onSelectionChanged,
         ),
         const SizedBox(height: AppSpacing.sm),

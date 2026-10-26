@@ -16,6 +16,9 @@ import {CacheSystemModel} from "../../domain/usecases/cache-system-model.js";
 import {ModelCacheJobs} from "./model-cache-jobs.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
+import {ModelTagVocabulary} from "../../domain/entities/model-tag-vocabulary.js";
+
+const knownTags = {load: async () => new ModelTagVocabulary([{key: "test", labels: {en: "Test"}}])};
 
 test("installs a team-scoped ONNX model from a manifest and lists it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
@@ -26,7 +29,7 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
 
   try {
     const importRequest = await handler.handle({
@@ -61,7 +64,7 @@ test("lists global models and prefetches one in the background without copying i
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger(), systemModelCatalog, modelCache});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger(), systemModelCatalog, modelCache});
 
   try {
     const listed = await handler.handle({method: "GET", url: "/v1/ml-models/catalog", body: {}});
@@ -94,7 +97,7 @@ test("caching needs the global catalog", async () => {
     uploadStore: new LocalModelArtifactUploadStore("/tmp/novooa-unused"),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
 
   const response = await handler.handle({method: "POST", url: "/v1/ml-models/catalog/example-model/cache", body: {}});
 
@@ -116,7 +119,7 @@ test("rejects a manifest whose transformation is not supported by the Python run
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new RejectingValidator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
 
   try {
     const importRequest = await handler.handle({
@@ -140,7 +143,7 @@ test("does not remove a model owned by another team", async () => {
     uploadStore: new LocalModelArtifactUploadStore("/tmp/novooa-unused"),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
 
   const response = await handler.handle({
     method: "DELETE",
@@ -160,7 +163,7 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
 
   try {
     const importRequest = await handler.handle({
@@ -187,7 +190,7 @@ test("recovers an interrupted import with an existing local artifact", async () 
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1", logger: new Logger()});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags, logger: new Logger()});
   const request = {
     method: "POST" as const,
     url: "/v1/ml-models/imports",

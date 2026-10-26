@@ -48,6 +48,7 @@ class ModelSearchResults extends StatelessWidget {
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) => ModelSearchTile(
                     model: models[index],
+                    vocabulary: state.tagVocabulary,
                     onTap: () => Navigator.of(context).pop(models[index]),
                   ),
                 ),

@@ -12,8 +12,8 @@ export type ModelScope =
 /** Sprachcode (BCP 47, z. B. `en` oder `pt-BR`) → übersetzte Anzeigetexte. */
 export type ModelTranslations = Readonly<Record<string, ModelTranslation>>;
 
-/** Ohne `tags` gelten die Tags der Rückfallsprache. */
-export type ModelTranslation = {title: string; description: string; tags?: readonly string[]};
+/** Tags werden nicht übersetzt: Ihre Bezeichnungen stehen einmal im Tag-Vokabular. */
+export type ModelTranslation = {title: string; description: string};
 
 /**
  * Woher ein lokaler Eintrag stammt: aus dem globalen Katalog gecacht oder selbst importiert
@@ -31,6 +31,7 @@ export type ModelCatalogEntry = {
   task: ModelTask;
   /** BCP-47-Codes der unterstützten Sprachen; leer bei sprachunabhängigen Modellen. */
   languages: readonly string[];
+  /** Schlüssel aus dem Tag-Vokabular; ältere Einträge können noch Freitext enthalten. */
   tags: readonly string[];
   scope: ModelScope;
   origin?: ModelOrigin;
@@ -76,7 +77,6 @@ function validTranslations(translations: ModelTranslations): void {
     if (!localePattern.test(locale)) throw new Error(`Der Sprachcode „${locale}“ der Modellübersetzung ist ungültig.`);
     required(translation.title, `Der übersetzte Modellname (${locale}) fehlt.`);
     required(translation.description, `Die übersetzte Modellbeschreibung (${locale}) fehlt.`);
-    if (translation.tags !== undefined) validTags(translation.tags);
   }
 }
 

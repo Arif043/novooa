@@ -5,10 +5,7 @@
   "task": "optical-character-recognition",
   "languages": [],
   "tags": [
-    "ocr",
-    "dokument",
-    "texterkennung",
-    "rechnung"
+    "invoices"
   ],
   "artifact": {
     "artifactId": "pp-ocr-v3-text-detector",

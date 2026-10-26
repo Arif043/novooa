@@ -93,6 +93,9 @@ import '../../features/machine_learning/domain/usecases/import_model_catalog_ent
 import '../../features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
 import '../../features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
 import '../../features/machine_learning/domain/usecases/load_global_model_catalog.dart';
+import '../../features/machine_learning/domain/usecases/load_model_tag_vocabulary.dart';
+import '../../features/machine_learning/domain/repositories/model_tag_repository.dart';
+import '../../features/machine_learning/infrastructure/repositories/local_model_tag_repository.dart';
 import '../../features/machine_learning/domain/usecases/cache_global_model.dart';
 import '../../features/machine_learning/domain/usecases/watch_model_cache_statuses.dart';
 import '../../features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
@@ -371,6 +374,9 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton<GlobalModelCatalogRepository>(
       () => locator<ModelCatalogRepository>() as GlobalModelCatalogRepository,
     )
+    ..registerLazySingleton<ModelTagRepository>(
+      () => LocalModelTagRepository(locator<WorkspaceApiClient>()),
+    )
     ..registerLazySingleton<LanguageModelConnectionRepository>(
       () =>
           locator<LanguageModelRepository>()
@@ -464,6 +470,9 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => WatchModelCacheStatuses(locator<GlobalModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => LoadModelTagVocabulary(locator<ModelTagRepository>()),
     )
     ..registerLazySingleton(
       () => LoadRuntimeLicenseStatus(locator<RuntimeLicenseRepository>()),
@@ -606,6 +615,7 @@ Future<void> configureStandaloneDependencies(
         locator<LoadGlobalModelCatalog>(),
         locator<CacheGlobalModel>(),
         locator<WatchModelCacheStatuses>(),
+        locator<LoadModelTagVocabulary>(),
       ),
     )
     ..registerFactory(

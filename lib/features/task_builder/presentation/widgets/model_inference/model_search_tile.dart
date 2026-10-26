@@ -5,11 +5,18 @@ import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/widgets/model_size_label.dart';
 import '../../../../machine_learning/presentation/widgets/model_language_label.dart';
 import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
+import '../../../../machine_learning/domain/entities/model_tag_vocabulary.dart';
 
 class ModelSearchTile extends StatelessWidget {
-  const ModelSearchTile({super.key, required this.model, required this.onTap});
+  const ModelSearchTile({
+    super.key,
+    required this.model,
+    this.vocabulary = ModelTagVocabulary.empty,
+    required this.onTap,
+  });
 
   final ModelCatalogEntry model;
+  final ModelTagVocabulary vocabulary;
   final VoidCallback onTap;
 
   @override
@@ -18,7 +25,7 @@ class ModelSearchTile extends StatelessWidget {
     final theme = Theme.of(context);
     final details = [
       modelSizeLabel(model.sizeBytes),
-      ...model.tagsFor(languageTag),
+      for (final tag in model.tags) vocabulary.labelFor(tag, languageTag),
     ].join(' · ');
     return ListTile(
       onTap: onTap,

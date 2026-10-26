@@ -4,7 +4,7 @@
   "description": "Erzeugt deutsche Sprachausgabe mit auswählbarer Stimmung lokal aus Text.",
   "task": "text-to-speech",
   "languages": ["de"],
-  "tags": ["emotionen"],
+  "tags": ["emotional"],
   "artifact": {
     "artifactId": "piper-de-thorsten-emotional-medium",
     "versionId": "375a0fe641dea077c2a47b4e9a056d6da521eed3"

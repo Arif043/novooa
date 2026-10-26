@@ -1,10 +1,12 @@
 import path from "node:path";
 import { PublishSystemModel } from "../../domain/usecases/publish-system-model.js";
+import { FileModelTagVocabulary } from "../file-model-tag-vocabulary.js";
 import { LocalFileModelCatalog } from "../local/local-file-model-catalog.js";
 import { LocalModelArtifactPublisher } from "../local/local-model-artifact-publisher.js";
 import { type ModelPublishCommandDependencies } from "./model-publish-command.js";
 import { type LocalModelInstallOptions } from "./local-model-install-options.js";
 import { pythonModelValidators } from "./python-model-validators.js";
+import { shippedModelTagsPath } from "./repository-files.js";
 
 export function localModelInstallDependencies(
   options: LocalModelInstallOptions,
@@ -15,6 +17,7 @@ export function localModelInstallDependencies(
       new LocalFileModelCatalog(
         path.join(options.runtimeRoot, "model-catalog"),
       ),
+      new FileModelTagVocabulary(shippedModelTagsPath),
     ),
     ...pythonModelValidators(options.pythonExecutable),
   };

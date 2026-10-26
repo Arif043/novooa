@@ -15,6 +15,7 @@
 - [ML-Katalogeintrag](../notes/ml-katalogeintrag.md)
 - [Globaler Modellspeicher](../notes/globaler-modellspeicher.md)
 - [Modellaufgaben, Sprachen und Tags](../notes/modellaufgaben-und-sprachen.md)
+- [Tag-Vokabular der Modelle](../notes/modell-tag-vokabular.md)
 - [Mehrsprachige Manifeste](../notes/mehrsprachige-manifeste.md)
 - [Modellsuche](../notes/modellsuche.md)
 - [Persistenz des Modellkatalogs](../notes/modellkatalog-persistenz.md)

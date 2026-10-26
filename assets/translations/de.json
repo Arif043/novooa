@@ -729,7 +729,8 @@
     "file_format_csv": "Tabelle (.csv)",
     "file_format_json": "JSON (.json)",
     "file_format_text": "Text (.txt)",
-    "authorization_page_open_failed": "Die Anmeldeseite konnte nicht geöffnet werden."
+    "authorization_page_open_failed": "Die Anmeldeseite konnte nicht geöffnet werden.",
+    "themen": "Themen"
   },
   "machine_learning": {
     "model_import": {

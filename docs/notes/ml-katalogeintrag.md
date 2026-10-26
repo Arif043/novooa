@@ -16,7 +16,7 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
   description: "Klassifiziert ein Bild.",
   task: "image-classification",
   languages: [],
-  tags: ["leichtgewichtig"],
+  tags: ["lightweight"], // Schlüssel aus dem Tag-Vokabular
   scope: {type: "system"},
   runtime: "onnx",
   artifactReference: {

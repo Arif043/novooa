@@ -10,6 +10,9 @@ import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js"
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {type FreeBytes, LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
 import {modelCatalogRoutes} from "./local-model-catalog-routes.js";
+import {ModelTagVocabulary} from "../../domain/entities/model-tag-vocabulary.js";
+
+const knownTags = {load: async () => new ModelTagVocabulary([{key: "test", labels: {en: "Test"}}])};
 
 test("installs a model with its weight file next to it and records both", async () => {
   await withRoutes(undefined, async ({handler, catalog, directory}) => {
@@ -48,6 +51,24 @@ test("refuses an upload larger than the free space before writing it", async () 
   });
 });
 
+test("rejects an import with a tag outside the vocabulary before any upload", async () => {
+  await withRoutes(undefined, async ({handler}) => {
+    const response = await handler.handle({method: "POST", url: "/v1/ml-models/imports", body: {manifest: {...manifest(), tags: ["test", "cars"]}}});
+
+    assert.equal(response?.statusCode, 400);
+    assert.match((response?.body as {error: string}).error, /Unbekannte Modell-Tags: cars/);
+  });
+});
+
+test("serves the tag vocabulary with labels, parents and synonyms", async () => {
+  await withRoutes(undefined, async ({handler}) => {
+    const response = await handler.handle({method: "GET", url: "/v1/ml-models/tags", body: {}});
+
+    assert.equal(response?.statusCode, 200);
+    assert.deepEqual(response?.body, {items: [{key: "test", labels: {en: "Test"}, synonyms: {}}]});
+  });
+});
+
 type Routes = {handler: ReturnType<typeof testingRoutes>; catalog: Catalog; directory: string};
 
 async function withRoutes(freeBytes: FreeBytes | undefined, action: (routes: Routes) => Promise<void>): Promise<void> {
@@ -57,7 +78,7 @@ async function withRoutes(freeBytes: FreeBytes | undefined, action: (routes: Rou
     catalog, artifactPublisher: new LocalModelArtifactPublisher(directory),
     uploadStore: new LocalModelArtifactUploadStore(directory, null, freeBytes),
     contractValidator: {validate: async () => undefined}, notifier: new LocalRuntimeRealtimeNotifier(),
-  }, {teamId: "team-1"});
+  }, {teamId: "team-1", modelTagVocabulary: knownTags});
   try {
     await action({handler, catalog, directory});
   } finally {

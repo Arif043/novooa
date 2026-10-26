@@ -1,0 +1,51 @@
+{
+  "tags": [
+    {
+      "key": "documents",
+      "labels": {"en": "Documents", "de": "Dokumente", "tr": "Belgeler"},
+      "synonyms": {"en": ["document", "scan", "letter"], "de": ["Dokument", "Scan", "Brief"], "tr": ["belge", "tarama"]}
+    },
+    {
+      "key": "invoices",
+      "parent": "documents",
+      "labels": {"en": "Invoices", "de": "Rechnungen", "tr": "Faturalar"},
+      "synonyms": {"en": ["invoice", "bill"], "de": ["Rechnung"], "tr": ["fatura"]}
+    },
+    {
+      "key": "receipts",
+      "parent": "documents",
+      "labels": {"en": "Receipts", "de": "Kassenbelege", "tr": "Fişler"},
+      "synonyms": {"en": ["receipt"], "de": ["Beleg", "Kassenbon", "Quittung"], "tr": ["fiş", "makbuz"]}
+    },
+    {
+      "key": "everyday-objects",
+      "labels": {"en": "Everyday objects", "de": "Alltagsgegenstände", "tr": "Gündelik nesneler"},
+      "synonyms": {"en": ["object", "imagenet"], "de": ["Gegenstand", "Objekt"], "tr": ["nesne"]}
+    },
+    {
+      "key": "animals",
+      "labels": {"en": "Animals", "de": "Tiere", "tr": "Hayvanlar"},
+      "synonyms": {"en": ["animal"], "de": ["Tier"], "tr": ["hayvan"]}
+    },
+    {
+      "key": "latin-script",
+      "labels": {"en": "Latin script", "de": "Lateinische Schrift", "tr": "Latin alfabesi"},
+      "synonyms": {"en": ["latin"], "de": ["lateinisch"], "tr": ["latin"]}
+    },
+    {
+      "key": "lightweight",
+      "labels": {"en": "Lightweight", "de": "Leichtgewichtig", "tr": "Hafif"},
+      "synonyms": {"en": ["fast", "small"], "de": ["schnell", "klein"], "tr": ["hızlı", "küçük"]}
+    },
+    {
+      "key": "high-quality",
+      "labels": {"en": "High quality", "de": "Hohe Qualität", "tr": "Yüksek kalite"},
+      "synonyms": {"en": ["accurate", "precise"], "de": ["genau", "präzise"], "tr": ["hassas"]}
+    },
+    {
+      "key": "emotional",
+      "labels": {"en": "Emotional", "de": "Emotional", "tr": "Duygusal"},
+      "synonyms": {"en": ["emotions"], "de": ["Emotionen", "Gefühle"], "tr": ["duygular"]}
+    }
+  ]
+}

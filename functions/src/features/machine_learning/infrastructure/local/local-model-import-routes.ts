@@ -7,7 +7,7 @@ import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.
 import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
 import {type LocalModelArtifactUploadStore, type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
-import {artifactReferenceFor, contentLength, type SystemModelManifest} from "./local-model-catalog-support.js";
+import {artifactReferenceFor, contentLength, requireKnownTags, type SystemModelManifest} from "./local-model-catalog-support.js";
 import {entryDto, failures, guarded, ModelEntry} from "./local-model-route-support.js";
 
 export type ModelImportRoutesOptions = {
@@ -30,7 +30,10 @@ export const modelImportRoutes: FastifyPluginAsyncTypebox<ModelImportRoutesOptio
     schema: {body: Type.Object({manifest: Type.Unknown()}), response: {...failures, 201: Type.Object({importId: Type.String()})}},
   }, async (request, reply) => guarded(request.workspace, "create_failed", reply, async () => {
     const importId = randomUUID();
-    imports.set(importId, {manifest: systemModelManifestFromUnknown(request.body.manifest), externalData: new Map()});
+    const manifest = systemModelManifestFromUnknown(request.body.manifest);
+    // Vor dem Upload: Ein Modell mit unbekannten Tags ließe sich sonst erst nach Gigabytes ablehnen.
+    await requireKnownTags(request.workspace.modelTagVocabulary, manifest.tags);
+    imports.set(importId, {manifest, externalData: new Map()});
     return reply.code(201).send({importId});
   }));
 

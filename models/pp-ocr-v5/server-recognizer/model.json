@@ -7,13 +7,9 @@
     "de"
   ],
   "tags": [
-    "ocr",
-    "text",
-    "dokument",
-    "beleg",
-    "rechnung",
-    "deutsch",
-    "server"
+    "invoices",
+    "receipts",
+    "high-quality"
   ],
   "artifact": {
     "artifactId": "pp-ocr-v5-server-text-recognizer",

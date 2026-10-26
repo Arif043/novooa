@@ -28,6 +28,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Kontrolliertes Tag-Vokabular der Modelle; pflegt nur der Betreiber (models:tags:publish).
+    match /modelTags/{tagKey} {
+      allow get, list: if isLocalRuntime();
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

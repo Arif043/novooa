@@ -114,6 +114,15 @@ export const modelCatalog = sqliteTable("model_catalog", {
   index("idx_model_catalog_team").on(table.team_id),
 ]);
 
+/** Spiegel des globalen Tag-Vokabulars (`modelTags`), damit Suche und Import auch ohne Firebase-Sitzung funktionieren. */
+export const modelTags = sqliteTable("model_tags", {
+  key: text("key").primaryKey(),
+  parent: text("parent"),
+  labels_json: text("labels_json").notNull(),
+  synonyms_json: text("synonyms_json").notNull().default("{}"),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 /** Passwörter der Konten: scrypt-Hash, mit dem Master-Key verschlüsselt (siehe `passwordHashContext`). Getrennt vom Profil, damit ein Konto künftig per SSO auch ohne Passwort bestehen kann. */
 export const runtimePasswordCredentials = sqliteTable("runtime_password_credentials", {
   uid: text("uid").primaryKey().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),

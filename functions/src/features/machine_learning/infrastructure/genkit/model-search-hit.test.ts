@@ -1,16 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
+import {ModelTagVocabulary} from "../../domain/entities/model-tag-vocabulary.js";
 import {modelSearchHitFrom} from "./model-search-hit.js";
 
+const vocabulary = new ModelTagVocabulary([{key: "animals", labels: {en: "Animals", de: "Tiere"}}]);
+
 test("maps a catalog entry to a compact hit without artifact details", () => {
-  const hit = modelSearchHitFrom(entry());
+  const hit = modelSearchHitFrom(entry(), vocabulary);
 
   assert.deepEqual(hit, {
     modelId: "mobilenet-v3",
     titel: "Bildklassifikation",
     beschreibung: "Ordnet Bilder Kategorien zu.",
     aufgabe: "image-classification",
+    themen: ["Tiere", "altes-tag"],
     sprachen: [],
     eingaben: ["image (image)"],
     ausgaben: ["value (json)"],
@@ -27,7 +31,7 @@ function entry(): ModelCatalogEntry {
     translations: {de: {title: "Bildklassifikation", description: "Ordnet Bilder Kategorien zu."}},
     task: "image-classification",
     languages: [],
-    tags: [],
+    tags: ["animals", "altes-tag"],
     scope: {type: "system"},
     runtime: "onnx",
     artifactReference: {

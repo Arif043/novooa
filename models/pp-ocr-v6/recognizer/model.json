@@ -5,12 +5,9 @@
   "task": "optical-character-recognition",
   "languages": [],
   "tags": [
-    "ocr",
-    "text",
-    "dokument",
-    "beleg",
-    "rechnung",
-    "small"
+    "invoices",
+    "receipts",
+    "lightweight"
   ],
   "artifact": {
     "artifactId": "pp-ocr-v6-text-recognizer-small",

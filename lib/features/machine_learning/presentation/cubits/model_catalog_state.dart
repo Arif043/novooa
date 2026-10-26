@@ -1,5 +1,6 @@
 import '../../domain/entities/model_cache_status.dart';
 import '../../domain/entities/model_catalog_entry.dart';
+import '../../domain/entities/model_tag_vocabulary.dart';
 
 enum ModelCatalogStatus { loading, ready, failure }
 
@@ -12,6 +13,7 @@ class ModelCatalogState {
     this.cacheStatuses = const {},
     this.isSaving = false,
     this.message,
+    this.tagVocabulary = ModelTagVocabulary.empty,
   });
 
   final ModelCatalogStatus status;
@@ -25,6 +27,9 @@ class ModelCatalogState {
   final Map<String, ModelCacheStatus> cacheStatuses;
   final bool isSaving;
   final String? message;
+
+  /// Bezeichnungen und Synonyme der Tags; leer, bis die Runtime es geliefert hat.
+  final ModelTagVocabulary tagVocabulary;
 
   List<ModelCatalogEntry> get cachedEntries =>
       entries.where((entry) => entry.isCached).toList(growable: false);
@@ -55,6 +60,7 @@ class ModelCatalogState {
     bool? isSaving,
     String? message,
     bool clearMessage = false,
+    ModelTagVocabulary? tagVocabulary,
   }) => ModelCatalogState(
     status: status ?? this.status,
     entries: entries ?? this.entries,
@@ -63,5 +69,6 @@ class ModelCatalogState {
     cacheStatuses: cacheStatuses ?? this.cacheStatuses,
     isSaving: isSaving ?? this.isSaving,
     message: clearMessage ? null : message ?? this.message,
+    tagVocabulary: tagVocabulary ?? this.tagVocabulary,
   );
 }
