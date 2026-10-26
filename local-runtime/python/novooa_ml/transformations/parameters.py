@@ -17,6 +17,13 @@ def optional_number(value, transformation_type, name):
     return None if value is None else number(value, transformation_type, name)
 
 
+def column_index(value):
+    """Spaltenangabe in einer Tensorzeile: nichtnegative ganze Zahl."""
+    if not is_integer(value) or value < 0:
+        raise ValueError("Ein Spaltenindex muss eine nichtnegative ganze Zahl sein.")
+    return value
+
+
 def positive_integer(value):
     if not isinstance(value, int) or value <= 0:
         raise ValueError("Bildmaße müssen positive ganze Zahlen sein.")

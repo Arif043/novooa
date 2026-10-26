@@ -4,7 +4,7 @@
 
 Gehört zu: [Transformationen](../index/transformationen.md)
 
-**Wertart:** `json-result` oder `detections` → Wertart der Eingabe
+**Wertart:** `json-result` oder `detections` oder `keypoints` → Wertart der Eingabe
 
 Große Label-Listen stehen so nicht im Manifest.
 

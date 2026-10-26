@@ -29,6 +29,8 @@ Neue Tags zuerst eintragen und veröffentlichen:
 2. Eine ONNX-Runtime-Session öffnen und Namen, Datentypen und feste Formen mit
    dem Manifest vergleichen (`onnx_validation_worker.py`). Dynamische Achsen
    des Modells nehmen jede Größe an; ZipMap-Ausgänge gelten als `float32`.
+   Ausgänge, die Transformationen über Parameter lesen (`tensor.concat`,
+   `keypoints.fromSimcc`), müssen im Modell existieren.
 3. Größe und SHA-256 aller Dateien berechnen.
 4. Im Katalog nachsehen: Jeder Tag muss im globalen Vokabular stehen
    (`models:install-local` prüft gegen `models/tags.json`). Steht unter der

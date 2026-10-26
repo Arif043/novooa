@@ -1,6 +1,6 @@
 import json
 
-from novooa_ml.transformations.kinds import DETECTIONS, JSON_RESULT, SAME
+from novooa_ml.transformations.kinds import DETECTIONS, JSON_RESULT, KEYPOINTS, SAME
 from novooa_ml.transformations.parameters import is_integer
 from novooa_ml.transformations.schema import Choice, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
@@ -14,7 +14,7 @@ class ResourceLookupStrategy(TransformationStrategy):
     nachgeschlagen und als `field` ergänzt, z. B. nach `tensor.topK` ein `label`.
     """
 
-    accepts = (JSON_RESULT, DETECTIONS)
+    accepts = (JSON_RESULT, DETECTIONS, KEYPOINTS)
     produces = SAME
     parameters = {
         "resource": Text(),

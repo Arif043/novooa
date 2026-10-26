@@ -6,11 +6,15 @@ from novooa_ml.transformations.values import AudioSignal, require_audio
 
 
 class AudioNormalizeStrategy(TransformationStrategy):
-    """Bringt die Lautstärke auf einen Spitzen- (`peak`) oder Effektivwert (`rms`)."""
+    """Bringt die Lautstärke auf einen Spitzen- (`peak`) oder Effektivwert (`rms`), oder standardisiert.
+
+    `zscore` rechnet `(x − Mittelwert) / sqrt(Varianz + 1e-7)` wie die Feature-Extractors von
+    Wav2Vec2 und HuBERT; `target` gilt dort nicht.
+    """
 
     accepts = (AUDIO,)
     produces = AUDIO
-    parameters = {"mode": Choice("peak", "rms", optional=True, default="peak"), "target": Number(minimum=0, optional=True)}
+    parameters = {"mode": Choice("peak", "rms", "zscore", optional=True, default="peak"), "target": Number(minimum=0, optional=True)}
 
     @property
     def transformation_type(self):
@@ -20,8 +24,10 @@ class AudioNormalizeStrategy(TransformationStrategy):
         signal = require_audio(value, self.transformation_type, context)
         numpy = context.numpy
         mode = parameters.get("mode", "peak")
-        if mode not in ("peak", "rms"):
-            raise ValueError("audio.normalize benötigt mode peak oder rms.")
+        if mode not in ("peak", "rms", "zscore"):
+            raise ValueError("audio.normalize benötigt mode peak, rms oder zscore.")
+        if mode == "zscore":
+            return standardized(numpy, signal)
         default = 1.0 if mode == "peak" else 0.1
         target = number(parameters.get("target", default), self.transformation_type, "target")
         samples = signal.samples
@@ -30,3 +36,11 @@ class AudioNormalizeStrategy(TransformationStrategy):
         if level == 0:
             return signal
         return AudioSignal((samples * (target / level)).astype(numpy.float32), signal.sample_rate)
+
+
+def standardized(numpy, signal):
+    """Je Kanal; der Summand 1e-7 entspricht der Referenzimplementierung und schützt Stille."""
+    samples = signal.samples.astype(numpy.float64)
+    mean = samples.mean(axis=0, keepdims=True)
+    variance = samples.var(axis=0, keepdims=True)
+    return AudioSignal(((samples - mean) / numpy.sqrt(variance + 1e-7)).astype(numpy.float32), signal.sample_rate)

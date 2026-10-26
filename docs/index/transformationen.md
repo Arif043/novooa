@@ -13,27 +13,33 @@
 
 ## Bild
 
+- [`image.applyMask`](../notes/transformation-image-apply-mask.md) — Setzt eine Maske des Modells als Alphakanal auf das Originalbild (Freistellen).
 - [`image.centerCrop`](../notes/transformation-image-center-crop.md) — Schneidet einen Ausschnitt aus der Bildmitte; größer als das Bild ist ein Fehler.
 - [`image.crop`](../notes/transformation-image-crop.md) — Schneidet einen achsenparallelen Bildbereich aus.
 - [`image.decode`](../notes/transformation-image-decode.md) — Dekodiert eine Bilddatei und setzt den Farbraum (`rgb`, `rgba` oder `grayscale`).
 - [`image.encode`](../notes/transformation-image-encode.md) — Kodiert einen Tensor als Bilddatei (Werte auf 0…255 begrenzt); mit `palette` werden Klassenindizes eingefärbt.
 - [`image.exifTranspose`](../notes/transformation-image-exif-transpose.md) — Dreht Fotos gemäß EXIF-Ausrichtung (z. B. Handyaufnahmen); vor anderen Bildtransformationen einsetzen.
+- [`image.keepSource`](../notes/transformation-image-keep-source.md) — Merkt sich das Originalbild, damit ein Ausgang es weiterverarbeiten kann.
 - [`image.padToMultiple`](../notes/transformation-image-pad-to-multiple.md) — Füllt rechts und unten bis zu einem Vielfachen auf; Bildkoordinaten bleiben erhalten.
 - [`image.perspectiveCrop`](../notes/transformation-image-perspective-crop.md) — Richtet ein Viereck perspektivisch zu einem Bild aus.
 - [`image.resize`](../notes/transformation-image-resize.md) — Skaliert ein Bild auf feste Breite und Höhe (LANCZOS); das Seitenverhältnis kann sich dabei ändern.
 - [`image.resizeHeightPad`](../notes/transformation-image-resize-height-pad.md) — Skaliert ein Bild auf die Zielhöhe und füllt die Breite auf, schneidet sie ab oder lässt sie dynamisch.
 - [`image.resizePad`](../notes/transformation-image-resize-pad.md) — Skaliert ein Bild unter Erhalt des Seitenverhältnisses und füllt bis zur Zielgröße auf (Letterbox).
 - [`image.resizeShorterSide`](../notes/transformation-image-resize-shorter-side.md) — Skaliert die kürzere Seite auf `size`, das Seitenverhältnis bleibt.
+- [`image.sizeTensor`](../notes/transformation-image-size-tensor.md) — Liefert Bildmaße oder Skalierungsfaktoren als Tensor für Hilfseingänge eines Modells.
+- [`image.tiles`](../notes/transformation-image-tiles.md) — Zerlegt ein Bild in überlappende Kacheln und rechnet sie als Batch.
 
 ## Tensor
 
 - [`tensor.argmax`](../notes/transformation-tensor-argmax.md) — Index des größten Werts, z. B. die wahrscheinlichste Klasse.
 - [`tensor.channelOrder`](../notes/transformation-tensor-channel-order.md) — Ordnet Farbkanäle über eine vollständige Indexpermutation um.
 - [`tensor.clip`](../notes/transformation-tensor-clip.md) — Begrenzt Werte auf den Bereich zwischen `min` und `max`.
+- [`tensor.concat`](../notes/transformation-tensor-concat.md) — Hängt Rohausgänge des Modells an den aktuellen Tensor an, etwa Scores und Labels an die Boxen.
 - [`tensor.constant`](../notes/transformation-tensor-constant.md) — Ersetzt den Wert durch einen festen Zahlentensor, z. B. für Hilfseingänge mit Inferenzparametern.
 - [`tensor.fitLength`](../notes/transformation-tensor-fit-length.md) — Füllt eine Achse auf oder kürzt sie; `keep: end` behält die jüngsten Werte (Zeitreihen-Fenster).
 - [`tensor.l2Normalize`](../notes/transformation-tensor-l2-normalize.md) — Skaliert Vektoren auf Länge 1 für Ähnlichkeitsvergleiche; Nullvektoren bleiben unverändert.
 - [`tensor.layout`](../notes/transformation-tensor-layout.md) — Ordnet Bildtensoren zwischen HWC (`channelsLast`) und CHW (`channelsFirst`) um.
+- [`tensor.minMaxScale`](../notes/transformation-tensor-min-max-scale.md) — Skaliert Werte linear vom eigenen Minimum und Maximum auf einen Zielbereich.
 - [`tensor.normalize`](../notes/transformation-tensor-normalize.md) — Normalisiert jeden Farbkanal mit `(wert − mean) / std`.
 - [`tensor.reduce`](../notes/transformation-tensor-reduce.md) — Verdichtet eine Achse, z. B. Token-Embeddings per Mittelwert zu einem Satzvektor.
 - [`tensor.reshape`](../notes/transformation-tensor-reshape.md) — Formt den Tensor um; die Anzahl der Werte muss passen.
@@ -46,15 +52,21 @@
 - [`tensor.threshold`](../notes/transformation-tensor-threshold.md) — Wandelt numerische Werte in eine boolesche Maske.
 - [`tensor.topK`](../notes/transformation-tensor-top-k.md) — Liefert die `k` größten Werte als Paare aus Index und Wert.
 - [`tensor.transpose`](../notes/transformation-tensor-transpose.md) — Ordnet die Achsen eines Tensors nach einer vollständigen Permutation um.
+- [`tensor.untile`](../notes/transformation-tensor-untile.md) — Setzt die Kacheln eines Batches nach dem Raster von `image.tiles` zu einem Bild zusammen.
 
-## Masken, Regionen und Erkennungen
+## Masken, Erkennungen und Keypoints
 
 - [`geometry.mergeRows`](../notes/transformation-geometry-merge-rows.md) — Fasst horizontale Textregionen mit ausreichender vertikaler Überlappung zu einer Zeile zusammen.
 - [`geometry.scaleBounds`](../notes/transformation-geometry-scale-bounds.md) — Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück.
-- [`geometry.toSource`](../notes/transformation-geometry-to-source.md) — Rechnet `bounds` bzw. `box` mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild.
+- [`geometry.toSource`](../notes/transformation-geometry-to-source.md) — Rechnet `bounds`, `box` bzw. Keypoints mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild.
+- [`keypoints.fromHeatmaps`](../notes/transformation-keypoints-from-heatmaps.md) — Liest je Heatmap den Punkt mit dem höchsten Wert als Keypoint.
+- [`keypoints.fromRows`](../notes/transformation-keypoints-from-rows.md) — Liest Keypoints aus Zeilen eines Tensors, eine Zeile je Punkt.
+- [`keypoints.fromSimcc`](../notes/transformation-keypoints-from-simcc.md) — Dekodiert Keypoints aus SimCC-Verteilungen je Achse zweier Modellausgänge.
 - [`mask.connectedComponents`](../notes/transformation-mask-connected-components.md) — Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`.
 - [`mask.textRegions`](../notes/transformation-mask-text-regions.md) — Leitet aus einer Wahrscheinlichkeitsmaske bewertete Textregionen ab.
 - [`mask.toSource`](../notes/transformation-mask-to-source.md) — Bildet eine Maske oder Karte `[H, W]`, `[C, H, W]` bzw. `[H, W, C]` per Nearest-Neighbour auf die Originalgröße ab; Rand des Modellbildes wird zu `fill`.
+- [`tensor.decodeAnchors`](../notes/transformation-tensor-decode-anchors.md) — Dekodiert Boxen relativ zu Ankern aus einer Modellressource.
+- [`tensor.decodeGrid`](../notes/transformation-tensor-decode-grid.md) — Dekodiert Rohboxen ankerfreier Detektoren aus Rasterzellen in Modellpixel.
 - [`tensor.nonMaximumSuppression`](../notes/transformation-tensor-non-maximum-suppression.md) — Liest Erkennungen aus den Zeilen eines Tensors und unterdrückt überlappende Boxen.
 
 ## Sequenzen
@@ -65,6 +77,7 @@
 ## Audio
 
 - [`audio.fitDuration`](../notes/transformation-audio-fit-duration.md) — Füllt mit Stille auf oder kürzt auf eine feste Dauer.
+- [`audio.frames`](../notes/transformation-audio-frames.md) — Zerlegt Mono-Audio in Fenster fester Dauer und rechnet sie als Batch.
 - [`audio.melSpectrogram`](../notes/transformation-audio-mel-spectrogram.md) — Liefert ein Mel-Spektrogramm `[melBins, Frames]` aus Mono-Audio.
 - [`audio.mono`](../notes/transformation-audio-mono.md) — Mischt alle Kanäle eines Audiosignals zu einem.
 - [`audio.normalize`](../notes/transformation-audio-normalize.md) — Gleicht die Lautstärke an; Stille bleibt unverändert.
@@ -95,24 +108,10 @@
 
 ## Offene Punkte
 
-Allgemeine Transformationen, die weitere Modellfamilien ohne neuen Code
-importierbar machen (alle **geplant**):
-
-- Ausgänge übergreifend lesen (z. B. `tensor.concat` mit Verweis auf einen
-  anderen Ausgang) — getrennte Boxen-, Score- und Label-Ausgänge (RT-DETR,
-  D-FINE, DETR).
-- Bildgröße als Hilfstensor für Eingänge wie `im_shape`, `scale_factor`,
-  `orig_target_sizes` (Paddle-Detektoren, RT-DETR).
-- Erkennungszeilen mit Klassenspalte und ohne erneute Unterdrückung
-  (PP-DocLayout, Exporte mit eingebauter NMS).
-- Raster- und Ankerdekodierung (YOLOX ohne Dekodierung, YuNet, SSD).
-- Min-Max-Skalierung (Tiefen- und Saliency-Karten).
-- Keypoints: Rückrechnung ins Originalbild, Dekodierung aus Heatmaps und
-  SimCC (MoveNet, RTMPose).
-- In Fenster oder Kacheln teilen und als Batch rechnen (lange Audiosignale,
-  große Bilder).
-- Maske als Alphakanal aufs Quellbild anwenden (Freistellen).
-- Audio standardisieren (Mittelwert und Standardabweichung).
+- Referenztests je Katalogmodell (geplant, siehe
+  [Regeln für Transformationen](../notes/regeln-fuer-transformationen.md)).
+- Weitere Modellfamilien als Manifeste erproben; was fehlt, als allgemeine
+  Transformation ergänzen.
 
 ## Verwandt
 

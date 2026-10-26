@@ -1,16 +1,16 @@
-from novooa_ml.transformations.kinds import DETECTIONS, REGIONS, SAME
+from novooa_ml.transformations.kinds import DETECTIONS, KEYPOINTS, REGIONS, SAME
 from novooa_ml.transformations.schema import Boolean, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
 class GeometryToSourceStrategy(TransformationStrategy):
-    """Rechnet Regionen (`bounds`) und Erkennungen (`box`) in Koordinaten des Originalbildes zurück.
+    """Rechnet Regionen (`bounds`), Erkennungen (`box`) und Keypoints (`x`, `y`) ins Originalbild zurück.
 
     Grundlage ist die Geometrie, die der Eingang `input` beim Skalieren, Auffüllen und
     Zuschneiden aufgezeichnet hat. Mit `clip` (Standard) werden Werte auf das Bild begrenzt.
     """
 
-    accepts = (REGIONS, DETECTIONS)
+    accepts = (REGIONS, DETECTIONS, KEYPOINTS)
     produces = SAME
     parameters = {"input": Text(), "clip": Boolean(optional=True, default=True)}
 
@@ -22,7 +22,7 @@ class GeometryToSourceStrategy(TransformationStrategy):
         geometry = context.input_geometry(parameters.get("input"), self.transformation_type)
         clip = parameters.get("clip", True)
         if not isinstance(value, list):
-            raise ValueError("geometry.toSource erwartet eine Liste von Regionen oder Erkennungen.")
+            raise ValueError("geometry.toSource erwartet eine Liste von Regionen, Erkennungen oder Keypoints.")
         return [mapped_item(item, geometry, clip) for item in value]
 
 
@@ -31,7 +31,9 @@ def mapped_item(item, geometry, clip):
         return {**item, "box": mapped_box(item["box"], geometry, clip)}
     if isinstance(item, dict) and isinstance(item.get("bounds"), dict):
         return {**item, "bounds": mapped_bounds(item["bounds"], geometry, clip)}
-    raise ValueError("geometry.toSource erwartet Einträge mit box oder bounds.")
+    if isinstance(item, dict) and all(isinstance(item.get(axis), (int, float)) for axis in ("x", "y")):
+        return {**item, "x": source_x(item["x"], geometry, clip), "y": source_y(item["y"], geometry, clip)}
+    raise ValueError("geometry.toSource erwartet Einträge mit box, bounds oder x und y.")
 
 
 def mapped_box(box, geometry, clip):

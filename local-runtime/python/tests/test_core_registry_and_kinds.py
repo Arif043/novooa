@@ -89,6 +89,8 @@ class DiscoveryTest(unittest.TestCase):
         self.assertEqual(types, {
             "mask.connectedComponents", "mask.textRegions", "mask.toSource", "geometry.mergeRows",
             "geometry.scaleBounds", "geometry.toSource", "tensor.nonMaximumSuppression",
+            "tensor.decodeGrid", "tensor.decodeAnchors", "keypoints.fromRows", "keypoints.fromHeatmaps",
+            "keypoints.fromSimcc",
         })
 
 

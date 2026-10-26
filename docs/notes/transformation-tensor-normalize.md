@@ -6,6 +6,8 @@ Gehört zu: [Transformationen](../index/transformationen.md)
 
 **Wertart:** `tensor` → `tensor`
 
+Die Kanalachse folgt dem Layout aus `tensor.layout`; ein Batch wird je Bild normalisiert.
+
 ## Parameter
 
 | Parameter | Wert | Pflicht | Standard |

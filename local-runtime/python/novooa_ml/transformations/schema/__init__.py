@@ -6,6 +6,7 @@ Settings, deren Steuerelement nicht passt. `describe()` liefert die Beschreibung
 """
 
 from .composites import ListOf, MapOf, OneOf, Record
+from .output_name import OutputName
 from .scalars import Boolean, Choice, Integer, Number, Schema, Text
 
-__all__ = ["Boolean", "Choice", "Integer", "ListOf", "MapOf", "Number", "OneOf", "Record", "Schema", "Text"]
+__all__ = ["Boolean", "Choice", "Integer", "ListOf", "MapOf", "Number", "OneOf", "OutputName", "Record", "Schema", "Text"]

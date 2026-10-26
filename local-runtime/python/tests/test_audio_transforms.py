@@ -149,5 +149,24 @@ class MelSpectrogramTest(unittest.TestCase):
                 tensor_of(wav, [("audio.melSpectrogram", parameters)], [80, "dynamic"])
 
 
+
+class StandardizeTest(unittest.TestCase):
+    """Referenz: Wav2Vec2FeatureExtractor.zero_mean_unit_var_norm — (x − mean) / sqrt(var + 1e-7)."""
+
+    def test_matches_the_wav2vec2_feature_extractor(self):
+        samples = numpy.linspace(-0.5, 0.9, 400) + 0.1
+        tensor = tensor_of(pcm16_wav(samples, 8000), [("audio.normalize", {"mode": "zscore"})])
+        decoded = numpy.round(samples * 32767) / 32767
+
+        expected = (decoded - decoded.mean()) / numpy.sqrt(decoded.var() + 1e-7)
+        numpy.testing.assert_allclose(tensor, expected, atol=1e-4)
+        self.assertAlmostEqual(float(tensor.mean()), 0.0, places=5)
+
+    def test_keeps_silence_finite(self):
+        tensor = tensor_of(pcm16_wav(numpy.zeros(10), 8000), [("audio.normalize", {"mode": "zscore"})])
+
+        numpy.testing.assert_allclose(tensor, numpy.zeros(10))
+
+
 if __name__ == "__main__":
     unittest.main()

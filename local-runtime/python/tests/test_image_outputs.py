@@ -137,7 +137,7 @@ class ImageOutputChainTest(unittest.TestCase):
         ]
         check_output_pipeline("boxen", steps, REGISTRY)
         check_output_pipeline("maske", [{"type": "mask.connectedComponents", "parameters": {}}, steps[1]], REGISTRY)
-        with self.assertRaisesRegex(ValueError, "geometry.toSource erwartet regions oder detections, erhält tensor"):
+        with self.assertRaisesRegex(ValueError, "geometry.toSource erwartet regions oder detections oder keypoints, erhält tensor"):
             check_output_pipeline("roh", [steps[1]], REGISTRY)
 
     def test_a_box_travels_from_the_input_through_the_model_back_into_the_original(self):

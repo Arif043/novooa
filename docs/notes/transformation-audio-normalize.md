@@ -6,11 +6,14 @@ Gehört zu: [Transformationen](../index/transformationen.md)
 
 **Wertart:** `audio` → `audio`
 
+`zscore` standardisiert je Kanal: `(x − Mittelwert) / sqrt(Varianz + 1e-7)`, wie die
+Feature-Extractors von Wav2Vec2 und HuBERT; `target` gilt dort nicht.
+
 ## Parameter
 
 | Parameter | Wert | Pflicht | Standard |
 | --- | --- | --- | --- |
-| `mode` | `peak` oder `rms` | nein | `"peak"` |
+| `mode` | `peak` oder `rms` oder `zscore` | nein | `"peak"` |
 | `target` | Zahl ≥ 0 | nein | – |
 
 Hinweis: optional `mode` (`peak` oder `rms`), `target` (Standard `1` bzw. `0.1`)

@@ -29,16 +29,22 @@ def input_arrays(payload, numpy):
 
 
 def run_model(session, payload, numpy, resource_reader=None):
-    names = [output["name"] for output in payload["outputs"]]
-    values = session.run(names, input_arrays(payload, numpy))
-    return transformed_output_tensors(payload, values, numpy, resource_reader)
+    # Alle Ausgänge: Pipelines dürfen Hilfsausgänge lesen, die keinen eigenen Vertragsausgang haben.
+    names = [output.name for output in session.get_outputs()]
+    raw = dict(zip(names, session.run(names, input_arrays(payload, numpy)), strict=True))
+    missing = [output["name"] for output in payload["outputs"] if output["name"] not in raw]
+    if missing:
+        raise ValueError(f"Das Modell hat keinen Ausgang {missing[0]}.")
+    return transformed_output_tensors(payload, raw, numpy, resource_reader)
 
 
-def transformed_output_tensors(payload, values, numpy, resource_reader=None):
-    named = zip([output["name"] for output in payload["outputs"]], values, strict=True)
+def transformed_output_tensors(payload, raw_outputs, numpy, resource_reader=None):
+    """`raw_outputs`: alle Rohausgänge (Name → Wert) oder Werte in der Reihenfolge der Vertragsausgänge."""
+    if not isinstance(raw_outputs, dict):
+        raw_outputs = dict(zip([output["name"] for output in payload["outputs"]], raw_outputs, strict=True))
     # Eingänge tragen z. B. ihre Bildgeometrie, damit Ausgänge ins Originalbild zurückrechnen.
     input_metadata = {tensor["name"]: tensor.get("metadata", {}) for tensor in payload.get("inputs", [])}
-    transformed = transform_outputs(named, payload["outputs"], numpy, resource_reader, input_metadata)
+    transformed = transform_outputs(raw_outputs, payload["outputs"], numpy, resource_reader, input_metadata)
     return [
         {
             **encode_tensor(output["name"], output["tensor"], numpy),

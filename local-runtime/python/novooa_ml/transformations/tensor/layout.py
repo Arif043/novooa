@@ -7,7 +7,8 @@ from novooa_ml.transformations.values import as_tensor
 class TensorLayoutStrategy(TransformationStrategy):
     """Ordnet ein Bild zwischen HWC (`channelsLast`) und CHW (`channelsFirst`) um.
 
-    Das gewählte Layout merkt sich der Kontext, damit `tensor.normalize` die Kanalachse kennt.
+    Ein Batch (`[N, H, W, C]`, etwa aus `image.tiles`) wird je Bild umgeordnet. Das gewählte
+    Layout merkt sich der Kontext, damit `tensor.normalize` die Kanalachse kennt.
     """
 
     accepts = (TENSOR,)
@@ -25,8 +26,13 @@ class TensorLayoutStrategy(TransformationStrategy):
         tensor = as_tensor(value, context)
         if requested == layout_of(context):
             return tensor
+        if tensor.ndim not in (3, 4):
+            raise ValueError("tensor.layout erwartet ein Bild [H, W, C] oder einen Batch [N, H, W, C].")
         context.metadata["layout"] = requested
-        return tensor.transpose((2, 0, 1) if requested == "channelsFirst" else (1, 2, 0))
+        batch = (0,) if tensor.ndim == 4 else ()
+        offset = len(batch)
+        order = (2, 0, 1) if requested == "channelsFirst" else (1, 2, 0)
+        return tensor.transpose(batch + tuple(axis + offset for axis in order))
 
 
 def layout_of(context):

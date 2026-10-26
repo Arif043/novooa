@@ -1,17 +1,19 @@
 """Liest Erkennungen aus Tensorzeilen: Box-Format, Score oder beste Klasse, und unterdrückt Überlappungen."""
 
+from novooa_ml.transformations.parameters import column_index
+
 CORNER_KEYS = ("left", "top", "right", "bottom")
 CENTER_KEYS = ("centerX", "centerY", "width", "height")
 
 
-def row_reader(parameters, width):
-    """Prüft die Spaltenangaben und liefert eine Funktion Zeile → Erkennung oder None."""
+def row_reader(parameters, width, numpy):
+    """Prüft die Spaltenangaben und liefert eine Funktion Zeile → Erkennung."""
     box = parameters.get("box")
     if not isinstance(box, dict):
         raise ValueError("tensor.nonMaximumSuppression benötigt box.")
     keys = CENTER_KEYS if "centerX" in box else CORNER_KEYS
-    box_columns = {key: required_index(box.get(key)) for key in keys}
-    scoring = score_reader(parameters, width)
+    box_columns = {key: column_index(box.get(key)) for key in keys}
+    scoring = score_reader(parameters, width, numpy)
     if max(box_columns.values()) >= width:
         raise ValueError("Ein Erkennungsindex liegt außerhalb der Tensorbreite.")
     scale_x, scale_y = box_scale(parameters.get("boxScale"))
@@ -23,30 +25,66 @@ def row_reader(parameters, width):
     return read
 
 
-def score_reader(parameters, width):
+ACTIVATIONS = ("none", "sigmoid", "softmax")
+
+
+def score_reader(parameters, width, numpy):
     score_index, class_scores = parameters.get("scoreIndex"), parameters.get("classScores")
     if score_index is None and class_scores is None:
         raise ValueError("tensor.nonMaximumSuppression benötigt scoreIndex oder classScores.")
     if score_index is not None and class_scores is not None:
         raise ValueError("tensor.nonMaximumSuppression benötigt entweder scoreIndex oder classScores.")
-    objectness = parameters.get("objectnessIndex")
-    last = [required_index(objectness)] if objectness is not None else []
+    activation = parameters.get("scoreActivation", "none")
+    if activation not in ACTIVATIONS:
+        raise ValueError("scoreActivation erwartet none, sigmoid oder softmax.")
     if score_index is not None:
-        column = required_index(score_index)
-        within_width([column, *last], width)
-        return lambda row: {"score": float(row[column]) * objectness_of(row, objectness)}
-    start = required_index(class_scores.get("start"))
+        return column_score_reader(parameters, column_index(score_index), activation, numpy, width)
+    return class_score_reader(parameters, class_scores, activation, numpy, width)
+
+
+def class_score_reader(parameters, class_scores, activation, numpy, width):
+    """Beste Klasse aus den Klassenspalten; sie bestimmt Score und `classIndex`."""
+    if parameters.get("classColumn") is not None:
+        raise ValueError("classColumn passt nur zu scoreIndex; mit classScores ergibt sich die Klasse aus den Spalten.")
+    objectness = parameters.get("objectnessIndex")
+    start = column_index(class_scores.get("start"))
     end = class_scores.get("end", width)
-    within_width([start, required_index(end) - 1, *last], width)
+    within_width([start, column_index(end) - 1, *([column_index(objectness)] if objectness is not None else [])], width)
     if end <= start:
         raise ValueError("classScores benötigt end größer als start.")
 
     def best_class(row):
-        scores = row[start:end]
+        scores = activated(row[start:end], activation, numpy)
         best = int(scores.argmax())
         return {"score": float(scores[best]) * objectness_of(row, objectness), "classIndex": best}
 
     return best_class
+
+
+def column_score_reader(parameters, column, activation, numpy, width):
+    """Score aus einer Spalte; die Klasse optional aus `classColumn` (z. B. `[klasse, score, …]`)."""
+    if activation == "softmax":
+        raise ValueError("scoreActivation softmax braucht classScores; eine einzelne Spalte hat keine Verteilung.")
+    class_column, objectness = parameters.get("classColumn"), parameters.get("objectnessIndex")
+    optional_columns = [column_index(index) for index in (class_column, objectness) if index is not None]
+    within_width([column, *optional_columns], width)
+
+    def read(row):
+        score = float(activated(row[column:column + 1], activation, numpy)[0]) * objectness_of(row, objectness)
+        return {"score": score, **({} if class_column is None else {"classIndex": int(round(float(row[class_column])))})}
+
+    return read
+
+
+def activated(scores, activation, numpy):
+    """Viele Detektoren liefern Logits; Schwellen und Vergleich brauchen Wahrscheinlichkeiten."""
+    values = numpy.asarray(scores, dtype=numpy.float64)
+    if activation == "sigmoid":
+        return 1 / (1 + numpy.exp(-values))
+    if activation == "softmax":
+        exponentials = numpy.exp(values - values.max())
+        return exponentials / exponentials.sum()
+    return values
 
 
 def corners_of(row, columns, scale_x, scale_y):
@@ -99,7 +137,3 @@ def within_width(columns, width):
         raise ValueError("Ein Erkennungsindex liegt außerhalb der Tensorbreite.")
 
 
-def required_index(value):
-    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-        raise ValueError("Ein Spaltenindex muss eine nichtnegative ganze Zahl sein.")
-    return value

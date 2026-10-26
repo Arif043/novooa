@@ -13,6 +13,8 @@ JSON = "json"
 TENSOR = "tensor"
 REGIONS = "regions"
 DETECTIONS = "detections"
+# Liste `{index, x, y, score?}` in Modellpixeln, z. B. Körper- oder Gesichtspunkte.
+KEYPOINTS = "keypoints"
 JSON_RESULT = "json-result"
 AUDIO_FILE = "audioFile"
 IMAGE_FILE = "imageFile"
@@ -20,7 +22,10 @@ ANY = "*"
 # Als `produces`: Das Ergebnis behält die Wertart der Eingabe (z. B. Regionen bleiben Regionen).
 SAME = "same"
 
-KINDS = (IMAGE, AUDIO, TEXT, DATETIME, NUMBER, JSON, TENSOR, REGIONS, DETECTIONS, JSON_RESULT, AUDIO_FILE, IMAGE_FILE)
+KINDS = (
+    IMAGE, AUDIO, TEXT, DATETIME, NUMBER, JSON, TENSOR, REGIONS, DETECTIONS, KEYPOINTS, JSON_RESULT, AUDIO_FILE,
+    IMAGE_FILE,
+)
 
 # Bilder und Audiosignale lassen sich ohne eigenen Schritt als Tensor lesen (`as_tensor`).
 CONVERTIBLE_TO_TENSOR = (IMAGE, AUDIO)

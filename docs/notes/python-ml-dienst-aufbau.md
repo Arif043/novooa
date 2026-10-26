@@ -11,6 +11,8 @@ local-runtime/python/
     transformations/                Katalog und Kern
       strategy.py registry.py context.py values.py parameters.py discovery.py
       kinds.py                      Wertarten
+      travelling_metadata.py        was vom Eingang zum Ausgang reist (Geometrie, Kacheln, Quellbild)
+      output_references.py          Parameter, die Modellausgänge nennen (Prüfung beim Veröffentlichen)
       pipeline_check.py             Prüfung der Wertarten-Kette (und Parameter beim Import)
       parameter_check.py, schema/   Parameterschemas und Prüfung
       image/ audio/ text/ data/ temporal/ tensor/ vision/ sequence/ resources/
@@ -19,8 +21,12 @@ local-runtime/python/
 ```
 
 **Parameterschemas** aus `transformations/schema/`: `Integer`, `Number`,
-`Boolean`, `Text`, `Choice`, `ListOf`, `Record` (feste Felder), `MapOf`,
-`OneOf`.
+`Boolean`, `Text`, `OutputName` (Name eines Modellausgangs), `Choice`,
+`ListOf`, `Record` (feste Felder), `MapOf`, `OneOf`.
+
+**Ausgänge:** Der Dienst fragt alle Ausgänge des ONNX-Modells ab und
+transformiert die des Vertrags; die übrigen stehen den Pipelines als
+Rohausgänge zur Verfügung (`context.output_tensor`).
 
 ```python
 parameters = {

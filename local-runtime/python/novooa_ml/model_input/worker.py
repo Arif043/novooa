@@ -1,6 +1,7 @@
 from novooa_ml.transformations.context import TransformationContext
 from novooa_ml.transformations.default_registry import default_transformation_registry
-from novooa_ml.transformations.geometry import KEY as GEOMETRY, start_geometry
+from novooa_ml.transformations.geometry import start_geometry
+from novooa_ml.transformations.travelling_metadata import travelling_metadata
 from novooa_ml.transformations.pipeline_check import check_input_pipeline
 from novooa_ml.transformations.values import as_tensor
 
@@ -20,9 +21,10 @@ def transform_payload(payload, resource_reader=None):
         start_geometry(context, value)
     result = registry.run(value, definition["transformations"], context)
     encoded = tensor_for_contract(as_tensor(result.value, context), definition, numpy)
-    # Die Geometrie reist mit, damit Ausgänge Boxen und Masken ins Originalbild zurückrechnen.
-    if GEOMETRY in context.metadata:
-        encoded["metadata"] = {GEOMETRY: context.metadata[GEOMETRY]}
+    # Geometrie, Kachelraster und Quellbild reisen mit, damit Ausgänge ins Original zurückrechnen.
+    metadata = travelling_metadata(context)
+    if metadata:
+        encoded["metadata"] = metadata
     return {"tensor": encoded}
 
 

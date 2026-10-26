@@ -8,7 +8,7 @@ from .layout import layout_of
 
 
 class TensorNormalizeStrategy(TransformationStrategy):
-    """Normalisiert jeden Farbkanal: (wert − mean) / std, passend zum aktuellen Layout."""
+    """Normalisiert jeden Farbkanal: (wert − mean) / std, passend zum aktuellen Layout; auch je Bild eines Batches."""
 
     accepts = (TENSOR,)
     produces = TENSOR
@@ -24,7 +24,7 @@ class TensorNormalizeStrategy(TransformationStrategy):
         mean = numeric_values(parameters.get("mean"), "mean")
         standard_deviation = numeric_values(parameters.get("std"), "std")
         channels_first = layout_of(context) == "channelsFirst"
-        channels = tensor.shape[0] if channels_first else tensor.shape[-1]
+        channels = tensor.shape[-3] if channels_first else tensor.shape[-1]
         if len(mean) != channels or len(standard_deviation) != channels:
             raise ValueError("tensor.normalize benötigt Werte für jeden Farbkanal.")
         shape = (-1, 1, 1) if channels_first else (1, 1, -1)

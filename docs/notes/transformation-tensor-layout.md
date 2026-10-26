@@ -6,6 +6,8 @@ Gehört zu: [Transformationen](../index/transformationen.md)
 
 **Wertart:** `tensor` → `tensor`
 
+Ein Batch `[N, H, W, C]` (etwa aus `image.tiles`) wird je Bild umgeordnet.
+
 ## Parameter
 
 | Parameter | Wert | Pflicht | Standard |

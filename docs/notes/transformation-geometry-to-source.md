@@ -1,10 +1,12 @@
 # Transformation `geometry.toSource`
 
-> Rechnet `bounds` bzw. `box` mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild.
+> Rechnet `bounds`, `box` bzw. Keypoints mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild.
 
 Gehört zu: [Transformationen](../index/transformationen.md)
 
-**Wertart:** `regions` oder `detections` → Wertart der Eingabe
+**Wertart:** `regions` oder `detections` oder `keypoints` → Wertart der Eingabe
+
+Keypoints (`x`, `y`) werden wie Boxen umgerechnet.
 
 ## Parameter
 
@@ -19,6 +21,7 @@ Hinweis: `input`, optional `clip` (Standard `true`)
 
 - [`test_image_outputs.py`](../../local-runtime/python/tests/test_image_outputs.py)
 - [`test_detector_formats.py`](../../local-runtime/python/tests/test_detector_formats.py)
+- [`test_keypoints.py`](../../local-runtime/python/tests/test_keypoints.py)
 
 ## Siehe auch
 

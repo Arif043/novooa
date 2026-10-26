@@ -11,6 +11,7 @@ from PIL import Image
 
 from ml_test_support import REGISTRY, context, png_base64
 from novooa_ml.model_input.worker import transform_payload
+from novooa_ml.tensor_codec import decode_tensor
 from novooa_ml.transformations.geometry import start_geometry
 
 
@@ -131,6 +132,38 @@ class GeometryTransportTest(unittest.TestCase):
         }
 
         self.assertNotIn("metadata", transform_payload(payload)["tensor"])
+
+
+
+class SizeTensorTest(unittest.TestCase):
+    """Hilfseingänge wie `im_shape` und `scale_factor` der Paddle-Detektoren, als abgeleiteter Eingang."""
+
+    def size_tensor(self, values, steps):
+        payload = {
+            "input": {"name": "scale_factor", "dataType": "float32", "shape": [1, len(values)], "transformations": [
+                *steps, {"type": "image.sizeTensor", "parameters": {"values": values}},
+            ]},
+            "source": {"type": "image", "dataBase64": png_base64(Image.new("RGB", (1000, 500)))},
+        }
+        return decode_tensor(transform_payload(payload)["tensor"], numpy)
+
+    def test_delivers_model_size_and_scale_after_a_letterbox(self):
+        steps = [{"type": "image.resizePad", "parameters": {"width": 640, "height": 640, "alignment": "center"}}]
+
+        tensor = self.size_tensor(["height", "width", "scaleY", "scaleX"], steps)
+
+        numpy.testing.assert_allclose(tensor, [[640, 640, 0.64, 0.64]], rtol=1e-6)
+
+    def test_delivers_the_original_size(self):
+        steps = [{"type": "image.resize", "parameters": {"width": 320, "height": 320}}]
+
+        numpy.testing.assert_allclose(self.size_tensor(["sourceHeight", "sourceWidth"], steps), [[500, 1000]])
+
+    def test_has_no_scale_after_a_perspective_crop(self):
+        steps = [{"type": "image.perspectiveCrop", "parameters": {"points": [0, 0, 10, 0, 10, 10, 0, 10], "width": 8, "height": 8}}]
+
+        with self.assertRaisesRegex(ValueError, "scaleX lässt sich nach einem nicht umkehrbaren Bildschritt"):
+            self.size_tensor(["scaleX"], steps)
 
 
 if __name__ == "__main__":

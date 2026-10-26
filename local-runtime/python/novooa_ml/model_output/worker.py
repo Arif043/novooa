@@ -4,23 +4,30 @@ from novooa_ml.transformations.pipeline_check import check_output_pipeline
 
 
 def transform_outputs(outputs, definitions, numpy, resource_reader=None, input_metadata=None):
-    by_name = {definition["name"]: definition for definition in definitions}
+    """Transformiert die Ausgänge des Vertrags; alle Rohausgänge stehen den Pipelines zur Verfügung.
+
+    `outputs`: Rohausgänge des Modells als Zuordnung oder Paare (Name, Wert). Hilfsausgänge ohne
+    eigene Definition werden nur gelesen, z. B. Scores zu den Boxen eines anderen Ausgangs.
+    """
     registry = default_transformation_registry()
     # `outputs` kann ein einmal lesbarer Iterator sein (zip im ONNX-Worker).
-    outputs = [(name, *dense_output(name, value, numpy)) for name, value in outputs]
-    for name, _, _ in outputs:
-        check_output_pipeline(name, by_name[name].get("transformations", []), registry)
-    return [
-        {
-            "name": name,
-            "tensor": tensor,
-            "transformationValues": {**extras, **transformation_values(
-                registry, tensor, by_name[name].get("transformations", []),
-                TransformationContext(numpy, image_module=image_module(), resource_reader=resource_reader, inputs=input_metadata),
-            )},
-        }
-        for name, tensor, extras in outputs
-    ]
+    dense = {name: dense_output(name, value, numpy) for name, value in dict(outputs).items()}
+    raw = {name: tensor for name, (tensor, _) in dense.items()}
+    for definition in definitions:
+        if definition["name"] not in dense:
+            raise ValueError(f"Das Modell hat keinen Ausgang {definition['name']}.")
+        check_output_pipeline(definition["name"], definition.get("transformations", []), registry)
+    return [output_result(definition, dense, raw, registry, numpy, resource_reader, input_metadata) for definition in definitions]
+
+
+def output_result(definition, dense, raw, registry, numpy, resource_reader, input_metadata):
+    name = definition["name"]
+    tensor, extras = dense[name]
+    context = TransformationContext(
+        numpy, image_module=image_module(), resource_reader=resource_reader, inputs=input_metadata, outputs=raw,
+    )
+    values = transformation_values(registry, tensor, definition.get("transformations", []), context)
+    return {"name": name, "tensor": tensor, "transformationValues": {**extras, **values}}
 
 
 def dense_output(name, value, numpy):

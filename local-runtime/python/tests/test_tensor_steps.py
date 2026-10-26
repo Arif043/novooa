@@ -125,5 +125,42 @@ class ConstantTest(unittest.TestCase):
                 run("x", ("tensor.constant", {"values": values}))
 
 
+
+class MinMaxScaleTest(unittest.TestCase):
+    def test_maps_the_own_range_onto_the_target_range(self):
+        result = run(numpy.array([[2.0, 4.0], [6.0, 10.0]]), ("tensor.minMaxScale", {"maximum": 255}))
+
+        numpy.testing.assert_allclose(result, [[0, 63.75], [127.5, 255]])
+
+    def test_a_constant_tensor_becomes_the_minimum(self):
+        result = run(numpy.full((2, 2), 3.0), ("tensor.minMaxScale", {"minimum": 1, "maximum": 2}))
+
+        numpy.testing.assert_allclose(result, numpy.ones((2, 2)))
+
+    def test_rejects_an_empty_target_range(self):
+        with self.assertRaisesRegex(ValueError, "maximum größer als minimum"):
+            run(numpy.zeros(2), ("tensor.minMaxScale", {"minimum": 1, "maximum": 1}))
+
+
+class BatchLayoutTest(unittest.TestCase):
+    """Kacheln aus `image.tiles` werden je Bild umgeordnet und normalisiert."""
+
+    def test_reorders_and_normalizes_every_image_of_a_batch(self):
+        batch = numpy.zeros((2, 3, 4, 3), dtype=numpy.float32)
+        batch[1, ..., 2] = 10.0
+        ctx = context()
+
+        result = run(batch, ("tensor.layout", {"order": "channelsFirst"}),
+                     ("tensor.normalize", {"mean": [0, 0, 5], "std": [1, 1, 5]}), ctx=ctx)
+
+        self.assertEqual(result.shape, (2, 3, 3, 4))
+        numpy.testing.assert_allclose(result[1, 2], numpy.ones((3, 4)))
+        numpy.testing.assert_allclose(result[0, 2], -numpy.ones((3, 4)))
+
+    def test_rejects_a_tensor_that_is_neither_image_nor_batch(self):
+        with self.assertRaisesRegex(ValueError, "Batch \\[N, H, W, C\\]"):
+            run(numpy.zeros((2, 2)), ("tensor.layout", {"order": "channelsFirst"}))
+
+
 if __name__ == "__main__":
     unittest.main()
