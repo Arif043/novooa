@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/node_config_labels.dart';
@@ -7,6 +8,7 @@ import '../cubits/task_builder_cubit.dart';
 import 'baustein_icon_avatar.dart';
 import 'baustein_swap_handle.dart';
 import 'compact_node_card.dart';
+import 'plugin_disabled_badge.dart';
 
 /// Baustein auf der Leinwand. Über sein Icon lässt er sich auf einen anderen
 /// Baustein ziehen und mit ihm tauschen, auch über Zweige und Schleifen
@@ -46,13 +48,22 @@ class _CompactWorkflowNodeState extends State<CompactWorkflowNode> {
           .swapNodes(details.data, widget.node.id),
       builder: (context, candidates, _) => Opacity(
         opacity: _isDragged ? _draggedOpacity : 1,
-        child: CompactNodeCard(
-          key: _cardKey,
-          node: widget.node,
-          selected: widget.selected,
-          highlighted: widget.targeted || candidates.isNotEmpty,
-          onTap: widget.onTap,
-          leading: _swapHandle(),
+        child: Stack(
+          children: [
+            CompactNodeCard(
+              key: _cardKey,
+              node: widget.node,
+              selected: widget.selected,
+              highlighted: widget.targeted || candidates.isNotEmpty,
+              onTap: widget.onTap,
+              leading: _swapHandle(),
+            ),
+            Positioned(
+              top: AppSpacing.sm,
+              right: AppSpacing.sm,
+              child: PluginDisabledBadge(node: widget.node),
+            ),
+          ],
         ),
       ),
     );

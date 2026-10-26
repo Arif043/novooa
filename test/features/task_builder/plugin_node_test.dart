@@ -22,6 +22,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/baustein_palette.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph_item.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/plugin_disabled_badge.dart';
 
 /// Ein Baustein, wie ihn ein Plugin im eigenen Ordner definieren würde.
 class _HelloConfig extends PluginNodeConfig {
@@ -257,6 +258,36 @@ void main() {
       expect(find.text('Hallo Anna'), findsOneWidget);
       expect(find.textContaining('Plugin deaktiviert'), findsOneWidget);
     });
+
+    for (final (enabled, badges) in [
+      (<String>{}, findsOneWidget),
+      ({'hello'}, findsNothing),
+    ]) {
+      testWidgets('Ausrufezeichen nur bei deaktiviertem Plugin ($enabled)', (
+        tester,
+      ) async {
+        PluginNodeModules.register(_module());
+        await tester.pumpWidget(
+          withPlugins(
+            enabled: enabled,
+            MaterialApp(
+              home: PluginDisabledBadge(
+                node: WorkflowNode(
+                  id: const NodeId('n1'),
+                  title: 'Hallo-Baustein',
+                  description: '',
+                  outputs: [WorkflowOutput.primary('gruss1')],
+                  config: const _HelloConfig(),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byIcon(Icons.priority_high), badges);
+      });
+    }
 
     testWidgets('ein Baustein ohne registriertes Plugin zeigt einen Hinweis', (
       tester,
