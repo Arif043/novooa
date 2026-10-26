@@ -8,6 +8,7 @@
 - [Microsoft-Graph-App je Umgebung](../notes/microsoft-graph-entra-app.md)
 - [Lizenz ausstellen](../notes/lizenz-ausstellen.md)
 - [Modelle veröffentlichen](../notes/modelle-veroeffentlichen.md)
+- [Modellspeicher auf Garage](../notes/modellspeicher-garage.md)
 
 ## Runtime auf Windows
 

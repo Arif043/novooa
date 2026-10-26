@@ -14,6 +14,7 @@
 
 - [ML-Katalogeintrag](../notes/ml-katalogeintrag.md)
 - [Globaler Modellspeicher](../notes/globaler-modellspeicher.md)
+- [Modellspeicher auf Garage](../notes/modellspeicher-garage.md)
 - [Modellaufgaben, Sprachen und Tags](../notes/modellaufgaben-und-sprachen.md)
 - [Tag-Vokabular der Modelle](../notes/modell-tag-vokabular.md)
 - [Mehrsprachige Manifeste](../notes/mehrsprachige-manifeste.md)

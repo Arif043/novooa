@@ -9,9 +9,11 @@ export type S3ModelStoreConfiguration = {
   bucket: string;
   accessKeyId: string;
   secretAccessKey: string;
+  /** Pfad statt Subdomain je Bucket; Garage ohne `root_domain` versteht nur diese Form. */
+  forcePathStyle: boolean;
 };
 
-/** S3-kompatibler Speicher (Hetzner Object Storage). Große Dateien gehen per Multipart-Upload als Datenstrom. */
+/** S3-kompatibler Speicher (Garage auf dem eigenen VPS). Große Dateien gehen per Multipart-Upload als Datenstrom. */
 export class S3ModelObjectStore implements ModelObjectStore {
   private readonly client: S3Client;
 
@@ -19,6 +21,7 @@ export class S3ModelObjectStore implements ModelObjectStore {
     this.client = new S3Client({
       endpoint: configuration.endpoint,
       region: configuration.region,
+      forcePathStyle: configuration.forcePathStyle,
       credentials: {accessKeyId: configuration.accessKeyId, secretAccessKey: configuration.secretAccessKey},
       // S3-kompatible Anbieter unterstützen die neueren Standard-Prüfsummen des SDK nicht überall.
       requestChecksumCalculation: "WHEN_REQUIRED",
@@ -50,10 +53,12 @@ export class S3ModelObjectStore implements ModelObjectStore {
 export function s3ModelStoreConfigurationFromEnvironment(environment = process.env): S3ModelStoreConfiguration {
   return {
     endpoint: required(environment, "MODEL_STORE_S3_ENDPOINT"),
-    region: environment.MODEL_STORE_S3_REGION?.trim() || "eu-central",
+    // Garage signiert mit seiner `s3_region` aus garage.toml; Standard dort ist „garage“.
+    region: environment.MODEL_STORE_S3_REGION?.trim() || "garage",
     bucket: required(environment, "MODEL_STORE_S3_BUCKET"),
     accessKeyId: required(environment, "MODEL_STORE_S3_ACCESS_KEY_ID"),
     secretAccessKey: required(environment, "MODEL_STORE_S3_SECRET_ACCESS_KEY"),
+    forcePathStyle: environment.MODEL_STORE_S3_FORCE_PATH_STYLE?.trim().toLowerCase() !== "false",
   };
 }
 

@@ -8,8 +8,8 @@ Keine öffentliche Function, keine App-Oberfläche.
 
 ```bash
 gcloud auth application-default login
-export MODEL_STORE_S3_ENDPOINT=https://fsn1.your-objectstorage.com MODEL_STORE_S3_REGION=fsn1 \
-  MODEL_STORE_S3_BUCKET=<bucket> MODEL_STORE_S3_ACCESS_KEY_ID=<schlüssel> MODEL_STORE_S3_SECRET_ACCESS_KEY=<geheimnis>
+export MODEL_STORE_S3_ENDPOINT=https://models.arif-it.de MODEL_STORE_S3_REGION=garage \
+  MODEL_STORE_S3_BUCKET=web-novooa-models.arif-it.de MODEL_STORE_S3_ACCESS_KEY_ID=<schlüssel> MODEL_STORE_S3_SECRET_ACCESS_KEY=<geheimnis>
 npm --prefix functions run models:publish -- \
   --project syscat-90bff \
   --manifest models/mobilenet-v3/model.json \
@@ -50,6 +50,7 @@ oder `python3`, mit den Paketen aus `local-runtime/python/requirements.txt`.
   veröffentlichen (etwa für korrigierte Texte) ist ohne Option erlaubt.
 - Gewichtsdateien liegen im Modellordner; ihr Dateiname ist der erwartete
   Name.
+- Ziel ist der Garage-Bucket auf unserem VPS ([Modellspeicher auf Garage](./modellspeicher-garage.md)).
 - Der S3-Schlüssel bleibt beim Betreiber. Die Identität braucht Lese- und
   Schreibzugriff auf `modelCatalog`.
 - `models:install-local -- --runtime-root <ordner>` prüft genauso und schreibt

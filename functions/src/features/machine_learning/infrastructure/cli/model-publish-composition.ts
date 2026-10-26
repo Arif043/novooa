@@ -8,7 +8,7 @@ import {type ModelPublishCommandDependencies} from "./model-publish-command.js";
 import {type ModelPublishOptions} from "./model-publish-options.js";
 import {pythonModelValidators} from "./python-model-validators.js";
 
-/** Dateien in den globalen Modellspeicher (Hetzner Object Storage), Katalogeintrag nach Firestore. */
+/** Dateien in den globalen Modellspeicher (Garage auf dem VPS), Katalogeintrag nach Firestore. */
 export function cloudModelPublishDependencies(
   options: ModelPublishOptions,
 ): ModelPublishCommandDependencies {

@@ -1,6 +1,6 @@
 # Globaler Modellspeicher
 
-> Dateien globaler Modelle liegen öffentlich lesbar im S3-kompatiblen Hetzner Object Storage; jeder Beteiligte leitet den Ort aus der logischen Referenz ab.
+> Dateien globaler Modelle liegen öffentlich lesbar in einem Garage-Bucket auf unserem VPS (S3-kompatibel); jeder Beteiligte leitet den Ort aus der logischen Referenz ab.
 
 Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 
@@ -20,5 +20,6 @@ der Pfad ist nie Teil eines Katalogeintrags oder Workflow-Werts.
 
 ## Siehe auch
 
+- [Modellspeicher auf Garage](./modellspeicher-garage.md) — Einrichtung, Endpunkte, Zugriff
 - [Modelle veröffentlichen](./modelle-veroeffentlichen.md)
 - [Modellbündel](./modellbuendel.md)

@@ -15,7 +15,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8081"
-      # Globaler Modellspeicher (Hetzner Object Storage, öffentlich lesbar) für Katalogmodelle.
+      # Globaler Modellspeicher: Website-Endpunkt des Garage-Buckets auf dem VPS (öffentlich lesbar) für Katalogmodelle.
       MODEL_STORE_URL: ${NOVOOA_MODEL_STORE_URL:-}
       MODEL_BUNDLE_MAX_BYTES: ${NOVOOA_ML_BUNDLE_MAX_BYTES:-}
       MODEL_TEAM_MAX_BYTES: ${NOVOOA_ML_TEAM_MAX_BYTES:-}

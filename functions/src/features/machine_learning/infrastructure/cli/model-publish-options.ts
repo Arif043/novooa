@@ -38,7 +38,8 @@ export const modelPublishUsage = [
   "Gewichtsdateien liegen im Ordner des Modells; ihr Dateiname ist der Name, unter dem das Modell sie erwartet.",
   "--replace-version ersetzt eine schon veröffentlichte andere Version derselben Modell-ID.",
   "Die Tags des Manifests müssen im globalen Vokabular stehen (zuerst models:tags:publish).",
-  "Der Modellspeicher kommt aus MODEL_STORE_S3_ENDPOINT, _REGION, _BUCKET, _ACCESS_KEY_ID, _SECRET_ACCESS_KEY.",
+  "Der Modellspeicher (Garage) kommt aus MODEL_STORE_S3_ENDPOINT, _BUCKET, _ACCESS_KEY_ID, _SECRET_ACCESS_KEY,",
+  "optional _REGION (Standard garage) und _FORCE_PATH_STYLE (Standard true).",
 ].join("\n");
 
 function resourceFrom(value: string): {name: string; path: string} {
