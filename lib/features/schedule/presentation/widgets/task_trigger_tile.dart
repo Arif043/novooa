@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/syscat_theme.dart';
+import '../../../../core/widgets/luminous_card.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/task_trigger.dart';
@@ -110,128 +111,89 @@ class _TaskTriggerTileState extends State<TaskTriggerTile> {
     final trigger = widget.trigger;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.outlineVariant),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: .08),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    _iconFor(trigger),
-                    color: colors.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trigger.taskTitle,
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        triggerLabel(trigger),
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (trigger.event?.source == EventTriggerSource.shopware &&
-                trigger.webhookUrl != null) ...[
-              const SizedBox(height: 16),
-              _ShopwareAppPanel(trigger: trigger),
-            ] else if (trigger.webhookUrl case final address?) ...[
-              const SizedBox(height: 16),
-              WebhookAddress(
-                address: address,
-                verified:
-                    trigger.event?.webhook?.verification
-                        is HmacWebhookVerification,
-                busy: _busy,
-                onCopy: () => _copyAddress(address),
-                onRotate: _rotateAddress,
-              ),
-            ],
-            const SizedBox(height: 20),
-            Divider(height: 1, color: colors.outlineVariant),
-            const SizedBox(height: 12),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 16,
-              runSpacing: 8,
-              children: [
-                Text(
-                  triggerStatusLabel(trigger),
-                  style: theme.textTheme.bodySmall,
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      trigger.enabled ? 'Aktiv' : 'Pausiert',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(width: 8),
-                    Semantics(
-                      label: 'Auslöser für ${trigger.taskTitle}',
-                      child: CupertinoSwitch(
-                        value: trigger.enabled,
-                        activeTrackColor: SyscatTheme.primaryOrange,
-                        onChanged: _busy
-                            ? null
-                            : (value) => _perform(
-                                () => widget.cubit.setEnabled(trigger, value),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (_busy)
-                      const Padding(
-                        padding: EdgeInsets.all(14),
-                        child: CupertinoActivityIndicator(),
-                      )
-                    else
-                      IconButton(
-                        tooltip: 'Auslöser löschen',
-                        onPressed: _delete,
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        icon: Icon(
-                          CupertinoIcons.trash,
-                          size: 20,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ],
+    return LuminousCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LuminousCardHeading(
+            icon: _iconFor(trigger),
+            title: trigger.taskTitle,
+            subtitle: triggerLabel(trigger),
+          ),
+          if (trigger.event?.source == EventTriggerSource.shopware &&
+              trigger.webhookUrl != null) ...[
+            const SizedBox(height: 16),
+            _ShopwareAppPanel(trigger: trigger),
+          ] else if (trigger.webhookUrl case final address?) ...[
+            const SizedBox(height: 16),
+            WebhookAddress(
+              address: address,
+              verified:
+                  trigger.event?.webhook?.verification
+                      is HmacWebhookVerification,
+              busy: _busy,
+              onCopy: () => _copyAddress(address),
+              onRotate: _rotateAddress,
             ),
           ],
-        ),
+          const SizedBox(height: 20),
+          Divider(height: 1, color: colors.outlineVariant),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              Text(
+                triggerStatusLabel(trigger),
+                style: theme.textTheme.bodySmall,
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    trigger.enabled ? 'Aktiv' : 'Pausiert',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 8),
+                  Semantics(
+                    label: 'Auslöser für ${trigger.taskTitle}',
+                    child: CupertinoSwitch(
+                      value: trigger.enabled,
+                      activeTrackColor: SyscatTheme.primaryOrange,
+                      onChanged: _busy
+                          ? null
+                          : (value) => _perform(
+                              () => widget.cubit.setEnabled(trigger, value),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (_busy)
+                    const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: CupertinoActivityIndicator(),
+                    )
+                  else
+                    IconButton(
+                      tooltip: 'Auslöser löschen',
+                      onPressed: _delete,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      icon: Icon(
+                        CupertinoIcons.trash,
+                        size: 20,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

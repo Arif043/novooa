@@ -736,7 +736,19 @@
     "alle_anzeigen_count": "Show all ({count})",
     "weniger_anzeigen": "Show less",
     "treffer_anzeigen_count": "Show results ({count})",
-    "filter_entfernen": "Remove filter “{label}”"
+    "filter_entfernen": "Remove filter “{label}”",
+    "skills_page_subtitle": "Reusable know-how for your blocks.",
+    "skills_count_one": "1 skill",
+    "skills_count_other": "{count} skills",
+    "skills_import": "Import",
+    "skills_empty_title": "No skills yet",
+    "skills_empty_body": "Skills give prompt blocks reusable instructions. Import them from GitHub, a ZIP file, a folder or the catalog.",
+    "skills_empty_import": "Import skills",
+    "skill_files_one": "1 file",
+    "skill_files_other": "{count} files",
+    "skill_delete_tooltip": "Delete skill “{name}”",
+    "skill_delete_title": "Delete skill?",
+    "skill_delete_body": "The folder “{name}” and all its files will be removed permanently."
   },
   "machine_learning": {
     "model_import": {

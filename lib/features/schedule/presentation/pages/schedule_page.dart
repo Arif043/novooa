@@ -6,6 +6,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/layout/page_insets.dart';
 import '../../../../core/widgets/ios_overlays.dart';
+import '../../../../core/widgets/luminous_page_header.dart';
 import '../cubits/schedule_cubit.dart';
 import '../cubits/schedule_state.dart';
 import '../widgets/create_schedule_trigger_dialog.dart';
@@ -97,48 +98,23 @@ class _ScheduleHeader extends StatelessWidget {
   final ScheduleState state;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final active = state.triggers.where((t) => t.enabled).length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 24,
-            runSpacing: 16,
-            children: [
-              Text('Zeitplan', style: theme.textTheme.headlineLarge),
-              FilledButton.icon(
-                onPressed:
-                    state.status == ScheduleStatus.ready &&
-                        state.tasks.isNotEmpty
-                    ? () => _create(context)
-                    : null,
-                icon: const Icon(CupertinoIcons.add, size: 20),
-                label: const Text('Auslöser hinzufügen'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Deine Aufgaben. Zur richtigen Zeit.',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        if (state.status == ScheduleStatus.ready &&
-            state.triggers.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            '$active aktiv · ${state.triggers.length - active} pausiert',
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
-      ],
+    final hasTriggers =
+        state.status == ScheduleStatus.ready && state.triggers.isNotEmpty;
+    return LuminousPageHeader(
+      title: 'Zeitplan',
+      subtitle: 'Deine Aufgaben. Zur richtigen Zeit.',
+      summary: hasTriggers
+          ? '$active aktiv · ${state.triggers.length - active} pausiert'
+          : null,
+      action: FilledButton.icon(
+        onPressed:
+            state.status == ScheduleStatus.ready && state.tasks.isNotEmpty
+            ? () => _create(context)
+            : null,
+        icon: const Icon(CupertinoIcons.add, size: 20),
+        label: const Text('Auslöser hinzufügen'),
+      ),
     );
   }
 }

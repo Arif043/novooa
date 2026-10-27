@@ -736,7 +736,19 @@
     "alle_anzeigen_count": "Alle anzeigen ({count})",
     "weniger_anzeigen": "Weniger anzeigen",
     "treffer_anzeigen_count": "Treffer anzeigen ({count})",
-    "filter_entfernen": "Filter „{label}“ entfernen"
+    "filter_entfernen": "Filter „{label}“ entfernen",
+    "skills_page_subtitle": "Wiederverwendbares Wissen für deine Bausteine.",
+    "skills_count_one": "1 Fähigkeit",
+    "skills_count_other": "{count} Fähigkeiten",
+    "skills_import": "Importieren",
+    "skills_empty_title": "Noch keine Fähigkeiten",
+    "skills_empty_body": "Fähigkeiten geben Prompt-Bausteinen wiederverwendbare Anweisungen. Importiere sie von GitHub, aus einem ZIP, einem Ordner oder dem Katalog.",
+    "skills_empty_import": "Fähigkeiten importieren",
+    "skill_files_one": "1 Datei",
+    "skill_files_other": "{count} Dateien",
+    "skill_delete_tooltip": "Fähigkeit „{name}“ löschen",
+    "skill_delete_title": "Fähigkeit löschen?",
+    "skill_delete_body": "Der Ordner „{name}“ wird samt allen Dateien endgültig entfernt."
   },
   "machine_learning": {
     "model_import": {

@@ -736,7 +736,19 @@
     "alle_anzeigen_count": "Tümünü göster ({count})",
     "weniger_anzeigen": "Daha az göster",
     "treffer_anzeigen_count": "Sonuçları göster ({count})",
-    "filter_entfernen": "“{label}” filtresini kaldır"
+    "filter_entfernen": "“{label}” filtresini kaldır",
+    "skills_page_subtitle": "Blokların için yeniden kullanılabilir bilgi.",
+    "skills_count_one": "1 yetenek",
+    "skills_count_other": "{count} yetenek",
+    "skills_import": "İçe aktar",
+    "skills_empty_title": "Henüz yetenek yok",
+    "skills_empty_body": "Yetenekler, istem bloklarına yeniden kullanılabilir talimatlar verir. Bunları GitHub'dan, bir ZIP dosyasından, bir klasörden veya katalogdan içe aktar.",
+    "skills_empty_import": "Yetenekleri içe aktar",
+    "skill_files_one": "1 dosya",
+    "skill_files_other": "{count} dosya",
+    "skill_delete_tooltip": "“{name}” yeteneğini sil",
+    "skill_delete_title": "Yetenek silinsin mi?",
+    "skill_delete_body": "“{name}” klasörü tüm dosyalarıyla birlikte kalıcı olarak silinecek."
   },
   "machine_learning": {
     "model_import": {

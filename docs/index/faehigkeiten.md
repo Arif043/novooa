@@ -3,6 +3,7 @@
 > Fähigkeiten (Skills nach agentskills.io) sind wiederverwendbare Anweisungen mit Progressive Disclosure, die an Prompt-Bausteine gehängt werden.
 
 - [Skills-Ordner](../notes/skills-ordner.md)
+- [Fähigkeiten-Seite](../notes/faehigkeiten-seite.md)
 - [Skill-Format (agentskills.io)](../notes/skill-format.md)
 - [Skills importieren](../notes/skills-import.md)
 - [skills.sh-Katalog](../notes/skills-sh-katalog.md)

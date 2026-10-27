@@ -22,7 +22,8 @@ Gehört zu: [Fähigkeiten](../index/faehigkeiten.md) · [Lokale Runtime](../inde
   freigegeben. `NOVOOA_SKILLS_DIR` verlegt ihn (nur Sonderfälle wie Tests).
 - Skills kommen nur über den Import herein und werden in der App gelöscht;
   keine Bearbeitung von außen.
-- Die Seite **Fähigkeiten** zeigt den Pfad (kopierbar) und „Neu einlesen“.
+- Die [Fähigkeiten-Seite](./faehigkeiten-seite.md) zeigt den Inhalt des
+  Ordners; Pfad (kopierbar) und „Neu einlesen“ dort sind geplant.
 - Realtime-Thema `skills`.
 
 ## Siehe auch
