@@ -39,20 +39,6 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
           ),
           Divider(height: 1, color: colors.outlineVariant),
           Expanded(child: _content()),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Semantics(
-              liveRegion: true,
-              child: Text(
-                widget.state.status == KnowledgeBaseStatus.failure
-                    ? 'Speicherstatus prüfen'
-                    : widget.state.isSaving
-                    ? 'Wird gespeichert …'
-                    : 'Automatisch gespeichert',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ),
         ],
       ),
     );

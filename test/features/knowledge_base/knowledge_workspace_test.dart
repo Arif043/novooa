@@ -193,7 +193,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(cubit.state.selectedNote!.content, 'Neuer Inhalt');
-      expect(find.text('Wird gespeichert …'), findsOneWidget);
+      expect(find.text('Automatisch gespeichert'), findsNothing);
       await tester.tap(find.byTooltip('Lesen'));
       await tester.pumpAndSettle();
       expect(find.byType(KnowledgeMarkdownPreview), findsOneWidget);

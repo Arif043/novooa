@@ -8,8 +8,9 @@ Route `/knowledge-base`, Drawer-Label **Wissensbasis**, Designsystem
 „Luminous Precision“.
 
 - **Links:** Notizliste mit Suche, Inhaltsvorschau, „Notiz erstellen“.
-- **Mitte:** Dokument mit „Schreiben“, „Lesen“, „Graph“ und sichtbarem
-  Speicherstatus. Die Ansichten sind Symbolknöpfe links
+- **Mitte:** Dokument mit „Schreiben“, „Lesen“, „Graph“; der Graph füllt den
+  Bereich als Leinwand mit eckigen oberen Ecken. Kein Speicherstatus im
+  Dokument — Fehler beim Speichern meldet eine Snackbar. Die Ansichten sind Symbolknöpfe links
   (`KnowledgeBaseModeToolbar`, Bezeichnung im Tooltip, die gewählte getönt),
   „Notiz löschen“ steht rechts.
 - **Rechts:** Eigenschaften, Speicherstatus, verlinkte Notizen, Backlinks.

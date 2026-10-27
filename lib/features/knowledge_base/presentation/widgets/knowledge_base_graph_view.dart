@@ -70,8 +70,9 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
           _simulation.setNotes(widget.notes);
           _run();
         }
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(AppSpacing.md),
+        // Eckig: Die Leinwand füllt den Dokumentbereich bis an Trennlinie und Kartenrand;
+        // unten rundet die umgebende Karte ab.
+        return ClipRect(
           child: KnowledgeGraphBackground(
             child: Stack(
               children: [
