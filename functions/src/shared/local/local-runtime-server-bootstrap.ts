@@ -1,4 +1,5 @@
 import {RelayListCache} from "./relay-list-cache.js";
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {
   googleAccountsModuleFromEnvironment,
   type GoogleAccountsModule,
@@ -6,12 +7,10 @@ import {
 import {type MailConnectorSummary} from "../../features/communication/domain/entities/mail-connector-summary.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type Server} from "node:http";
-import {type RuntimeDatabase} from "../../db/database.js";
 import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {RuntimeLicenseMonitor} from "../../features/licensing/infrastructure/local/runtime-license-monitor.js";
 import {localMlServiceFromEnvironment, type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {type RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
 import {SQLitePasswordCredentialRepository} from "../../features/runtime_users/infrastructure/local/sqlite-password-credential-repository.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
@@ -27,9 +26,8 @@ import {localRuntimeApi} from "./local-runtime-routes.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
 type BootstrapOptions = {
-  database: RuntimeDatabase;
-  runtimeRoot: string;
-  fieldCipher: SensitiveFieldCipher;
+  /** Prozessweite Infrastruktur; bleibt bei einem Arbeitsbereichswechsel bestehen. */
+  host: LocalRuntimeHost;
   /** Sperre für die verschlüsselten Dateien unter `credentials/`, geteilt mit dem Schlüsselwechsel. */
   secretFileAccess: RuntimeSecretFileAccess;
   licenses: RuntimeLicenseService;
@@ -76,7 +74,8 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
 }
 
 function sharedFor(options: BootstrapOptions): RuntimeShared {
-  const {database, runtimeRoot, fieldCipher, licenses} = options;
+  const {host, licenses} = options;
+  const {database, runtimeRoot, fieldCipher} = host;
   const notifier = new LocalRuntimeRealtimeNotifier();
   const mailConnectors = new RelayListCache<MailConnectorSummary>();
   const googleAccounts = googleAccountsModuleFromEnvironment(() => licenses.signedActiveLicense());
@@ -85,7 +84,7 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
     tenantId: () => licenses.activeContext()?.licenseId ?? null,
   });
   const application = new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, googleAccounts, mlService,
+    host, realtimeNotifier: notifier, mailConnectors, googleAccounts, mlService,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
@@ -112,11 +111,10 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
   return async (routes) => {
     const activate = new ActivateRuntime(options.licenses, (context) => shared.application.activate(context));
     registerRuntimeLicenseRoutes(routes, options.licenses, activate, {
-      passwords: new SQLitePasswordCredentialRepository(options.database, options.fieldCipher), sessions: shared.sessions,
+      passwords: new SQLitePasswordCredentialRepository(options.host.database, options.host.fieldCipher), sessions: shared.sessions,
     });
     await routes.register(localRuntimeApi({
-      database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
-      licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
+      host: options.host, licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
       realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors, googleAccounts: shared.googleAccounts,
       workspaceContext: () => shared.application.workspaceContext(), mlService: shared.mlService,
     }));

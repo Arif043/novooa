@@ -72,8 +72,8 @@ async function activatedRuntimeFixture(t: TestContext) {
   t.after(() => rm(runtimeRoot, {recursive: true, force: true}));
   const database = await openLocalRuntimeDatabase({databasePath: ":memory:",
     migrationsDirectory: resolve(__dirname, "../../../drizzle")});
-  const runtime = await bootstrapLocalRuntime({database, runtimeRoot,
-    fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), secretFileAccess: new RuntimeSecretFileAccess(), licenses: activatableLicenses(),
+  const runtime = await bootstrapLocalRuntime({
+    host: {database, runtimeRoot, fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring()))}, secretFileAccess: new RuntimeSecretFileAccess(), licenses: activatableLicenses(),
     cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0});
   let closed = false;
   const closeHttp = async () => { if (!closed) { closed = true; await runtime.closeHttp(); } };
@@ -101,7 +101,7 @@ function postJson(base: string, path: string, body: unknown, token?: string): Pr
 test("starts the runtime HTTP server with the new keyring configuration", async () => {
   const database = connectRuntimeDatabase(":memory:");
   const {server, application, closeHttp} = await bootstrapLocalRuntime({
-    database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), secretFileAccess: new RuntimeSecretFileAccess(),
+    host: {database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring()))}, secretFileAccess: new RuntimeSecretFileAccess(),
     licenses: inactiveLicenses(), cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0,
   });
   try {

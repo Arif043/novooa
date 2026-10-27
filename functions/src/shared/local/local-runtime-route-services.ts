@@ -1,3 +1,4 @@
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {ConnectionHttpClient} from "../../features/connections/infrastructure/local/connection-http-client.js";
 import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
@@ -34,7 +35,6 @@ import {
   UnavailablePythonModelContractValidator,
 } from "../../features/machine_learning/infrastructure/local/python-model-contract-validator.js";
 import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {createLocalTaskBuilderAssistant} from "../../features/task_execution/infrastructure/local/local-task-builder-assistant.js";
 import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastructure/local/sqlite-task-definition-store.js";
 import {scriptPackageJobsFromEnvironment} from "../../features/task_execution/infrastructure/local/script-package-composition.js";
@@ -45,20 +45,18 @@ import {type ApplicationLogger} from "../logging/application-logger.js";
 
 /**
  * Stabile Dienste der HTTP-Schicht — einmal beim Start gebaut, da sie nur
- * von Datenbank, Runtime-Verzeichnis und Umgebung abhängen, nicht vom
- * aktiven Arbeitsbereich.
+ * vom Host (Datenbank, Runtime-Verzeichnis, Feldverschlüsselung) und der
+ * Umgebung abhängen, nicht vom aktiven Arbeitsbereich.
  */
 export function createLocalRuntimeRouteServices(options: {
-  database: RuntimeDatabase;
-  runtimeRoot: string;
-  fieldCipher: SensitiveFieldCipher;
+  host: LocalRuntimeHost;
   notifier: LocalRuntimeRealtimeNotifier;
   licenses: Pick<RuntimeLicenseService, "signedActiveLicense">;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
   mlService: LocalMlService | undefined;
 }) {
-  const {database, runtimeRoot} = options;
-  const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
+  const {database, runtimeRoot, fieldCipher} = options.host;
+  const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, fieldCipher);
   const fileSettings = new SQLiteFileSettingsStore(database);
   const taskDefinitions = new SQLiteTaskDefinitionStore(database);
   const connectionStore = new SQLiteConnectionStore(database, languageModelSecrets);

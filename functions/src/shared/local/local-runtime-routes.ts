@@ -4,7 +4,6 @@ import {skillCatalogRoutes} from "../../features/skills/infrastructure/local/loc
 import {skillRoutes} from "../../features/skills/infrastructure/local/local-skill-routes.js";
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
-import {type RuntimeDatabase} from "../../db/database.js";
 import {type RelayListCache} from "./relay-list-cache.js";
 import {type GoogleAccountsModule} from "../../features/google_accounts/infrastructure/local/google-accounts-module.js";
 import {googleAccountRoutes} from "../../features/google_accounts/infrastructure/local/local-google-account-routes.js";
@@ -19,7 +18,6 @@ import {languageModelRoutes} from "../../features/language_models/infrastructure
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {modelCatalogRoutes} from "../../features/machine_learning/infrastructure/local/local-model-catalog-routes.js";
 import {pushDeviceRoutes} from "../../features/notifications/infrastructure/local/local-push-device-routes.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {taskTriggerRoutes} from "../../features/scheduling/infrastructure/local/local-task-trigger-routes.js";
 import {taskActivityRoutes} from "../../features/task_execution/infrastructure/local/local-task-activity-routes.js";
 import {taskDefinitionRoutes} from "../../features/task_execution/infrastructure/local/local-task-definition-routes.js";
@@ -43,12 +41,12 @@ import {pluginRoutes} from "../../features/plugins/infrastructure/local/local-pl
 import {accountRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-account-routes.js";
 import {userRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-user-routes.js";
 import {createRuntimeUsersModule} from "../../features/runtime_users/infrastructure/local/runtime-users-composition.js";
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {registerWorkspaceContext, type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 
 export type LocalRuntimeApiDependencies = {
-  database: RuntimeDatabase;
-  runtimeRoot: string;
-  fieldCipher: SensitiveFieldCipher;
+  /** Prozessweite Infrastruktur; bleibt bei einem Arbeitsbereichswechsel bestehen. */
+  host: LocalRuntimeHost;
   licenses: RuntimeLicenseService;
   sessions: LocalRuntimeSessionStore;
   notifier: LocalRuntimeRealtimeNotifier;
@@ -79,7 +77,7 @@ type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 /** Einrichtung, Anmeldung, Konten (öffentlich nur, was die Access-Hooks freigeben), Realtime-Tickets, Abmelden. */
 async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies) {
   const runtimeUsers = createRuntimeUsersModule({
-    database: dependencies.database, fieldCipher: dependencies.fieldCipher,
+    database: dependencies.host.database, fieldCipher: dependencies.host.fieldCipher,
     workspace: () => {
       const {teamId, ownerUid} = dependencies.workspaceContext();
       return {teamId, ownerUid};
@@ -94,7 +92,8 @@ async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRun
 }
 
 async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {
-  const {database, runtimeRoot, notifier, licenses} = dependencies;
+  const {database, runtimeRoot} = dependencies.host;
+  const {notifier, licenses} = dependencies;
   const signedLicense = () => licenses.signedActiveLicense();
   await api.register(taskRunRoutes, {notifier});
   await api.register(taskDefinitionRoutes, {store: services.taskDefinitions, notifier, cycleGuard: services.cycleGuard});

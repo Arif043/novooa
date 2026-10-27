@@ -1,3 +1,4 @@
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -37,8 +38,10 @@ async function startLockedRuntime(runtimeRoot: string, release: () => Promise<vo
   const database = await preparedRuntimeDatabase(runtimeRoot, localKeyring);
   const security = new LocalRuntimeSecurity(requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"), localKeyring, database, runtimeRoot);
   try {
+    // Ab hier steht der Host fest; Arbeitsbereiche kommen erst mit der Lizenzaktivierung.
+    const host: LocalRuntimeHost = {database, runtimeRoot, fieldCipher: security.cipher};
     const {closeHttp, application} = await bootstrapLocalRuntime({
-      database, runtimeRoot, fieldCipher: security.cipher, secretFileAccess: security.licenseAccess,
+      host, secretFileAccess: security.licenseAccess,
       licenses: licenseServiceFor(runtimeRoot, security),
       cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: webApplicationDirectory(), port: configuredPort(),
     });

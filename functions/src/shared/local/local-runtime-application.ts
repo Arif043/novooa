@@ -1,23 +1,21 @@
 import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {type RelayListCache} from "./relay-list-cache.js";
 import {type MailConnectorSummary} from "../../features/communication/domain/entities/mail-connector-summary.js";
 import {RuntimeWakeupHandler} from "../../features/communication/infrastructure/local/runtime-wakeup-handler.js";
 import {type GoogleAccountsModule} from "../../features/google_accounts/infrastructure/local/google-accounts-module.js";
 import {GoogleAccountsWakeupHandler} from "../../features/google_accounts/infrastructure/local/google-accounts-wakeup-handler.js";
-import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeApplicationOptions = {
-  database: RuntimeDatabase;
-  runtimeRoot: string;
-  fieldCipher: SensitiveFieldCipher;
+  /** Prozessweite Infrastruktur; bleibt bei einem Arbeitsbereichswechsel bestehen. */
+  host: LocalRuntimeHost;
   realtimeNotifier: LocalRuntimeRealtimeNotifier;
   mailConnectors: RelayListCache<MailConnectorSummary>;
   googleAccounts: GoogleAccountsModule;
@@ -45,7 +43,7 @@ export class LocalRuntimeApplication {
     await this.stopRuntime();
     this.options.mailConnectors.invalidate();
     this.options.googleAccounts.cache.invalidate();
-    await ensureLocalRuntimeWorkspace(this.options.database, workspace);
+    await ensureLocalRuntimeWorkspace(this.options.host.database, workspace);
     this.workspace = workspace;
     this.runtime = createLocalRuntimeComposition({
       ...this.options,

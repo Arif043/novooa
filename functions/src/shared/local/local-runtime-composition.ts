@@ -6,7 +6,6 @@ import {TokenBucketRateLimiter} from "../rate_limiting/domain/usecases/token-buc
 import {ReceiveWebhook} from "../../features/webhooks/domain/usecases/receive-webhook.js";
 import {InMemoryBucketStateStore} from "../rate_limiting/infrastructure/local/in-memory-bucket-state-store.js";
 import {DispatchFileEvent} from "../../features/scheduling/domain/usecases/dispatch-file-event.js";
-import {type RuntimeDatabase} from "../../db/database.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
 import {RuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
 import {type RuntimeMailRelayClient} from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
@@ -27,7 +26,6 @@ import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infra
 import {FirebaseRuntimeModelTagVocabulary} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-tag-vocabulary.js";
 import {SQLiteModelTagVocabulary} from "../../features/machine_learning/infrastructure/local/sqlite-model-tag-vocabulary.js";
 import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {runDueTaskTriggers} from "../../features/scheduling/domain/usecases/run-due-task-triggers.js";
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
@@ -52,6 +50,7 @@ import {SQLitePluginActivationStore} from "../../features/plugins/infrastructure
 import {type GoogleAccessTokens} from "../../features/google_accounts/domain/repositories/google-access-tokens.js";
 import {createDefaultNodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
+import {type LocalRuntimeHost} from "./local-runtime-host.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 
@@ -65,10 +64,10 @@ export type LocalRuntimeComposition = {
 };
 
 export type LocalRuntimeCompositionOptions = {
-  database: RuntimeDatabase;
-  runtimeRoot: string;
+  /** Prozessweite Infrastruktur — dieselbe für jeden Arbeitsbereich. */
+  host: LocalRuntimeHost;
+  /** Team und Nutzer der aktiven Lizenz; ein Wechsel baut eine neue Composition. */
   workspace: LocalRuntimeWorkspace;
-  fieldCipher: SensitiveFieldCipher;
   /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
   /** App-weit: Realtime-Abonnenten überdauern einen Arbeitsbereichswechsel. */
   realtimeNotifier: LocalRuntimeRealtimeNotifier;
@@ -84,9 +83,10 @@ export type LocalRuntimeCompositionOptions = {
 export function createLocalRuntimeComposition(
   options: LocalRuntimeCompositionOptions,
 ): LocalRuntimeComposition {
+  const {database, runtimeRoot, fieldCipher} = options.host;
   const realtimeNotifier = options.realtimeNotifier;
-  const activityStore = new SQLiteActivityStore(options.database);
-  const applicationLogStore = new SQLiteLocalApplicationLogStore(options.database);
+  const activityStore = new SQLiteActivityStore(database);
+  const applicationLogStore = new SQLiteLocalApplicationLogStore(database);
   const applicationLogger = new LocalApplicationLogger(
     applicationLogStore,
     options.workspace.teamId,
@@ -95,22 +95,22 @@ export function createLocalRuntimeComposition(
   const mailRelay = mailRelayFromEnvironment();
   const firebaseSession = firebaseSessionFor();
   const taskRunStore = new SQLiteTaskRunStore(
-    options.database,
+    database,
     activityStore,
     new LocalTaskRunApprovalPushNotifier(options.signedLicense, pushRelay, applicationLogger),
   );
   let fileEventDispatcher: FileEventPublisher = noFileEventPublisher;
   const fileEvents: FileEventPublisher = {publish: (event) => fileEventDispatcher.publish(event)};
   const teamFileStore = new SQLiteTeamFileStore(
-    options.database, options.runtimeRoot, new SQLiteFileSettingsStore(options.database), fileEvents,
+    database, runtimeRoot, new SQLiteFileSettingsStore(database), fileEvents,
   );
-  const jobStore = new SQLiteTaskRunJobStore(options.database);
-  const taskStore = new SQLiteTaskStore(options.database);
+  const jobStore = new SQLiteTaskRunJobStore(database);
+  const taskStore = new SQLiteTaskStore(database);
   const languageModelSecretStore = new EncryptedSQLiteLanguageModelSecretStore(
-    options.database,
-    options.fieldCipher,
+    database,
+    fieldCipher,
   );
-  const documentStore = new SQLiteDocumentStore(options.database);
+  const documentStore = new SQLiteDocumentStore(database);
   let taskWorkflow: TaskWorkflow | undefined;
   const taskRunWorker = new TaskRunQueueWorker(
     jobStore,
@@ -134,8 +134,8 @@ export function createLocalRuntimeComposition(
   );
   const taskRunDispatcher = new SQLiteTaskRunDispatcher(jobStore, taskRunWorker);
   fileEventDispatcher = new DispatchFileEvent({
-    triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
-    folders: new SQLiteFolderAncestry(options.database),
+    triggerStore: new SQLiteTaskTriggerStore(database), taskStore, taskRunStore, taskRunDispatcher,
+    folders: new SQLiteFolderAncestry(database),
     onFailure: (error, trigger) => applicationLogger.exception(
       "file_event_trigger.failed", error, {teamId: options.workspace.teamId, triggerId: trigger?.id},
     ),
@@ -150,23 +150,23 @@ export function createLocalRuntimeComposition(
     },
   });
   const outboundHttpClient = new ConnectionHttpClient(new StoredConnectionAuthorizer(
-    new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
+    new SQLiteConnectionStore(database, languageModelSecretStore), new OAuthTokenProvider(),
   ));
   const systemModelCatalog = firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession);
   const modelTagVocabulary = new CachedModelTagVocabulary(
     firebaseSession === undefined ? undefined : new FirebaseRuntimeModelTagVocabulary(firebaseSession),
-    new SQLiteModelTagVocabulary(options.database),
+    new SQLiteModelTagVocabulary(database),
     (error) => applicationLogger.exception("model_tags.global_read_failed", error, {teamId: options.workspace.teamId}),
   );
   const modelCache = systemModelCatalog === undefined ? undefined : createLocalModelCache({
-    database: options.database, runtimeRoot: options.runtimeRoot, teamId: options.workspace.teamId,
+    database: database, runtimeRoot: runtimeRoot, teamId: options.workspace.teamId,
     systemModelCatalog, notifier: realtimeNotifier, logger: applicationLogger, mlService: options.mlService?.client,
   });
-  const pluginActivation = new SQLitePluginActivationStore(options.database);
+  const pluginActivation = new SQLitePluginActivationStore(database);
   taskWorkflow = createLocalTaskWorkflow({
-    database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,
+    database: database, runtimeRoot: runtimeRoot, signedLicense: options.signedLicense,
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
-    languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
+    languageModelCatalog: new SQLiteLanguageModelCatalog(database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
     executorRegistry: registerIntegrationPlugins(
       createDefaultNodeExecutorRegistry(), {googleAccessTokens: options.googleAccessTokens}, pluginActivation,
@@ -178,7 +178,7 @@ export function createLocalRuntimeComposition(
   const webhookBuckets = new InMemoryBucketStateStore();
   const webhooks = new ReceiveWebhook({
     teamId: options.workspace.teamId,
-    triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
+    triggerStore: new SQLiteTaskTriggerStore(database), taskStore, taskRunStore, taskRunDispatcher,
     secrets: languageModelSecretStore,
     interpreters: integrationWebhookInterpreters(outboundHttpClient, pluginActivation),
     // Fehlversuche: kleiner Eimer. Gültige Aufrufe je Auslöser: im Schnitt 5 pro Sekunde, Stöße bis 20.
@@ -207,7 +207,7 @@ export function createLocalRuntimeComposition(
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {
-        triggerStore: new SQLiteTaskTriggerStore(options.database),
+        triggerStore: new SQLiteTaskTriggerStore(database),
         taskStore,
         taskRunStore,
         taskRunDispatcher,
@@ -240,9 +240,9 @@ function mailRelayWorkerFor(
   return new RuntimeMailRelayWorker(
     options.signedLicense, relay,
     new LocalMailRelayEventProcessor(
-      new SQLiteInboundChannelMessageStore(options.database),
+      new SQLiteInboundChannelMessageStore(options.host.database),
       {
-        triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore,
+        triggerStore: new SQLiteTaskTriggerStore(options.host.database), taskStore, taskRunStore,
         taskRunDispatcher,
       }, options.workspace.teamId, logger,
     ), logger, {

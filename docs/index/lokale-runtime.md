@@ -5,6 +5,7 @@
 ## Aufbau und Betrieb
 
 - [Runtime-Schichten](../notes/runtime-schichten.md)
+- [Host und Arbeitsbereich der Runtime](../notes/runtime-host-und-arbeitsbereich.md)
 - [Runtime-Adapterübersicht](../notes/runtime-adapteruebersicht.md)
 - [Docker-Stack der Runtime](../notes/runtime-docker-stack.md)
 - [Ports und Netze der Runtime](../notes/runtime-ports-und-netze.md)
