@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/core/widgets/adaptive_sheet.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_tag_vocabulary.dart';
 import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
@@ -105,7 +107,11 @@ void main() {
     await _openSheet(tester, cubit);
 
     expect(find.widgetWithText(FilterChip, 'Text vorlesen 2'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilterChip, 'Objekte erkennen 1'));
+    // Das Sheet ist wie alle Auswahl-Sheets höchstens 560 breit; die Chip-Reihe scrollt.
+    final detectionChip = find.widgetWithText(FilterChip, 'Objekte erkennen 1');
+    await tester.ensureVisible(detectionChip);
+    await tester.pumpAndSettle();
+    await tester.tap(detectionChip);
     await tester.pumpAndSettle();
     expect(find.text('Yolo'), findsOneWidget);
     expect(find.text('Piper'), findsNothing);
@@ -201,6 +207,44 @@ void main() {
     expect(find.text('Hunderassen'), findsOneWidget);
     expect(find.text('Belegscanner'), findsNothing);
   });
+
+  testWidgets(
+    'erscheint am Desktop als Fenster-Sheet und schließt über Abbrechen',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final repository = FakeModelCatalogRepository()
+        ..globalEntries = [modelEntry('ocr', title: 'Texterkennung')];
+      final cubit = await loadedCatalogCubit(tester, repository);
+      ModelCatalogEntry? selected = modelEntry('platzhalter');
+      await tester.pumpWidget(
+        hostWithCatalog(
+          cubit,
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () async =>
+                  selected = await showModelSearchSheet(context),
+              child: const Text('Suchen'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Suchen'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SheetFooter), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Texterkennung'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Abbrechen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modell auswählen'), findsNothing);
+      expect(selected, isNull);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets('zeigt bei wenigen Aufgaben keine Bereichsebene', (tester) async {
     final repository = FakeModelCatalogRepository()

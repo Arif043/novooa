@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
+import '../../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_state.dart';
@@ -13,26 +14,25 @@ import 'model_search_results.dart';
 import 'model_search_selection.dart';
 
 /// Durchsucht globalen Katalog und eigene Modelle; liefert das gewählte Modell zurück.
+/// Wie die übrigen Auswahl-Sheets: am Desktop als Fenster, sonst als Bottom Sheet.
 Future<ModelCatalogEntry?> showModelSearchSheet(
   BuildContext context, {
   SpeechModelDirection? speechDirection,
 }) {
   final cubit = context.read<ModelCatalogCubit>();
-  return showModalBottomSheet<ModelCatalogEntry>(
+  return showAdaptiveSheet<ModelCatalogEntry>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (_) => BlocProvider.value(
+    builder: (_, style) => BlocProvider.value(
       value: cubit,
-      child: _ModelSearchSheet(speechDirection: speechDirection),
+      child: _ModelSearchSheet(style: style, speechDirection: speechDirection),
     ),
   );
 }
 
 class _ModelSearchSheet extends StatefulWidget {
-  const _ModelSearchSheet({required this.speechDirection});
+  const _ModelSearchSheet({required this.style, required this.speechDirection});
 
+  final AdaptiveSheetStyle style;
   final SpeechModelDirection? speechDirection;
 
   @override
@@ -40,57 +40,113 @@ class _ModelSearchSheet extends StatefulWidget {
 }
 
 class _ModelSearchSheetState extends State<_ModelSearchSheet> {
+  /// Standardhöhe des Fenster-Sheets; bei kleinen Fenstern begrenzt es die Karte.
+  static const _windowSheetHeight = 600.0;
+
   String _query = '';
   ModelSearchSelection _selection = const ModelSearchSelection();
 
   @override
   Widget build(BuildContext context) {
+    final isWindow = widget.style.isWindow;
     final filter = ModelSearchFilter(
       languageTag: Localizations.localeOf(context).toLanguageTag(),
       speechDirection: widget.speechDirection,
     );
-    return FractionallySizedBox(
-      heightFactor: 0.85,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          0,
-          AppSpacing.md,
-          AppSpacing.md,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              LocaleKeys.ui_modell_auswaehlen.tr(),
-              style: Theme.of(context).textTheme.titleLarge,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Header(leading: isWindow ? null : const _CancelButton()),
+        const Divider(height: 1),
+        Expanded(child: _searchBody(filter)),
+        if (isWindow) ...[
+          const Divider(height: 1),
+          SheetFooter(
+            onCancel: () => Navigator.of(context).pop(),
+            cancelLabel: LocaleKeys.ui_abbrechen.tr(),
+          ),
+        ],
+      ],
+    );
+    // Im Bottom Sheet relativ zum verfügbaren Platz (ohne Greifer), im Fenster feste Höhe.
+    return isWindow
+        ? SizedBox(height: _windowSheetHeight, child: content)
+        : FractionallySizedBox(heightFactor: 0.85, child: content);
+  }
+
+  Widget _searchBody(ModelSearchFilter filter) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            autofocus: true,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: LocaleKeys
+                  .ui_nach_name_beschreibung_oder_schlagwort_suchen
+                  .tr(),
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              autofocus: true,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: LocaleKeys
-                    .ui_nach_name_beschreibung_oder_schlagwort_suchen
-                    .tr(),
+            onChanged: (value) => setState(() => _query = value),
+          ),
+          Expanded(
+            child: BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
+              builder: (context, state) => _FilteredResults(
+                state: state,
+                filter: filter,
+                query: _query,
+                selection: _selection,
+                onSelectionChanged: (value) =>
+                    setState(() => _selection = value),
               ),
-              onChanged: (value) => setState(() => _query = value),
             ),
-            Expanded(
-              child: BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
-                builder: (context, state) => _FilteredResults(
-                  state: state,
-                  filter: filter,
-                  query: _query,
-                  selection: _selection,
-                  onSelectionChanged: (value) =>
-                      setState(() => _selection = value),
-                ),
-              ),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({this.leading});
+
+  /// Nur im Bottom Sheet; das Fenster-Sheet führt Abbrechen in der Fußzeile.
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: SizedBox(
+        height: kToolbarHeight,
+        child: NavigationToolbar(
+          leading: leading,
+          middle: Text(
+            LocaleKeys.ui_modell_auswaehlen.tr(),
+            style: Theme.of(context).textTheme.titleMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _CancelButton extends StatelessWidget {
+  const _CancelButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () => Navigator.of(context).pop(),
+      child: Text(LocaleKeys.ui_abbrechen.tr()),
     );
   }
 }
