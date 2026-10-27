@@ -730,7 +730,13 @@
     "file_format_json": "JSON (.json)",
     "file_format_text": "Metin (.txt)",
     "authorization_page_open_failed": "Oturum açma sayfası açılamadı.",
-    "themen": "Konular"
+    "themen": "Konular",
+    "filter": "Filtreler",
+    "zurueck": "Geri",
+    "alle_anzeigen_count": "Tümünü göster ({count})",
+    "weniger_anzeigen": "Daha az göster",
+    "treffer_anzeigen_count": "Sonuçları göster ({count})",
+    "filter_entfernen": "“{label}” filtresini kaldır"
   },
   "machine_learning": {
     "model_import": {

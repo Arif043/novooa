@@ -679,6 +679,12 @@ abstract class  LocaleKeys {
   static const ui_file_format_text = 'ui.file_format_text';
   static const ui_authorization_page_open_failed = 'ui.authorization_page_open_failed';
   static const ui_themen = 'ui.themen';
+  static const ui_filter = 'ui.filter';
+  static const ui_zurueck = 'ui.zurueck';
+  static const ui_alle_anzeigen_count = 'ui.alle_anzeigen_count';
+  static const ui_weniger_anzeigen = 'ui.weniger_anzeigen';
+  static const ui_treffer_anzeigen_count = 'ui.treffer_anzeigen_count';
+  static const ui_filter_entfernen = 'ui.filter_entfernen';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
   static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';

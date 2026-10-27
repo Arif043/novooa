@@ -9,12 +9,15 @@ import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_state.dart';
 import 'model_search_filter.dart';
-import 'model_filter_chips.dart';
-import 'model_search_results.dart';
+import 'model_search_layout.dart';
 import 'model_search_selection.dart';
 
 /// Durchsucht globalen Katalog und eigene Modelle; liefert das gewählte Modell zurück.
-/// Wie die übrigen Auswahl-Sheets: am Desktop als Fenster, sonst als Bottom Sheet.
+/// Wie die übrigen Auswahl-Sheets: am Desktop als Fenster, sonst als Bottom Sheet. Das Fenster
+/// ist breiter, damit die Filterspalte neben den Treffern Platz hat.
+/// Breite des Fenster-Sheets: Filterspalte und Trefferliste nebeneinander.
+const modelSearchWindowWidth = 880.0;
+
 Future<ModelCatalogEntry?> showModelSearchSheet(
   BuildContext context, {
   SpeechModelDirection? speechDirection,
@@ -22,6 +25,7 @@ Future<ModelCatalogEntry?> showModelSearchSheet(
   final cubit = context.read<ModelCatalogCubit>();
   return showAdaptiveSheet<ModelCatalogEntry>(
     context: context,
+    windowMaxWidth: modelSearchWindowWidth,
     builder: (_, style) => BlocProvider.value(
       value: cubit,
       child: _ModelSearchSheet(style: style, speechDirection: speechDirection),
@@ -41,24 +45,32 @@ class _ModelSearchSheet extends StatefulWidget {
 
 class _ModelSearchSheetState extends State<_ModelSearchSheet> {
   /// Standardhöhe des Fenster-Sheets; bei kleinen Fenstern begrenzt es die Karte.
-  static const _windowSheetHeight = 600.0;
+  static const _windowSheetHeight = 640.0;
 
-  String _query = '';
+  final _queryController = TextEditingController();
   ModelSearchSelection _selection = const ModelSearchSelection();
+
+  @override
+  void initState() {
+    super.initState();
+    _queryController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _queryController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final isWindow = widget.style.isWindow;
-    final filter = ModelSearchFilter(
-      languageTag: Localizations.localeOf(context).toLanguageTag(),
-      speechDirection: widget.speechDirection,
-    );
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Header(leading: isWindow ? null : const _CancelButton()),
         const Divider(height: 1),
-        Expanded(child: _searchBody(filter)),
+        Expanded(child: _body()),
         if (isWindow) ...[
           const Divider(height: 1),
           SheetFooter(
@@ -74,40 +86,18 @@ class _ModelSearchSheetState extends State<_ModelSearchSheet> {
         : FractionallySizedBox(heightFactor: 0.85, child: content);
   }
 
-  Widget _searchBody(ModelSearchFilter filter) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            autofocus: true,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: LocaleKeys
-                  .ui_nach_name_beschreibung_oder_schlagwort_suchen
-                  .tr(),
-            ),
-            onChanged: (value) => setState(() => _query = value),
-          ),
-          Expanded(
-            child: BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
-              builder: (context, state) => _FilteredResults(
-                state: state,
-                filter: filter,
-                query: _query,
-                selection: _selection,
-                onSelectionChanged: (value) =>
-                    setState(() => _selection = value),
-              ),
-            ),
-          ),
-        ],
+  Widget _body() {
+    final filter = ModelSearchFilter(
+      languageTag: Localizations.localeOf(context).toLanguageTag(),
+      speechDirection: widget.speechDirection,
+    );
+    return BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
+      builder: (context, state) => ModelSearchLayout(
+        state: state,
+        filter: filter.withVocabulary(state.tagVocabulary),
+        queryController: _queryController,
+        selection: _selection,
+        onSelectionChanged: (value) => setState(() => _selection = value),
       ),
     );
   }
@@ -147,52 +137,6 @@ class _CancelButton extends StatelessWidget {
     return TextButton(
       onPressed: () => Navigator.of(context).pop(),
       child: Text(LocaleKeys.ui_abbrechen.tr()),
-    );
-  }
-}
-
-class _FilteredResults extends StatelessWidget {
-  const _FilteredResults({
-    required this.state,
-    required this.filter,
-    required this.query,
-    required this.selection,
-    required this.onSelectionChanged,
-  });
-
-  final ModelCatalogState state;
-  final ModelSearchFilter filter;
-  final String query;
-  final ModelSearchSelection selection;
-  final ValueChanged<ModelSearchSelection> onSelectionChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final models = state.selectableEntries;
-    final filter = this.filter.withVocabulary(state.tagVocabulary);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ModelFilterChips(
-          facets: filter.facets(models, query, selection),
-          selection: selection,
-          showTasks: filter.fixedTask == null,
-          topicLabel: (topic) =>
-              state.tagVocabulary.labelFor(topic, filter.languageTag),
-          onChanged: onSelectionChanged,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Expanded(
-          child: ModelSearchResults(
-            state: state,
-            models: filter.apply(models, query, selection),
-            hasQuery: query.trim().isNotEmpty,
-            onResetFilters: selection.isActive
-                ? () => onSelectionChanged(const ModelSearchSelection())
-                : null,
-          ),
-        ),
-      ],
     );
   }
 }

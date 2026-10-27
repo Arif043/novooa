@@ -29,7 +29,12 @@ class ModelSearchTile extends StatelessWidget {
     ].join(' · ');
     return ListTile(
       onTap: onTap,
-      leading: Icon(model.task.icon),
+      // Akzentfarbe wie die Icons der Filter-Chips; die Aufgabe steht zusätzlich als Etikett darunter.
+      leading: Icon(
+        model.task.icon,
+        color: theme.colorScheme.primary,
+        semanticLabel: model.task.label,
+      ),
       title: Text(model.titleFor(languageTag)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

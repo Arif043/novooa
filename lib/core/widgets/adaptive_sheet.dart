@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../theme/app_spacing.dart';
+
+export 'sheet_footer.dart';
 
 /// Wie ein Sheet dargestellt wird.
 enum AdaptiveSheetStyle {
@@ -21,6 +22,9 @@ enum AdaptiveSheetStyle {
 /// Desktop, etwa in einem schmalen Browserfenster oder in der Geräteemulation,
 /// die weiterhin „macOS" meldet.
 const desktopSheetMinWidth = 600.0;
+
+/// Standardbreite des Fenster-Sheets nach den Apple-HIG.
+const defaultWindowSheetMaxWidth = 480.0;
 
 /// Fenster-Sheet nur auf einem Desktop-Betriebssystem *und* in einem
 /// ausreichend breiten Fenster; sonst Bottom Sheet. Die Breite entscheidet,
@@ -42,14 +46,18 @@ AdaptiveSheetStyle adaptiveSheetStyle(BuildContext context) {
 
 /// Zeigt [builder] als Sheet in der Form der Plattform. Der Inhalt bekommt den
 /// [AdaptiveSheetStyle], damit er seine Schaltflächen passend anordnen kann
-/// (siehe [SheetFooter]).
+/// (siehe [SheetFooter]). [windowMaxWidth] weitet nur das Fenster-Sheet, etwa
+/// für eine Filterspalte neben einer Liste.
 Future<T?> showAdaptiveSheet<T>({
   required BuildContext context,
   required Widget Function(BuildContext context, AdaptiveSheetStyle style)
   builder,
+  double windowMaxWidth = defaultWindowSheetMaxWidth,
 }) {
   final style = adaptiveSheetStyle(context);
-  if (style.isWindow) return _showWindowSheet<T>(context, builder);
+  if (style.isWindow) {
+    return _showWindowSheet<T>(context, builder, windowMaxWidth);
+  }
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
@@ -66,6 +74,7 @@ Future<T?> showAdaptiveSheet<T>({
 Future<T?> _showWindowSheet<T>(
   BuildContext context,
   Widget Function(BuildContext, AdaptiveSheetStyle) builder,
+  double maxWidth,
 ) {
   return showGeneralDialog<T>(
     context: context,
@@ -73,8 +82,10 @@ Future<T?> _showWindowSheet<T>(
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.32),
     transitionDuration: const Duration(milliseconds: 250),
-    pageBuilder: (sheetContext, _, _) =>
-        _WindowSheet(child: builder(sheetContext, AdaptiveSheetStyle.window)),
+    pageBuilder: (sheetContext, _, _) => _WindowSheet(
+      maxWidth: maxWidth,
+      child: builder(sheetContext, AdaptiveSheetStyle.window),
+    ),
     transitionBuilder: (_, animation, _, child) {
       final curved = CurvedAnimation(
         parent: animation,
@@ -95,8 +106,9 @@ Future<T?> _showWindowSheet<T>(
 }
 
 class _WindowSheet extends StatelessWidget {
-  const _WindowSheet({required this.child});
+  const _WindowSheet({required this.maxWidth, required this.child});
 
+  final double maxWidth;
   final Widget child;
 
   @override
@@ -116,7 +128,7 @@ class _WindowSheet extends StatelessWidget {
               padding: const EdgeInsets.only(top: AppSpacing.xl),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: 480,
+                  maxWidth: maxWidth,
                   maxHeight: height * 0.8,
                 ),
                 child: Material(
@@ -135,96 +147,4 @@ class _WindowSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Fußzeile eines Fenster-Sheets mit den Standard-Schaltflächen nach HIG:
-/// Abbrechen schließt ohne Änderung, „Zurück" wechselt nur den Schritt, der
-/// Bestätigen-Button schließt nach getaner Arbeit. Alle drei zugleich zeigt
-/// man nicht; „Abbrechen" ist immer da, damit „Fertig" nie die einzige Tür ist.
-class SheetFooter extends StatelessWidget {
-  const SheetFooter({
-    super.key,
-    required this.onCancel,
-    this.onBack,
-    this.cancelLabel = 'Abbrechen',
-    this.confirmLabel,
-    this.onConfirm,
-  }) : assert(
-         onBack == null || onConfirm == null,
-         'Zurück und Bestätigen nicht zugleich zeigen.',
-       );
-
-  final VoidCallback onCancel;
-  final VoidCallback? onBack;
-  final String cancelLabel;
-  final String? confirmLabel;
-  final VoidCallback? onConfirm;
-
-  /// Wie ein iOS-Dialog: Die Aktionen teilen sich die
-  /// Breite, getrennt durch dünne Linien; die Bestätigung ist fett. Die
-  /// Linie darüber setzt der Aufrufer.
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final actions = [
-      if (onBack != null) _FooterAction(label: 'Zurück', onPressed: onBack),
-      _FooterAction(label: cancelLabel, onPressed: onCancel, muted: true),
-      if (onConfirm != null)
-        _FooterAction(
-          label: confirmLabel ?? 'Fertig',
-          onPressed: onConfirm,
-          emphasized: true,
-        ),
-    ];
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < actions.length; index++) ...[
-            if (index > 0)
-              VerticalDivider(width: 1, color: colors.outlineVariant),
-            Expanded(child: actions[index]),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FooterAction extends StatelessWidget {
-  const _FooterAction({
-    required this.label,
-    required this.onPressed,
-    this.emphasized = false,
-    this.muted = false,
-  });
-
-  final String label;
-  final VoidCallback? onPressed;
-  final bool emphasized;
-
-  /// Zurückgenommen (grau): Abbrechen ist keine Warnung, soll aber hinter der
-  /// Bestätigung zurücktreten.
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: muted ? _mutedColor(context) : null,
-        minimumSize: const Size.fromHeight(52),
-        shape: const RoundedRectangleBorder(),
-        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
-      child: Text(label),
-    );
-  }
-}
-
-Color _mutedColor(BuildContext context) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  return isDark ? SyscatTheme.textMutedDark : SyscatTheme.textMuted;
 }

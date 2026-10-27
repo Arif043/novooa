@@ -730,7 +730,13 @@
     "file_format_json": "JSON (.json)",
     "file_format_text": "Text (.txt)",
     "authorization_page_open_failed": "Die Anmeldeseite konnte nicht geöffnet werden.",
-    "themen": "Themen"
+    "themen": "Themen",
+    "filter": "Filter",
+    "zurueck": "Zurück",
+    "alle_anzeigen_count": "Alle anzeigen ({count})",
+    "weniger_anzeigen": "Weniger anzeigen",
+    "treffer_anzeigen_count": "Treffer anzeigen ({count})",
+    "filter_entfernen": "Filter „{label}“ entfernen"
   },
   "machine_learning": {
     "model_import": {

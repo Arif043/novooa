@@ -730,7 +730,13 @@
     "file_format_json": "JSON (.json)",
     "file_format_text": "Text (.txt)",
     "authorization_page_open_failed": "The sign-in page could not be opened.",
-    "themen": "Topics"
+    "themen": "Topics",
+    "filter": "Filters",
+    "zurueck": "Back",
+    "alle_anzeigen_count": "Show all ({count})",
+    "weniger_anzeigen": "Show less",
+    "treffer_anzeigen_count": "Show results ({count})",
+    "filter_entfernen": "Remove filter “{label}”"
   },
   "machine_learning": {
     "model_import": {
