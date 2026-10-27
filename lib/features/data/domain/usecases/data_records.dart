@@ -1,6 +1,7 @@
 import '../entities/data_collection.dart';
 import '../entities/data_filter.dart';
 import '../entities/data_record.dart';
+import '../entities/data_sort.dart';
 import '../repositories/data_repository.dart';
 
 class ListDataCollections {
@@ -20,10 +21,12 @@ class QueryDataRecords {
     required String collectionName,
     required String search,
     required List<DataFilter> filters,
+    DataSort? sort,
   }) => _repository.queryRecords(
     collectionName: collectionName,
     search: search,
     filters: filters,
+    sort: sort,
   );
 }
 

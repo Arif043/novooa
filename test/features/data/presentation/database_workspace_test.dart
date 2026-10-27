@@ -15,6 +15,8 @@ import 'package:syscat2/features/data/presentation/pages/database_page.dart';
 import 'package:syscat2/features/data/presentation/widgets/database_sheet.dart';
 import 'package:syscat2/features/data/presentation/widgets/database_record_editor_dialog.dart';
 
+import 'database_test_providers.dart';
+
 final collection = DataCollection(
   name: 'Kunden',
   documentCount: 50,
@@ -108,10 +110,7 @@ Widget _app(_Cubit cubit, {bool dark = false, double scale = 1}) => MaterialApp(
     child: child!,
   ),
   home: Scaffold(
-    body: BlocProvider<DatabaseCubit>.value(
-      value: cubit,
-      child: const DatabaseView(),
-    ),
+    body: databaseTestProviders(cubit: cubit, child: const DatabaseView()),
   ),
 );
 

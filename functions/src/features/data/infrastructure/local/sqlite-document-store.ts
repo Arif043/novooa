@@ -1,61 +1,53 @@
-import {and, asc, count, desc, eq, sql} from "drizzle-orm";
+import {and, count, eq, inArray} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {documentCollections, documents} from "../../../../db/schema.js";
+import {documents} from "../../../../db/schema.js";
 import {
   type CreateDocumentCollectionInput, type DocumentCollection, type DocumentCollectionNameInput,
-  validateDocumentCollectionInput, validateDocumentCollectionNameInput
+  type DocumentCollectionRef, type RenameDocumentCollectionInput,
 } from "../../domain/entities/document-collection.js";
 import {type FindDocumentsInput, validateFindDocumentsInput} from "../../domain/entities/document-filter.js";
 import {
-  type CreateDocumentInput, type DocumentRecord, type FindDocumentByIdInput, type UpdateDocumentInput,
-  type UpsertDocumentInput, cloneDocumentData, validateCreateDocumentInput, validateFindDocumentByIdInput,
-  validateUpdateDocumentInput
+  type CreateDocumentInput, type CreateDocumentsInput, type DeleteDocumentsInput, type DocumentRecord,
+  type FindDocumentByIdInput, type UpdateDocumentInput, type UpsertDocumentInput, cloneDocumentData,
+  validateCreateDocumentInput, validateCreateDocumentsInput, validateDeleteDocumentsInput,
+  validateFindDocumentByIdInput, validateUpdateDocumentInput,
 } from "../../domain/entities/document.js";
 import {type DocumentStore} from "../../domain/repositories/document-store.js";
+import {SQLiteDocumentCollections} from "./sqlite-document-collections.js";
 import {sqlFilterFor} from "./sqlite-document-filter.js";
-import {documentCollectionFromRow, documentDataJson, documentFromRow} from "./sqlite-document-row.js";
+import {documentDataJson, documentFromRow} from "./sqlite-document-row.js";
+import {sqlOrderFor} from "./sqlite-document-sort.js";
 
 export class SQLiteDocumentStore implements DocumentStore {
-  constructor(private readonly database: RuntimeExecutor) {}
+  private readonly collections: SQLiteDocumentCollections;
 
-  async createCollection(input: CreateDocumentCollectionInput): Promise<DocumentCollection> {
-    validateDocumentCollectionInput(input);
-    return this.database.transaction(async (tx) => {
-      if (await new SQLiteDocumentStore(tx).collectionExists(input.teamId, input.id)) throw new Error("Die Datensammlung existiert bereits.");
-      const timestamp = new Date().toISOString();
-      const values = {id: input.id, team_id: input.teamId, display_name: input.displayName, created_at: timestamp, updated_at: timestamp};
-      await tx.insert(documentCollections).values(values);
-      return documentCollectionFromRow(values);
-    });
+  constructor(private readonly database: RuntimeExecutor) {
+    this.collections = new SQLiteDocumentCollections(database);
   }
 
-  async ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
-    validateDocumentCollectionNameInput(input);
-    return this.database.transaction(async (tx) => {
-      const store = new SQLiteDocumentStore(tx);
-      const existing = await store.findCollectionByName(input);
-      if (existing !== null) return existing;
-      const timestamp = new Date().toISOString();
-      await tx.insert(documentCollections).values({id: randomUUID(), team_id: input.teamId,
-        display_name: input.displayName, created_at: timestamp, updated_at: timestamp}).onConflictDoNothing();
-      const collection = await store.findCollectionByName(input);
-      if (collection === null) throw new Error("Die Datensammlung konnte nicht angelegt werden.");
-      return collection;
-    });
+  createCollection(input: CreateDocumentCollectionInput): Promise<DocumentCollection> {
+    return this.collections.create(input);
   }
 
-  async findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
-    validateDocumentCollectionNameInput(input);
-    const row = await this.database.select().from(documentCollections)
-      .where(and(eq(documentCollections.team_id, input.teamId), eq(documentCollections.display_name, input.displayName))).get();
-    return row ? documentCollectionFromRow(row) : null;
+  ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
+    return this.collections.ensure(input);
   }
 
-  async listCollections(teamId: string): Promise<DocumentCollection[]> {
-    const rows = await this.database.select().from(documentCollections).where(eq(documentCollections.team_id, teamId))
-      .orderBy(sql`${documentCollections.display_name} COLLATE BINARY`);
-    return rows.map(documentCollectionFromRow);
+  findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
+    return this.collections.findByName(input);
+  }
+
+  listCollections(teamId: string): Promise<DocumentCollection[]> {
+    return this.collections.list(teamId);
+  }
+
+  renameCollection(input: RenameDocumentCollectionInput): Promise<DocumentCollection | null> {
+    return this.collections.rename(input);
+  }
+
+  deleteCollection(input: DocumentCollectionRef): Promise<boolean> {
+    return this.collections.delete(input);
   }
 
   async countDocuments(input: FindDocumentsInput): Promise<number> {
@@ -84,13 +76,37 @@ export class SQLiteDocumentStore implements DocumentStore {
   async findMany(input: FindDocumentsInput): Promise<DocumentRecord[]> {
     validateFindDocumentsInput(input);
     const rows = await this.database.select().from(documents).where(documentScope(input))
-      .orderBy(desc(documents.updated_at), asc(documents.id)).limit(input.limit ?? 100);
+      .orderBy(...sqlOrderFor(input.sort)).limit(input.limit ?? 100).offset(input.offset ?? 0);
     return rows.map(documentFromRow);
   }
 
   async create(input: CreateDocumentInput): Promise<DocumentRecord> {
     validateCreateDocumentInput(input);
     return this.database.transaction((tx) => new SQLiteDocumentStore(tx).insertDocument(input, input.documentId ?? randomUUID()));
+  }
+
+  async createMany(input: CreateDocumentsInput): Promise<number> {
+    validateCreateDocumentsInput(input);
+    return this.database.transaction(async (tx) => {
+      if (!await new SQLiteDocumentCollections(tx).exists({teamId: input.teamId, id: input.collectionId})) {
+        throw new Error("Die Datensammlung wurde nicht gefunden.");
+      }
+      const timestamp = new Date().toISOString();
+      const rows = input.items.map((data) => ({id: randomUUID(), team_id: input.teamId, collection_id: input.collectionId,
+        data_json: documentDataJson(cloneDocumentData(data)), version: 1, created_at: timestamp, updated_at: timestamp}));
+      // SQLite begrenzt die Parameter je Anweisung; 100 Zeilen à 7 Spalten bleiben darunter.
+      for (let start = 0; start < rows.length; start += 100) await tx.insert(documents).values(rows.slice(start, start + 100));
+      return rows.length;
+    });
+  }
+
+  async deleteDocuments(input: DeleteDocumentsInput): Promise<number> {
+    validateDeleteDocumentsInput(input);
+    if (input.documentIds?.length === 0) return 0;
+    const scope = and(eq(documents.team_id, input.teamId), eq(documents.collection_id, input.collectionId),
+      input.documentIds === undefined ? undefined : inArray(documents.id, [...input.documentIds]));
+    const removed = await this.database.delete(documents).where(scope).returning({id: documents.id});
+    return removed.length;
   }
 
   async update(input: UpdateDocumentInput): Promise<DocumentRecord> {
@@ -135,10 +151,8 @@ export class SQLiteDocumentStore implements DocumentStore {
     return {...current, data, version, updatedAt: new Date(timestamp)};
   }
 
-  private async collectionExists(teamId: string, collectionId: string): Promise<boolean> {
-    const row = await this.database.select({id: documentCollections.id}).from(documentCollections)
-      .where(and(eq(documentCollections.team_id, teamId), eq(documentCollections.id, collectionId))).get();
-    return row !== undefined;
+  private collectionExists(teamId: string, collectionId: string): Promise<boolean> {
+    return this.collections.exists({teamId, id: collectionId});
   }
 
   private async documentById(teamId: string, collectionId: string, documentId: string): Promise<DocumentRecord | null> {

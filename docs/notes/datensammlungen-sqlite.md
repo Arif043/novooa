@@ -11,12 +11,24 @@ Gehört zu: [Daten](../index/daten.md)
   sichtbaren Namen. Namen sind je Team exakt eindeutig, Groß- und
   Kleinschreibung zählen („Kunden“ ≠ „kunden“).
 - Die Runtime injiziert den Store in den lokalen Task-Worker.
-- HTTP-API:
-  - `GET /v1/data/collections`
-  - `POST /v1/data/collections/{name}/query`
-  - `POST /v1/data/collections/{name}/documents`
-  - `PUT /v1/data/collections/{name}/documents/{id}`
-  - `DELETE /v1/data/collections/{name}/documents/{id}`
+- HTTP-API (`local-data-collection-routes.ts`, `local-data-document-routes.ts`,
+  `local-data-transfer-routes.ts`):
+  - `GET /v1/data/collections`, `POST /v1/data/collections` (anlegen; 409 bei
+    belegtem Namen)
+  - `PUT /v1/data/collections/{name}` (umbenennen; 409),
+    `DELETE /v1/data/collections/{name}` (samt Datensätzen)
+  - `POST /v1/data/collections/{name}/query` (Suche, Filter, `sort`)
+  - `POST /v1/data/collections/{name}/documents`,
+    `PUT …/documents/{id}`, `DELETE …/documents/{id}`
+  - `DELETE /v1/data/collections/{name}/documents` (leeren),
+    `POST …/documents/delete` mit `ids` (Mehrfachlöschen, höchstens 500)
+  - `POST …/export`, `POST …/import`
+    ([Import und Export von Datensammlungen](./datensammlungen-import-export.md))
+- Sortierung in SQL: Rang der Wertart per `json_type`, dann
+  `json_extract(...) COLLATE NOCASE`, danach Änderungszeit und ID
+  (`sqlite-document-sort.ts`) — dieselbe Ordnung wie der In-Memory-Store.
+- Löschen einer Sammlung entfernt ihre Datensätze in derselben Transaktion
+  ausdrücklich, unabhängig vom Fremdschlüssel.
 
 Offen: Welche Felder bei wachsendem Volumen als SQLite-Ausdrucksindizes?
 

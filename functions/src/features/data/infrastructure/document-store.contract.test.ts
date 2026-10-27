@@ -1,25 +1,8 @@
-import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
-import {connectRuntimeDatabase} from "../../../db/database.js";
-import {type DocumentStore} from "../domain/repositories/document-store.js";
-import {InMemoryDocumentStore} from "./in-memory/in-memory-document-store.js";
-import {SQLiteDocumentStore} from "./local/sqlite-document-store.js";
-
-type StoreFixture = {
-  store: DocumentStore;
-  dispose: () => void;
-};
-
-type StoreAdapter = {
-  name: string;
-  create: () => Promise<StoreFixture>;
-};
-
-const adapters: readonly StoreAdapter[] = [
-  {name: "InMemoryDocumentStore", create: createInMemoryFixture},
-  {name: "SQLiteDocumentStore", create: createSQLiteFixture},
-];
+import {
+  adapters, collection, createOrder, order, prepareOrders, search, target, withStore,
+} from "./document-store-test-support.js";
 
 for (const adapter of adapters) {
   test(`${adapter.name}: finds one or many documents with safe filters`, async () => {
@@ -133,48 +116,3 @@ for (const adapter of adapters) {
   });
 }
 
-async function withStore(adapter: StoreAdapter, operation: (store: DocumentStore) => Promise<void>): Promise<void> {
-  const fixture = await adapter.create();
-  try {
-    await operation(fixture.store);
-  } finally {
-    fixture.dispose();
-  }
-}
-
-async function createInMemoryFixture(): Promise<StoreFixture> {
-  return {store: new InMemoryDocumentStore(), dispose: () => undefined};
-}
-
-async function createSQLiteFixture(): Promise<StoreFixture> {
-  const database = connectRuntimeDatabase(":memory:");
-  await database.run(sql`CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id), UNIQUE(team_id, display_name))`);
-  await database.run(sql`CREATE TABLE documents (id TEXT, team_id TEXT, collection_id TEXT, data_json TEXT, version INTEGER, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, collection_id, id))`);
-  return {store: new SQLiteDocumentStore(database), dispose: () => database.$client.close()};
-}
-
-async function prepareOrders(store: DocumentStore): Promise<void> {
-  await store.createCollection(collection("team-1"));
-  await store.create({...createOrder("team-1", "order-1"), data: order("offen", 89, "anna@example.com")});
-  await store.create({...createOrder("team-1", "order-2"), data: order("bezahlt", 149, "ben@example.com")});
-}
-
-function collection(teamId: string) {
-  return {teamId, id: "bestellungen", displayName: "Bestellungen"};
-}
-
-function createOrder(teamId: string, documentId: string) {
-  return {teamId, collectionId: "bestellungen", documentId};
-}
-
-function search(teamId: string, email: string) {
-  return {teamId, collectionId: "bestellungen", filters: [{field: "email", operator: "equals" as const, value: email}]};
-}
-
-function target(document: {teamId: string; collectionId: string; id: string; version: number}) {
-  return {teamId: document.teamId, collectionId: document.collectionId, documentId: document.id, expectedVersion: document.version};
-}
-
-function order(status: string, betrag: number, email: string) {
-  return {status, betrag, email};
-}

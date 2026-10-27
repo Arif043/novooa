@@ -1,37 +1,29 @@
 import {randomUUID} from "node:crypto";
 import {
-  type CreateDocumentCollectionInput,
-  type DocumentCollection,
-  type DocumentCollectionNameInput,
-  validateDocumentCollectionInput,
-  validateDocumentCollectionNameInput,
+  type CreateDocumentCollectionInput, type DocumentCollection, type DocumentCollectionNameInput, type DocumentCollectionRef,
+  DocumentCollectionNameTakenError, type RenameDocumentCollectionInput, validateDocumentCollectionInput,
+  validateDocumentCollectionNameInput, validateDocumentCollectionRef, validateRenameDocumentCollectionInput,
 } from "../../domain/entities/document-collection.js";
 import {
-  cloneDocumentData,
-  type CreateDocumentInput,
-  type DocumentRecord,
-  type FindDocumentByIdInput,
-  type UpdateDocumentInput,
-  type UpsertDocumentInput,
-  validateCreateDocumentInput,
-  validateFindDocumentByIdInput,
-  validateUpdateDocumentInput,
+  type CreateDocumentInput, type CreateDocumentsInput, type DeleteDocumentsInput, type DocumentRecord,
+  type FindDocumentByIdInput, type UpdateDocumentInput, type UpsertDocumentInput, validateCreateDocumentInput,
+  validateCreateDocumentsInput, validateDeleteDocumentsInput, validateFindDocumentByIdInput, validateUpdateDocumentInput,
 } from "../../domain/entities/document.js";
-import {
-  isNumericOperator,
-  type DocumentFilter,
-  type FindDocumentsInput,
-  validateFindDocumentsInput,
-} from "../../domain/entities/document-filter.js";
+import {type FindDocumentsInput, validateFindDocumentsInput} from "../../domain/entities/document-filter.js";
 import {type DocumentStore} from "../../domain/repositories/document-store.js";
+import {SerialQueue} from "./serial-queue.js";
+import {collectionNamed, keysToDelete, queryDocuments} from "./in-memory-document-query.js";
+import {
+  collectionKey, copyCollection, copyDocument, copyOrNull, documentFrom, documentKey,
+} from "./in-memory-document-records.js";
 
 export class InMemoryDocumentStore implements DocumentStore {
   private readonly collections = new Map<string, DocumentCollection>();
   private readonly documents = new Map<string, DocumentRecord>();
-  private queue: Promise<void> = Promise.resolve();
+  private readonly queue = new SerialQueue();
 
   createCollection(input: CreateDocumentCollectionInput): Promise<DocumentCollection> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateDocumentCollectionInput(input);
       const key = collectionKey(input.teamId, input.id);
       if (this.collections.has(key)) throw new Error("Die Datensammlung existiert bereits.");
@@ -43,7 +35,7 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateDocumentCollectionNameInput(input);
       const existing = this.collectionByName(input);
       if (existing !== undefined) return copyCollection(existing);
@@ -55,17 +47,57 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateDocumentCollectionNameInput(input);
       return copyOrNull(this.collectionByName(input));
     });
   }
 
   listCollections(teamId: string): Promise<DocumentCollection[]> {
-    return this.exclusively(() => [...this.collections.values()]
+    return this.queue.run(() => [...this.collections.values()]
       .filter((collection) => collection.teamId === teamId)
       .sort((left, right) => left.displayName.localeCompare(right.displayName))
       .map(copyCollection));
+  }
+
+  renameCollection(input: RenameDocumentCollectionInput): Promise<DocumentCollection | null> {
+    return this.queue.run(() => {
+      validateRenameDocumentCollectionInput(input);
+      const key = collectionKey(input.teamId, input.collectionId);
+      const current = this.collections.get(key);
+      if (current === undefined) return null;
+      if ((this.collectionByName(input)?.id ?? current.id) !== current.id) throw new DocumentCollectionNameTakenError();
+      this.collections.set(key, {...current, displayName: input.displayName, updatedAt: new Date()});
+      return copyCollection(this.collections.get(key)!);
+    });
+  }
+
+  deleteCollection(input: DocumentCollectionRef): Promise<boolean> {
+    return this.queue.run(() => {
+      validateDocumentCollectionRef(input);
+      this.removeDocuments(input);
+      return this.collections.delete(collectionKey(input.teamId, input.collectionId));
+    });
+  }
+
+  deleteDocuments(input: DeleteDocumentsInput): Promise<number> {
+    return this.queue.run(() => {
+      validateDeleteDocumentsInput(input);
+      return this.removeDocuments(input);
+    });
+  }
+
+  createMany(input: CreateDocumentsInput): Promise<number> {
+    return this.queue.run(() => {
+      validateCreateDocumentsInput(input);
+      this.requireCollection(input.teamId, input.collectionId);
+      const timestamp = new Date();
+      for (const data of input.items) {
+        const id = randomUUID();
+        this.documents.set(documentKey(input.teamId, input.collectionId, id), documentFrom({...input, data}, id, 1, timestamp, timestamp));
+      }
+      return input.items.length;
+    });
   }
 
   countDocuments(input: FindDocumentsInput): Promise<number> {
@@ -73,7 +105,7 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   delete(input: FindDocumentByIdInput): Promise<boolean> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateFindDocumentByIdInput(input);
       return this.documents.delete(documentKey(input.teamId, input.collectionId, input.documentId));
     });
@@ -83,7 +115,7 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   findById(input: FindDocumentByIdInput): Promise<DocumentRecord | null> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateFindDocumentByIdInput(input);
       const document = this.documents.get(documentKey(
         input.teamId, input.collectionId, input.documentId,
@@ -93,18 +125,14 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   findMany(input: FindDocumentsInput): Promise<DocumentRecord[]> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateFindDocumentsInput(input);
-      return [...this.documents.values()]
-        .filter((document) => isMatchingDocument(document, input))
-        .sort(compareDocuments)
-        .slice(0, input.limit ?? 100)
-        .map(copyDocument);
+      return queryDocuments(this.documents.values(), input).map(copyDocument);
     });
   }
 
   create(input: CreateDocumentInput): Promise<DocumentRecord> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateCreateDocumentInput(input);
       const documentId = input.documentId ?? randomUUID();
       this.requireCollection(input.teamId, input.collectionId);
@@ -118,7 +146,7 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   update(input: UpdateDocumentInput): Promise<DocumentRecord> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateUpdateDocumentInput(input);
       const current = this.loadDocument(input);
       if (current === undefined) throw new Error("Der Datensatz wurde nicht gefunden.");
@@ -127,7 +155,7 @@ export class InMemoryDocumentStore implements DocumentStore {
   }
 
   upsert(input: UpsertDocumentInput): Promise<DocumentRecord> {
-    return this.exclusively(() => {
+    return this.queue.run(() => {
       validateUpdateDocumentInput(input);
       const current = this.loadDocument(input);
       if (current !== undefined) return this.replaceDocument(input, current);
@@ -148,14 +176,18 @@ export class InMemoryDocumentStore implements DocumentStore {
     return copyDocument(updated);
   }
 
+  private removeDocuments(input: DeleteDocumentsInput): number {
+    const keys = keysToDelete(this.documents, input);
+    for (const key of keys) this.documents.delete(key);
+    return keys.length;
+  }
+
   private loadDocument(input: UpdateDocumentInput): DocumentRecord | undefined {
     return this.documents.get(documentKey(input.teamId, input.collectionId, input.documentId));
   }
 
   private collectionByName(input: DocumentCollectionNameInput): DocumentCollection | undefined {
-    return [...this.collections.values()].find((collection) =>
-      collection.teamId === input.teamId && collection.displayName === input.displayName,
-    );
+    return collectionNamed(this.collections.values(), input);
   }
 
   private requireCollection(teamId: string, collectionId: string): void {
@@ -163,78 +195,4 @@ export class InMemoryDocumentStore implements DocumentStore {
       throw new Error("Die Datensammlung wurde nicht gefunden.");
     }
   }
-
-  private exclusively<T>(operation: () => T): Promise<T> {
-    const completed = this.queue.then(operation, operation);
-    this.queue = completed.then(() => undefined, () => undefined);
-    return completed;
-  }
-}
-
-function isMatchingDocument(document: DocumentRecord, input: FindDocumentsInput): boolean {
-  return document.teamId === input.teamId && document.collectionId === input.collectionId &&
-    (input.filters ?? []).every((filter) => isMatchingFilter(document, filter));
-}
-
-function isMatchingFilter(document: DocumentRecord, filter: DocumentFilter): boolean {
-  const value = document.data[filter.field];
-  if (filter.operator === "contains") return typeof value === "string" && value.includes(filter.value as string);
-  if (isNumericOperator(filter.operator)) {
-    return typeof value === "number" && typeof filter.value === "number" &&
-      numericComparison(value, filter.operator, filter.value);
-  }
-  if (value === undefined || typeof value === "object") return false;
-  return filter.operator === "equals" ? value === filter.value : value !== filter.value;
-}
-
-function numericComparison(
-  value: number,
-  operator: DocumentFilter["operator"],
-  expected: number,
-): boolean {
-  switch (operator) {
-    case "greaterThan": return value > expected;
-    case "greaterThanOrEqual": return value >= expected;
-    case "lessThan": return value < expected;
-    case "lessThanOrEqual": return value <= expected;
-    default: throw new Error("Der Datenfilter ist kein numerischer Vergleich.");
-  }
-}
-
-function documentFrom(
-  input: CreateDocumentInput,
-  id: string,
-  version: number,
-  createdAt: Date,
-  updatedAt: Date,
-): DocumentRecord {
-  return {
-    id, teamId: input.teamId, collectionId: input.collectionId,
-    data: cloneDocumentData(input.data), version,
-    createdAt: new Date(createdAt), updatedAt: new Date(updatedAt),
-  };
-}
-
-function copyDocument(document: DocumentRecord): DocumentRecord {
-  return {...document, data: cloneDocumentData(document.data), createdAt: new Date(document.createdAt), updatedAt: new Date(document.updatedAt)};
-}
-
-function copyOrNull(collection: DocumentCollection | undefined): DocumentCollection | null {
-  return collection === undefined ? null : copyCollection(collection);
-}
-
-function copyCollection(collection: DocumentCollection): DocumentCollection {
-  return {...collection, createdAt: new Date(collection.createdAt), updatedAt: new Date(collection.updatedAt)};
-}
-
-function compareDocuments(left: DocumentRecord, right: DocumentRecord): number {
-  return right.updatedAt.getTime() - left.updatedAt.getTime() || left.id.localeCompare(right.id);
-}
-
-function collectionKey(teamId: string, collectionId: string): string {
-  return `${teamId}\u0000${collectionId}`;
-}
-
-function documentKey(teamId: string, collectionId: string, documentId: string): string {
-  return `${collectionKey(teamId, collectionId)}\u0000${documentId}`;
 }

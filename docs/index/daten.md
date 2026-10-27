@@ -7,11 +7,13 @@
 - [Datensatz-Bausteine](../notes/datensatz-bausteine.md)
 - [Sammlung als Tabelle](../notes/sammlung-als-tabelle.md)
 - [Datenbank-Seite](../notes/datenbank-seite.md)
+- [Import und Export von Datensammlungen](../notes/datensammlungen-import-export.md)
 
 ## Offene Punkte
 
-- Freie SQL-Abfragen, Aggregationen und manuelle Sammlungsverwaltung sind
-  nicht enthalten.
+- Freie SQL-Abfragen und Aggregationen sind nicht enthalten.
+- Import mit Abgleich über IDs (Aktualisieren statt Anhängen) ist geplant.
+- Die Blattansicht zeigt höchstens 500 Datensätze; Blättern ist geplant.
 - Ausdrucksindizes bei wachsendem Datenvolumen.
 - Schema-Hinweise für Einsteiger:innen, ohne flexible Dokumente einzuschränken.
 

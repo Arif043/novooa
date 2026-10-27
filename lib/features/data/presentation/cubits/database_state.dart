@@ -1,6 +1,8 @@
 import '../../domain/entities/data_collection.dart';
 import '../../domain/entities/data_filter.dart';
 import '../../domain/entities/data_record.dart';
+import '../../domain/entities/data_record_query.dart';
+import '../../domain/entities/data_sort.dart';
 
 enum DatabaseStatus { loading, collections, records, failure }
 
@@ -12,6 +14,8 @@ class DatabaseState {
     this.records = const [],
     this.search = '',
     this.filters = const [],
+    this.sort,
+    this.selectedIds = const {},
     this.message,
     this.isMutating = false,
   });
@@ -22,8 +26,22 @@ class DatabaseState {
   final List<DataRecord> records;
   final String search;
   final List<DataFilter> filters;
+  final DataSort? sort;
+
+  /// IDs der ausgewählten Datensätze; nur sichtbare Datensätze können ausgewählt sein.
+  final Set<String> selectedIds;
   final String? message;
   final bool isMutating;
+
+  DataRecordQuery get query =>
+      DataRecordQuery(search: search, filters: filters, sort: sort);
+
+  List<DataRecord> get selectedRecords => records
+      .where((record) => selectedIds.contains(record.id))
+      .toList(growable: false);
+
+  bool get allSelected =>
+      records.isNotEmpty && selectedIds.length == records.length;
 
   DatabaseState copyWith({
     DatabaseStatus? status,
@@ -33,6 +51,9 @@ class DatabaseState {
     List<DataRecord>? records,
     String? search,
     List<DataFilter>? filters,
+    DataSort? sort,
+    bool clearSort = false,
+    Set<String>? selectedIds,
     String? message,
     bool clearMessage = false,
     bool? isMutating,
@@ -43,6 +64,8 @@ class DatabaseState {
     records: records ?? this.records,
     search: search ?? this.search,
     filters: filters ?? this.filters,
+    sort: clearSort ? null : sort ?? this.sort,
+    selectedIds: selectedIds ?? this.selectedIds,
     message: clearMessage ? null : message ?? this.message,
     isMutating: isMutating ?? this.isMutating,
   );

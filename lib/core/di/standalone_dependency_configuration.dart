@@ -61,10 +61,6 @@ import '../../features/assistant/presentation/cubits/assistant_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/usecases/upload_team_file.dart';
-import '../../features/data/domain/repositories/data_repository.dart';
-import '../../features/data/domain/usecases/data_records.dart';
-import '../../features/data/infrastructure/repositories/local_data_repository.dart';
-import '../../features/data/presentation/cubits/database_cubit.dart';
 import '../../features/files/domain/repositories/file_settings_repository.dart';
 import '../../features/files/domain/usecases/save_file_version_limit.dart';
 import '../../features/files/domain/usecases/watch_file_version_limit.dart';
@@ -142,6 +138,7 @@ import 'standalone_transport_registration.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
 import 'standalone_script_packages_dependency_configuration.dart';
+import 'standalone_data_dependency_configuration.dart';
 import 'standalone_workspace_transfer_dependency_configuration.dart';
 
 Future<void> configureStandaloneDependencies(
@@ -193,6 +190,7 @@ Future<void> configureStandaloneDependencies(
     runtimeUri: profile.workspaceApiUri,
   );
   configureStandaloneWorkspaceTransferDependencies(locator);
+  configureStandaloneDataDependencies(locator);
   configureStandaloneScriptPackagesDependencies(locator);
   configureStandaloneRuntimeUsersDependencies(locator);
   locator
@@ -235,9 +233,6 @@ Future<void> configureStandaloneDependencies(
         locator<WorkspaceApiClient>(),
         locator<WorkspaceRealtimeChannel>(),
       ),
-    )
-    ..registerLazySingleton<DataRepository>(
-      () => LocalDataRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<ApplicationLogRepository>(
       () => LocalApplicationLogRepository(
@@ -396,13 +391,6 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton(
       () => OpenDocumentScanSession(locator<DocumentScanner>()),
     )
-    ..registerLazySingleton(
-      () => ListDataCollections(locator<DataRepository>()),
-    )
-    ..registerLazySingleton(() => QueryDataRecords(locator<DataRepository>()))
-    ..registerLazySingleton(() => CreateDataRecord(locator<DataRepository>()))
-    ..registerLazySingleton(() => UpdateDataRecord(locator<DataRepository>()))
-    ..registerLazySingleton(() => DeleteDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => ExecuteTask(locator<TaskRepository>()))
     ..registerLazySingleton(() => AskAssistant(locator<AssistantRepository>()))
     ..registerFactory(
@@ -516,15 +504,6 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => UploadTaskRunMediaInput(locator<TaskRunMediaInputRepository>()),
-    )
-    ..registerFactory(
-      () => DatabaseCubit(
-        listCollections: locator<ListDataCollections>(),
-        queryRecords: locator<QueryDataRecords>(),
-        createRecord: locator<CreateDataRecord>(),
-        updateRecord: locator<UpdateDataRecord>(),
-        deleteRecord: locator<DeleteDataRecord>(),
-      ),
     )
     ..registerFactory(
       () =>

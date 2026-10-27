@@ -47,22 +47,30 @@ export function testingRoutes<Options extends object>(
 ) {
   let instance: Promise<FastifyInstance> | undefined;
   const server = () => instance ??= buildServer(plugin, options, workspace, actor);
-  async function handle(request: TestRequest, payload?: Buffer): Promise<TestResponse | null> {
+  async function inject(request: TestRequest, payload?: Buffer | string) {
     const body = payload ?? jsonPayload(request);
-    const response = await (await server()).inject({
+    return (await server()).inject({
       method: (request.method ?? "GET") as Method, url: request.url ?? "/", payload: body,
       // Wie der App-Client: Content-Type nur, wenn tatsächlich ein Body mitgeht.
       headers: {...(body === undefined ? {} : {"content-type": "application/json"}), ...request.headers as Record<string, string>},
     });
+  }
+  async function handle(request: TestRequest, payload?: Buffer): Promise<TestResponse | null> {
+    const response = await inject(request, payload);
     const responseBody = response.body.length === 0 ? {} : response.json<object>();
     return "testRouteMissing" in responseBody ? null : {body: responseBody, statusCode: response.statusCode};
+  }
+  /** Für Antworten, die kein JSON sind (Dateien): Status, Kopfzeilen und Text. */
+  async function handleRaw(request: TestRequest, payload?: Buffer) {
+    const response = await inject(request, payload);
+    return {statusCode: response.statusCode, headers: response.headers, body: response.body};
   }
   async function handleStream(request: TestRequest & {body: AsyncIterable<Uint8Array>}) {
     const chunks: Buffer[] = [];
     for await (const chunk of request.body) chunks.push(Buffer.from(chunk));
     return handle(request, Buffer.concat(chunks));
   }
-  return {handle, handleStream};
+  return {handle, handleRaw, handleStream};
 }
 
 async function buildServer<Options extends object>(

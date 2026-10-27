@@ -17,6 +17,32 @@ export type DocumentCollectionNameInput = {
   displayName: string;
 };
 
+/** Eine Sammlung über ihre interne Identität innerhalb eines Teams. */
+export type DocumentCollectionRef = {
+  teamId: string;
+  collectionId: string;
+};
+
+export type RenameDocumentCollectionInput = DocumentCollectionRef & {displayName: string};
+
+/** Der gewünschte Name gehört schon einer anderen Sammlung des Teams. */
+export class DocumentCollectionNameTakenError extends Error {
+  constructor() {
+    super("Eine Datensammlung mit diesem Namen existiert bereits.");
+    this.name = "DocumentCollectionNameTakenError";
+  }
+}
+
+export function validateDocumentCollectionRef(input: DocumentCollectionRef): void {
+  validateTeamId(input.teamId);
+  validateDocumentCollectionId(input.collectionId);
+}
+
+export function validateRenameDocumentCollectionInput(input: RenameDocumentCollectionInput): void {
+  validateDocumentCollectionRef(input);
+  validateDocumentCollectionNameInput(input);
+}
+
 export function validateDocumentCollectionInput(
   input: CreateDocumentCollectionInput,
 ): void {

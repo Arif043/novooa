@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/features/data/domain/entities/data_collection.dart';
 import 'package:syscat2/features/data/domain/entities/data_filter.dart';
-import 'package:syscat2/features/data/domain/entities/data_record.dart';
-import 'package:syscat2/features/data/domain/repositories/data_repository.dart';
+import 'package:syscat2/features/data/domain/entities/data_sort.dart';
 import 'package:syscat2/features/data/domain/usecases/data_records.dart';
 import 'package:syscat2/features/data/presentation/cubits/database_cubit.dart';
 
+import '../../support/data_test_fakes.dart';
+
 void main() {
   test('legt, aktualisiert und loescht Datensaetze ueber den Cubit', () async {
-    final repository = _DataRepository();
+    final repository = FakeDataRepository();
     final cubit = _cubit(repository);
     await cubit.loadCollections();
     await cubit.openCollection(repository.collection);
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('wendet Suche und Filter auf die Abfrage an', () async {
-    final repository = _DataRepository();
+    final repository = FakeDataRepository();
     final cubit = _cubit(repository);
     await cubit.openCollection(repository.collection);
     cubit.addFilter();
@@ -43,81 +43,74 @@ void main() {
     expect(repository.lastFilters.single.field, 'status');
     await cubit.close();
   });
+
+  test('sortiert auf-, dann absteigend, dann gar nicht', () async {
+    final repository = FakeDataRepository();
+    final cubit = _cubit(repository);
+    await cubit.openCollection(repository.collection);
+
+    await cubit.toggleSort('umsatz');
+    final ascending = repository.lastSort;
+    await cubit.toggleSort('umsatz');
+    final descending = repository.lastSort;
+    await cubit.toggleSort('umsatz');
+    await cubit.toggleSort('Kunden Name');
+
+    expect(ascending?.direction, DataSortDirection.ascending);
+    expect(descending?.direction, DataSortDirection.descending);
+    expect(
+      repository.lastSort,
+      isNull,
+      reason: 'ungültige Felder sind nicht sortierbar',
+    );
+    await cubit.close();
+  });
+
+  test(
+    'waehlt Datensaetze aus und vergisst geloeschte beim Neuladen',
+    () async {
+      final repository = FakeDataRepository()
+        ..records.addAll([dataRecord('a', {}), dataRecord('b', {})]);
+      final cubit = _cubit(repository);
+      await cubit.openCollection(repository.collection);
+
+      cubit.toggleSelection(repository.records.first);
+      final one = cubit.state.selectedIds;
+      cubit.toggleAllSelected();
+      final all = cubit.state.selectedIds;
+      repository.records.removeAt(0);
+      await cubit.reload();
+
+      expect(one, {'a'});
+      expect(all, {'a', 'b'});
+      expect(cubit.state.selectedIds, {'b'});
+      // Alle sichtbaren sind gewählt: Ein weiterer Klick hebt die Auswahl auf.
+      cubit.toggleAllSelected();
+      expect(cubit.state.selectedIds, isEmpty);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'oeffnet nach dem Neuladen die genannte Sammlung mit frischer Anzahl',
+    () async {
+      final repository = FakeDataRepository();
+      final cubit = _cubit(repository);
+      await cubit.openCollection(repository.collection);
+      repository.collections = [dataCollection('Kundschaft', count: 7)];
+
+      await cubit.reload(collection: dataCollection('Kundschaft'));
+
+      expect(cubit.state.collection?.documentCount, 7);
+      await cubit.close();
+    },
+  );
 }
 
-DatabaseCubit _cubit(_DataRepository repository) => DatabaseCubit(
+DatabaseCubit _cubit(FakeDataRepository repository) => DatabaseCubit(
   listCollections: ListDataCollections(repository),
   queryRecords: QueryDataRecords(repository),
   createRecord: CreateDataRecord(repository),
   updateRecord: UpdateDataRecord(repository),
   deleteRecord: DeleteDataRecord(repository),
 );
-
-class _DataRepository implements DataRepository {
-  final collection = DataCollection(
-    name: 'Kunden',
-    documentCount: 0,
-    createdAt: DateTime.utc(2026),
-    updatedAt: DateTime.utc(2026),
-  );
-  final records = <DataRecord>[];
-  Map<String, Object?>? createdFields;
-  Map<String, Object?>? updatedFields;
-  String lastSearch = '';
-  List<DataFilter> lastFilters = const [];
-
-  @override
-  Future<List<DataCollection>> listCollections() async => [collection];
-
-  @override
-  Future<List<DataRecord>> queryRecords({
-    required String collectionName,
-    required String search,
-    required List<DataFilter> filters,
-  }) async {
-    lastSearch = search;
-    lastFilters = filters;
-    return List.of(records);
-  }
-
-  @override
-  Future<DataRecord> createRecord({
-    required String collectionName,
-    required Map<String, Object?> fields,
-  }) async {
-    createdFields = fields;
-    final record = DataRecord(
-      id: 'record.${records.length + 1}',
-      fields: fields,
-      createdAt: DateTime.utc(2026),
-      updatedAt: DateTime.utc(2026),
-    );
-    records.add(record);
-    return record;
-  }
-
-  @override
-  Future<DataRecord> updateRecord({
-    required String collectionName,
-    required DataRecord record,
-    required Map<String, Object?> fields,
-  }) async {
-    updatedFields = fields;
-    final updated = DataRecord(
-      id: record.id,
-      fields: fields,
-      createdAt: record.createdAt,
-      updatedAt: DateTime.utc(2026, 2),
-    );
-    records[records.indexWhere((item) => item.id == record.id)] = updated;
-    return updated;
-  }
-
-  @override
-  Future<void> deleteRecord({
-    required String collectionName,
-    required DataRecord record,
-  }) async {
-    records.removeWhere((item) => item.id == record.id);
-  }
-}

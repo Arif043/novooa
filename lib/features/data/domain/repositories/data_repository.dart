@@ -1,6 +1,7 @@
 import '../entities/data_collection.dart';
 import '../entities/data_filter.dart';
 import '../entities/data_record.dart';
+import '../entities/data_sort.dart';
 
 abstract interface class DataRepository {
   Future<List<DataCollection>> listCollections();
@@ -9,6 +10,7 @@ abstract interface class DataRepository {
     required String collectionName,
     required String search,
     required List<DataFilter> filters,
+    DataSort? sort,
   });
 
   Future<DataRecord> createRecord({
