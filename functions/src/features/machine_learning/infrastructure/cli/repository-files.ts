@@ -12,20 +12,14 @@ export function runtimePythonScript(scriptName: string): string {
 /** Das gepflegte Tag-Vokabular, Quelle für `models:tags:publish` und `models:install-local`. */
 export const shippedModelTagsPath = path.join(repositoryRoot, "models", "tags.json");
 
-/** Alle mitgelieferten Manifeste: Systemmodelle der Runtime und Katalogmodelle unter `models/`. */
+/** Alle mitgelieferten Manifeste der Systemmodelle: jede `model.json` unterhalb von `models/`. */
 export async function shippedManifestPaths(): Promise<readonly string[]> {
-  const systemModels = path.join(repositoryRoot, "local-runtime", "system-models");
   const catalogModels = path.join(repositoryRoot, "models");
-  const systemFiles = (await readdir(systemModels)).filter((name) => name.endsWith(".json"));
-  const catalogFiles = (await readdir(catalogModels, {recursive: true})).filter((name) => path.basename(name) === "model.json");
-  return [
-    ...systemFiles.map((name) => path.join(systemModels, name)),
-    ...catalogFiles.map((name) => path.join(catalogModels, name)),
-  ];
+  const files = (await readdir(catalogModels, {recursive: true})).filter((name) => path.basename(name) === "model.json");
+  return files.map((name) => path.join(catalogModels, name)).sort();
 }
 
-/** `models/<modell>/model.json` → `JOURNAL.md` daneben; `system-models/<modell>.json` → `<modell>.journal.md`. */
+/** Der Journal-Eintrag liegt neben dem Manifest: `models/<modell>/JOURNAL.md`. */
 export function journalPathFor(manifestPath: string): string {
-  if (path.basename(manifestPath) === "model.json") return path.join(path.dirname(manifestPath), "JOURNAL.md");
-  return manifestPath.replace(/\.json$/, ".journal.md");
+  return path.join(path.dirname(manifestPath), "JOURNAL.md");
 }

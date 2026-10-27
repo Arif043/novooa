@@ -26,6 +26,7 @@
 - [`image.resizeHeightPad`](../notes/transformation-image-resize-height-pad.md) — Skaliert ein Bild auf die Zielhöhe und füllt die Breite auf, schneidet sie ab oder lässt sie dynamisch.
 - [`image.resizePad`](../notes/transformation-image-resize-pad.md) — Skaliert ein Bild unter Erhalt des Seitenverhältnisses und füllt bis zur Zielgröße auf (Letterbox).
 - [`image.resizeShorterSide`](../notes/transformation-image-resize-shorter-side.md) — Skaliert die kürzere Seite auf `size`, das Seitenverhältnis bleibt.
+- [`image.resizeWithin`](../notes/transformation-image-resize-within.md) — Skaliert ein Bild nur, wenn es außerhalb von Grenzen liegt: längere Seite höchstens `maxSide`, kürzere Seite mindestens `minSide`.
 - [`image.sizeTensor`](../notes/transformation-image-size-tensor.md) — Liefert Bildmaße oder Skalierungsfaktoren als Tensor für Hilfseingänge eines Modells.
 - [`image.tiles`](../notes/transformation-image-tiles.md) — Zerlegt ein Bild in überlappende Kacheln und rechnet sie als Batch.
 
@@ -63,7 +64,7 @@
 - [`keypoints.fromRows`](../notes/transformation-keypoints-from-rows.md) — Liest Keypoints aus Zeilen eines Tensors, eine Zeile je Punkt.
 - [`keypoints.fromSimcc`](../notes/transformation-keypoints-from-simcc.md) — Dekodiert Keypoints aus SimCC-Verteilungen je Achse zweier Modellausgänge.
 - [`mask.connectedComponents`](../notes/transformation-mask-connected-components.md) — Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`.
-- [`mask.textRegions`](../notes/transformation-mask-text-regions.md) — Leitet aus einer Wahrscheinlichkeitsmaske bewertete Textregionen ab.
+- [`mask.textRegions`](../notes/transformation-mask-text-regions.md) — Leitet aus einer Wahrscheinlichkeitsmaske bewertete Textregionen ab — die DB-Nachverarbeitung von DBNet und PP-OCR.
 - [`mask.toSource`](../notes/transformation-mask-to-source.md) — Bildet eine Maske oder Karte `[H, W]`, `[C, H, W]` bzw. `[H, W, C]` per Nearest-Neighbour auf die Originalgröße ab; Rand des Modellbildes wird zu `fill`.
 - [`tensor.decodeAnchors`](../notes/transformation-tensor-decode-anchors.md) — Dekodiert Boxen relativ zu Ankern aus einer Modellressource.
 - [`tensor.decodeGrid`](../notes/transformation-tensor-decode-grid.md) — Dekodiert Rohboxen ankerfreier Detektoren aus Rasterzellen in Modellpixel.

@@ -19,7 +19,7 @@ INPUT_TYPES = [
     "tensor.channelOrder", "tensor.clip", "tensor.constant", "tensor.fitLength", "tensor.layout",
     "tensor.normalize", "tensor.reshape", "tensor.scale", "tensor.transpose", "text.kokoroStyle",
     "text.kokoroTokens", "text.piperPhonemeLength", "text.piperPhonemes", "text.toTensor",
-    "audio.frames", "image.keepSource", "image.sizeTensor", "image.tiles",
+    "audio.frames", "image.keepSource", "image.resizeWithin", "image.sizeTensor", "image.tiles",
 ]
 OUTPUT_TYPES = [
     "audio.wav", "geometry.mergeRows", "geometry.scaleBounds", "geometry.toSource", "image.encode",

@@ -1,6 +1,6 @@
 # Piper Deutsch - Thorsten Emotional (`piper-de-thorsten-emotional-medium`)
 
-> Journal des Systemmodells; Manifest: [`piper-de-thorsten-emotional-medium.json`](./piper-de-thorsten-emotional-medium.json).
+> Journal des Katalogmodells; Manifest: [`model.json`](./model.json).
 
 **Status:** in Prüfung
 

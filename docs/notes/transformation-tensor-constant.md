@@ -14,7 +14,7 @@ Gehört zu: [Transformationen](../index/transformationen.md)
 
 ## Beispiel
 
-Aus `local-runtime/system-models/piper-de-eva-x-low.json`:
+Aus `models/piper-de-eva-x-low/model.json`:
 
 ```json
 {"type": "tensor.constant", "parameters": {"values": ["$noiseScale", "$lengthScale", "$noiseWidth"]}}

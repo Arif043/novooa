@@ -33,6 +33,13 @@
             }
           },
           {
+            "type": "image.resizeWithin",
+            "parameters": {
+              "minSide": 736,
+              "maxSide": 2000
+            }
+          },
+          {
             "type": "image.padToMultiple",
             "parameters": {
               "multiple": 32,
@@ -59,14 +66,14 @@
             "type": "tensor.normalize",
             "parameters": {
               "mean": [
-                123.675,
-                116.28,
-                103.53
+                127.5,
+                127.5,
+                127.5
               ],
               "std": [
-                58.395,
-                57.12,
-                57.375
+                127.5,
+                127.5,
+                127.5
               ]
             }
           }
@@ -91,9 +98,9 @@
               "threshold": 0.3,
               "minimumPixels": 8,
               "minimumScore": 0.5,
-              "dilationWidth": 3,
-              "dilationHeight": 1,
-              "padding": 1
+              "dilationWidth": 2,
+              "dilationHeight": 2,
+              "unclipRatio": 1.6
             },
             "result": "detectedRegions"
           },
@@ -103,6 +110,12 @@
               "minimumVerticalOverlap": 0.5
             },
             "result": "regions"
+          },
+          {
+            "type": "geometry.toSource",
+            "parameters": {
+              "input": "x"
+            }
           }
         ],
         "workflowOutput": {

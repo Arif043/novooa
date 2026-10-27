@@ -49,7 +49,10 @@ der [Recognizer](../recognizer/JOURNAL.md) in einer „Für jedes Element“-Sch
 ## Grenzen
 
 - Ohne „Unclip“ der DB-Nachverarbeitung: Regionen sind knapper als bei
-  RapidOCR; Ränder von Buchstaben können fehlen.
+  RapidOCR; Ränder von Buchstaben können fehlen. Beim PP-OCRv6-Detektor war
+  genau das der Grund für Lesefehler (Referenztest 2026-10-27); hier
+  vermutlich ebenso — `mask.textRegions` mit `unclipRatio` statt
+  `mask.connectedComponents` prüfen.
 - Titel und Beschreibung sind deutsch; laut [Mehrsprachige Manifeste](../../../docs/notes/mehrsprachige-manifeste.md)
   sollten sie englisch sein, mit deutscher Übersetzung (offen).
 

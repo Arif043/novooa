@@ -47,7 +47,7 @@ parameters = {
   allen Parametern und fachlichen Tests
   ([Regeln für Transformationen](./regeln-fuer-transformationen.md)).
 - `tests/test_parameter_check.py` prüft alle mitgelieferten Manifeste
-  (`local-runtime/system-models/` und `models/**/model.json`).
+  (`models/**/model.json`).
 - `contract_validation_worker.py` und `onnx_validation_worker.py` sind die
   Prüfungen der [Veröffentlichung](./modelle-veroeffentlichen.md); sie laufen
   ohne ML-Dienst (`tests/test_validation_workers.py`).

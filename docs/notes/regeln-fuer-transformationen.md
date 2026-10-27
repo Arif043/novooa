@@ -42,9 +42,12 @@ dasselbe rechnet wie die Referenz — nicht nur, dass sie läuft:
    `local-runtime/python/tests/fixtures/`) und Ausgang gegen eine
    gespeicherte Referenzausgabe.
 
-Referenztests je Katalogmodell — Referenzeingabe und erwartete Ausgabe aus
-der Originalimplementierung, bei jeder Änderung am ML-Dienst geprüft — sind
-**geplant**.
+**Referenztests je Katalogmodell:** Referenzeingabe und erwartete Ausgabe der
+Originalimplementierung, bei jedem Testlauf geprüft. Muster:
+`tests/fixtures/<bereich>/build_reference.py` erzeugt einmalig Eingabe und
+Ergebnis der Referenz (mit denselben ONNX-Dateien), `tests/test_reference_<modell>.py`
+rechnet die Manifest-Pipeline und vergleicht mit Toleranz. Umgesetzt für
+PP-OCRv6 Small; für die übrigen Katalogmodelle geplant.
 
 ## Pflichten beim Hinzufügen
 

@@ -9,6 +9,8 @@ from novooa_ml.transformations.context import TransformationContext
 from novooa_ml.model_output.worker import transformation_values
 from novooa_ml.model_execution import transformed_output_tensors
 
+import numpy
+
 
 class OutputTransformationRegistryTest(unittest.TestCase):
     def setUp(self):
@@ -122,6 +124,32 @@ class OutputTransformationRegistryTest(unittest.TestCase):
 
     def context(self):
         return TransformationContext(self.numpy)
+
+
+
+class TextRegionsUnclipTest(unittest.TestCase):
+    """Referenz: DB-Unclip — Abstand = Fläche × ratio / Umfang je Seite (für Rechtecke exakt)."""
+
+    def regions(self, **parameters):
+        probability = numpy.zeros((1, 1, 40, 200), dtype=numpy.float32)
+        probability[0, 0, 15:25, 50:150] = 0.9  # Kern einer Textzeile: 100 × 10 Pixel.
+        return default_transformation_registry().run(
+            probability, [{"type": "mask.textRegions", "parameters": parameters}], TransformationContext(numpy),
+        ).value
+
+    def test_expands_each_side_by_area_times_ratio_over_perimeter(self):
+        [region] = self.regions(unclipRatio=1.6)
+
+        # 100 × 10 × 1,6 / 220 ≈ 7,27 Pixel je Seite, nach außen gerundet.
+        self.assertEqual(region["bounds"], {"left": 42, "top": 7, "width": 116, "height": 26})
+        self.assertAlmostEqual(region["score"], 0.9, places=6)
+
+    def test_keeps_the_core_without_unclip_and_stays_inside_the_mask(self):
+        [plain] = self.regions()
+        [wide] = self.regions(unclipRatio=20)
+
+        self.assertEqual(plain["bounds"], {"left": 50, "top": 15, "width": 100, "height": 10})
+        self.assertEqual(wide["bounds"], {"left": 0, "top": 0, "width": 200, "height": 40})
 
 
 if __name__ == "__main__":

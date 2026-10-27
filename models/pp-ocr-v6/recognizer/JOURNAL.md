@@ -2,7 +2,7 @@
 
 > Journal des Katalogmodells; Manifest: [`model.json`](./model.json).
 
-**Status:** geprüft
+**Status:** veröffentlicht
 
 ## Steckbrief
 
@@ -43,10 +43,14 @@ ID `pp-ocr-v6-text-recognizer-small`, Version `rapidocr-3.9.2`, Aufgabe
 ## Prüfung
 
 - 2026-10-26: Vertragsprüfung, ONNX-Prüfung und Trockenlauf erfolgreich.
-- Fachlicher Referenztest gegen RapidOCR: offen.
+- 2026-10-27: fachlicher Referenztest zusammen mit dem Detektor bestanden
+  ([`test_reference_pp_ocr_v6.py`](../../../local-runtime/python/tests/test_reference_pp_ocr_v6.py)):
+  Text aller 8 Zeilen ohne Leerzeichen identisch mit RapidOCR und dem wahren Text.
 
 ## Grenzen
 
+- Leerzeichen zwischen eng stehenden Wörtern setzt das Modell nicht immer
+  („26.10.202614:32“), auch bei RapidOCR.
 - Ohne Einschränkung des Alphabets: Verwechslungen mit ähnlichen Zeichen anderer
   Schriften sind möglich (vgl. `allowedCharacters` bei PP-OCRv5 Server).
 - Titel und Beschreibung sind deutsch statt englisch mit Übersetzung (offen).
@@ -55,3 +59,9 @@ ID `pp-ocr-v6-text-recognizer-small`, Version `rapidocr-3.9.2`, Aufgabe
 
 - Vor 2026-10-26 — Manifest und Artefakt angelegt (nicht dokumentiert).
 - 2026-10-26 — `task` und Tags ergänzt; Journal nachgetragen; Trockenlauf erfolgreich.
+- 2026-10-27 — Referenztest mit dem Detektor bestanden; Vertrag unverändert.
+- 2026-10-27 — Veröffentlicht als `pp-ocr-v6-text-recognizer-small@rapidocr-3.9.2` (Projekt
+  `syscat-90bff`, Garage-Bucket `web-novooa-models.arif-it.de`):
+  `npm --prefix functions run models:publish -- --project syscat-90bff --manifest <repo>/models/pp-ocr-v6/recognizer/model.json --artifact <repo>/models/pp-ocr-v6/recognizer/model.onnx`.
+  Geprüft: Katalogeintrag in Firestore, anonymer Abruf über den
+  Website-Endpunkt (21 234 383 Bytes, SHA-256 wie im Eintrag).

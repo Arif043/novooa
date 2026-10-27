@@ -6,10 +6,9 @@ Gehört zu: [Modellkatalog](../index/modellkatalog.md) · [ML-Modelle](../index/
 
 ## Ablage
 
-| Manifest | Journal-Eintrag |
-| --- | --- |
-| `models/<modell>/model.json` | `models/<modell>/JOURNAL.md` |
-| `local-runtime/system-models/<modell>.json` | `local-runtime/system-models/<modell>.journal.md` |
+Jedes Systemmodell hat einen Ordner `models/<modell>/` mit Manifest
+`model.json`, Journal-Eintrag `JOURNAL.md` und, wo eingecheckt, den
+Modelldateien.
 
 Das Manifest wird nicht ins Journal kopiert; der Eintrag verweist darauf und
 hält fest, welche Version veröffentlicht wurde. Jede Zeile der Übersicht im
@@ -29,7 +28,9 @@ hält fest, welche Version veröffentlicht wurde. Jede Zeile der Übersicht im
    beschreiben; Abweichungen im Eintrag nennen.
 4. **Prüfung:** Trockenlauf mit `models:install-local … --dry-run`
    (Vertrag, ONNX, Tags) und fachlicher Referenztest: Referenzeingabe,
-   erwartete Ausgabe der Originalimplementierung, unsere Ausgabe. Ergebnis
+   erwartete Ausgabe der Originalimplementierung, unsere Ausgabe — als
+   dauerhafter Test nach dem Muster in den
+   [Regeln für Transformationen](./regeln-fuer-transformationen.md). Ergebnis
    und Datum eintragen, Status `geprüft`.
 5. **Veröffentlichen:** neue Tags mit `models:tags:publish`, dann
    [`models:publish`](./modelle-veroeffentlichen.md); Befehl, Datum und

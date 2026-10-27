@@ -1,0 +1,91 @@
+{
+  "generator": "rapidocr 3.10.0",
+  "models": {
+    "detector": "090f04abcd9d9a7498bc4ebf677e4cb9bdce1fe4197ddb7e529f1ef44e1ff94f",
+    "recognizer": "6f327246b50388f3c176ae304bd95767ea6dc0c9ae92153ef8cbe210b3c14884"
+  },
+  "truth": [
+    "Bäckerei Müller GmbH",
+    "Hauptstraße 12, 80331 München",
+    "Datum: 26.10.2026 14:32",
+    "2x Brötchen 1,20 €",
+    "1x Kaffee groß 3,40 €",
+    "Summe EUR 4,60",
+    "MwSt 7% 0,30",
+    "Vielen Dank!"
+  ],
+  "lines": [
+    {
+      "bounds": {
+        "left": 39.0,
+        "top": 33.0,
+        "width": 286.0,
+        "height": 30.0
+      },
+      "text": "Bäckerei Müller GmbH"
+    },
+    {
+      "bounds": {
+        "left": 37.0,
+        "top": 83.0,
+        "width": 422.0,
+        "height": 33.0
+      },
+      "text": "Hauptstraße 12, 80331 München"
+    },
+    {
+      "bounds": {
+        "left": 39.0,
+        "top": 138.0,
+        "width": 325.0,
+        "height": 28.0
+      },
+      "text": "Datum: 26.10.202614:32"
+    },
+    {
+      "bounds": {
+        "left": 38.0,
+        "top": 189.0,
+        "width": 245.0,
+        "height": 30.0
+      },
+      "text": "2x Brötchen 1,20 €"
+    },
+    {
+      "bounds": {
+        "left": 39.0,
+        "top": 239.0,
+        "width": 279.0,
+        "height": 34.0
+      },
+      "text": "1x Kaffee groß 3,40 €"
+    },
+    {
+      "bounds": {
+        "left": 38.0,
+        "top": 293.0,
+        "width": 230.0,
+        "height": 30.0
+      },
+      "text": "Summe EUR 4,60"
+    },
+    {
+      "bounds": {
+        "left": 39.0,
+        "top": 345.0,
+        "width": 184.0,
+        "height": 30.0
+      },
+      "text": "MwSt 7%0,30"
+    },
+    {
+      "bounds": {
+        "left": 37.0,
+        "top": 397.0,
+        "width": 164.0,
+        "height": 29.0
+      },
+      "text": "Vielen Dank!"
+    }
+  ]
+}

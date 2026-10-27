@@ -166,5 +166,43 @@ class SizeTensorTest(unittest.TestCase):
             self.size_tensor(["scaleX"], steps)
 
 
+
+class ResizeWithinTest(unittest.TestCase):
+    """Referenz: RapidOCR `resize_image_within_bounds` und `limit_type: min` — erst längere Seite begrenzen, dann kürzere anheben."""
+
+    def size_after(self, size, **parameters):
+        ctx = context()
+        image = Image.new("RGB", size)
+        start_geometry(ctx, image)
+        result = REGISTRY.run(image, [{"type": "image.resizeWithin", "parameters": parameters}], ctx).value
+        return result.size, ctx.metadata["geometry"]
+
+    def test_raises_a_short_side_below_the_minimum(self):
+        size, geometry = self.size_after((640, 476), minSide=736)
+
+        self.assertEqual(size, (990, 736))
+        assert_geometry(self, geometry, (990 / 640, 736 / 476), (0, 0), (640, 476))
+
+    def test_lowers_a_long_side_above_the_maximum(self):
+        size, _ = self.size_after((4000, 3000), minSide=736, maxSide=2000)
+
+        self.assertEqual(size, (2000, 1500))
+
+    def test_keeps_an_image_within_the_bounds(self):
+        size, geometry = self.size_after((1200, 900), minSide=736, maxSide=2000)
+
+        self.assertEqual(size, (1200, 900))
+        assert_geometry(self, geometry, (1, 1), (0, 0), (1200, 900))
+
+    def test_the_minimum_wins_for_extreme_aspect_ratios(self):
+        size, _ = self.size_after((4000, 100), minSide=736, maxSide=2000)
+
+        self.assertEqual(size[1], 736)
+
+    def test_needs_at_least_one_bound(self):
+        with self.assertRaisesRegex(ValueError, "minSide, maxSide oder beides"):
+            self.size_after((10, 10))
+
+
 if __name__ == "__main__":
     unittest.main()

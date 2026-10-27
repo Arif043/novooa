@@ -19,10 +19,8 @@ _REPOSITORY = Path(__file__).resolve().parents[3]
 
 
 def shipped_model_manifests():
-    """Alle mitgelieferten Manifeste: Systemmodelle der Runtime und Katalogmodelle unter `models/`."""
-    system_models = (_REPOSITORY / "local-runtime" / "system-models").glob("*.json")
-    catalog_models = (_REPOSITORY / "models").rglob("model.json")
-    return sorted([*system_models, *catalog_models])
+    """Alle mitgelieferten Manifeste der Systemmodelle: `models/**/model.json`."""
+    return sorted((_REPOSITORY / "models").rglob("model.json"))
 
 
 def context(**options):

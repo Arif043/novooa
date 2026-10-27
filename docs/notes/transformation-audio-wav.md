@@ -17,7 +17,7 @@ Hinweis: `sampleRate`, optional `fileName` (Standard `sprach-ausgabe.wav`)
 
 ## Beispiel
 
-Aus `local-runtime/system-models/piper-de-eva-x-low.json`:
+Aus `models/piper-de-eva-x-low/model.json`:
 
 ```json
 {"type": "audio.wav", "result": "audio", "parameters": {"sampleRate": 16000, "fileName": "piper-de-eva.wav"}}
