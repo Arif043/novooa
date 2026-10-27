@@ -78,6 +78,8 @@ dependencies:
     path: packages/novooa_runtime_client
 
 dev_dependencies:
+  # Datumsdaten für Unit-Tests ohne flutter_localizations; Version gibt das Flutter-SDK vor.
+  intl: any
   flutter_test:
     sdk: flutter
 

@@ -122,7 +122,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(collections.calls, ['delete Kunden']);
-    expect(find.text('Datensammlungen'), findsOneWidget);
+    expect(
+      find.text('Deine Daten. Gesammelt von deinen Aufgaben.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('legt in der Uebersicht eine Sammlung an und prueft den Namen', (

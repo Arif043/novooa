@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import 'database_cell_value.dart';
 import 'database_sheet_options.dart';
 import 'database_sheet_rows.dart';
 
@@ -14,6 +15,7 @@ class DatabaseSheet extends StatefulWidget {
     required this.columns,
     required this.rows,
     required this.onOpen,
+    this.columnKinds = const [],
     this.trailingBuilder,
     this.selection,
     this.sort,
@@ -21,7 +23,10 @@ class DatabaseSheet extends StatefulWidget {
   });
 
   final List<String> columns;
-  final List<List<String>> rows;
+  final List<List<DatabaseCellValue>> rows;
+
+  /// Art je Spalte; bestimmt das Symbol im Spaltenkopf.
+  final List<DatabaseValueKind> columnKinds;
   final ValueChanged<int> onOpen;
   final Widget Function(BuildContext context, int row)? trailingBuilder;
   final DatabaseSheetSelection? selection;
@@ -92,11 +97,12 @@ class _DatabaseSheetState extends State<DatabaseSheet> {
     return Column(
       children: [
         SizedBox(
-          height: math.max(72.0, 44 * scale + 20),
+          height: math.max(56.0, 32 * scale + 24),
           child: ColoredBox(
             color: colors.surfaceContainerLow,
             child: DatabaseSheetHeader(
               columns: widget.columns,
+              kinds: widget.columnKinds,
               cellWidth: cellWidth,
               selection: widget.selection,
               sort: widget.sort,

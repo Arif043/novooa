@@ -835,7 +835,23 @@
     "db_column_collection": "Collection",
     "db_column_records": "Records",
     "db_cell_empty": "Empty",
-    "db_cell_structured": "Structured data"
+    "db_cell_structured": "Structured data",
+    "db_page_title": "Database",
+    "db_page_subtitle": "Your data. Collected by your tasks.",
+    "db_collections_one": "1 collection",
+    "db_collections_other": "{count} collections",
+    "db_records_one": "1 record",
+    "db_records_other": "{count} records",
+    "db_search_collections": "Search collections",
+    "db_no_fields": "No fields yet",
+    "db_no_collection_match": "No collection matches “{query}”.",
+    "db_changed_just_now": "changed just now",
+    "db_changed_minutes": "changed {count} min ago",
+    "db_changed_hours": "changed {count} h ago",
+    "db_changed_days": "changed {count} days ago",
+    "db_changed_on": "changed on {date}",
+    "db_value_true": "Yes",
+    "db_value_false": "No"
   },
   "machine_learning": {
     "model_import": {

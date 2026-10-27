@@ -835,7 +835,23 @@
     "db_column_collection": "Datensammlung",
     "db_column_records": "Datensätze",
     "db_cell_empty": "Leer",
-    "db_cell_structured": "Strukturierte Daten"
+    "db_cell_structured": "Strukturierte Daten",
+    "db_page_title": "Datenbank",
+    "db_page_subtitle": "Deine Daten. Gesammelt von deinen Aufgaben.",
+    "db_collections_one": "1 Sammlung",
+    "db_collections_other": "{count} Sammlungen",
+    "db_records_one": "1 Datensatz",
+    "db_records_other": "{count} Datensätze",
+    "db_search_collections": "Sammlungen durchsuchen",
+    "db_no_fields": "Noch keine Felder",
+    "db_no_collection_match": "Keine Sammlung passt zu „{query}“.",
+    "db_changed_just_now": "gerade geändert",
+    "db_changed_minutes": "geändert vor {count} Min.",
+    "db_changed_hours": "geändert vor {count} Std.",
+    "db_changed_days": "geändert vor {count} Tagen",
+    "db_changed_on": "geändert am {date}",
+    "db_value_true": "Ja",
+    "db_value_false": "Nein"
   },
   "machine_learning": {
     "model_import": {

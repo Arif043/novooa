@@ -4,11 +4,15 @@ import '../../domain/entities/data_record.dart';
 /// Liest die JSON-Antworten der Daten-Routen; jede Abweichung ist ein [FormatException].
 DataCollection dataCollectionFromJson(Object? value) {
   final json = jsonMap(value);
+  final changedAt = json['changedAt'];
   return DataCollection(
     name: jsonString(json, 'name'),
     documentCount: jsonInt(json, 'documentCount'),
     createdAt: DateTime.parse(jsonString(json, 'createdAt')),
     updatedAt: DateTime.parse(jsonString(json, 'updatedAt')),
+    // Ältere Runtimes liefern weder Felder noch letzte Änderung.
+    fields: [...?(json['fields'] as List?)?.whereType<String>()],
+    changedAt: changedAt is String ? DateTime.tryParse(changedAt) : null,
   );
 }
 

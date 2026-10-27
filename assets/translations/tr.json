@@ -835,7 +835,23 @@
     "db_column_collection": "Koleksiyon",
     "db_column_records": "Kayıtlar",
     "db_cell_empty": "Boş",
-    "db_cell_structured": "Yapılandırılmış veri"
+    "db_cell_structured": "Yapılandırılmış veri",
+    "db_page_title": "Veritabanı",
+    "db_page_subtitle": "Verilerin. Görevlerin tarafından toplandı.",
+    "db_collections_one": "1 koleksiyon",
+    "db_collections_other": "{count} koleksiyon",
+    "db_records_one": "1 kayıt",
+    "db_records_other": "{count} kayıt",
+    "db_search_collections": "Koleksiyonlarda ara",
+    "db_no_fields": "Henüz alan yok",
+    "db_no_collection_match": "“{query}” ile eşleşen koleksiyon yok.",
+    "db_changed_just_now": "az önce değişti",
+    "db_changed_minutes": "{count} dk önce değişti",
+    "db_changed_hours": "{count} sa önce değişti",
+    "db_changed_days": "{count} gün önce değişti",
+    "db_changed_on": "{date} tarihinde değişti",
+    "db_value_true": "Evet",
+    "db_value_false": "Hayır"
   },
   "machine_learning": {
     "model_import": {

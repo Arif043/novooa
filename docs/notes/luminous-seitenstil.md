@@ -1,6 +1,6 @@
 # Luminous-Seitenstil
 
-> Listenseiten wie Zeitplan, Dateien, Fähigkeiten und Mitarbeiter teilen Hintergrund, Spaltenbreite, Ränder und Buttonstil über `LuminousPageTheme` und `PageInsets`.
+> Listenseiten wie Zeitplan, Datenbank, Dateien, Fähigkeiten und Mitarbeiter teilen Hintergrund, Spaltenbreite, Ränder und Buttonstil über `LuminousPageTheme` und `PageInsets`.
 
 Gehört zu: [Zeitplan](../index/zeitplan.md)
 
@@ -13,11 +13,11 @@ Gehört zu: [Zeitplan](../index/zeitplan.md)
 - Kopfzeile: Titel links, Aktionen horizontal rechts in einem `Wrap`, der bei
   wenig Platz umbricht; darunter Untertitel und optional eine Zusammenfassung.
   Gemeinsam als `LuminousPageHeader` (`lib/core/widgets/luminous_page_header.dart`,
-  Zeitplan, Fähigkeiten, Mitarbeiter).
+  Zeitplan, Datenbank, Fähigkeiten, Mitarbeiter).
 - Einträge sind Karten mit Radius 20, Rahmen `outlineVariant` und 12 px
   Abstand: `LuminousCard` (optional antippbar), Kopf `LuminousCardHeading` mit
   getönter Symbolkachel `LuminousIconBadge` oder einem Avatar
-  (`lib/core/widgets/luminous_card.dart`, Zeitplan, Fähigkeiten, Mitarbeiter).
+  (`lib/core/widgets/luminous_card.dart`, Zeitplan, Datenbank, Fähigkeiten, Mitarbeiter).
 - Die obere Leiste der App zeigt auf diesen Seiten keinen Titel, nur Menü und
   Aktionen — der Titel steht schon groß im Kopf (`RootTab.hasPageHeader`).
 - Laden und Fehler unter dem Kopf: `LuminousStatusPlaceholder`

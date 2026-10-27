@@ -39,12 +39,3 @@ Future<void> deleteDatabaseRecord(
   );
   if (confirmed) await cubit.deleteRecord(record);
 }
-
-/// Anzeige eines Feldwerts in einer Zelle; Strukturen zeigt erst der Editor.
-String databaseCellText(Object? value) {
-  if (value == null) return LocaleKeys.ui_db_cell_empty.tr();
-  if (value is Map || value is List) {
-    return LocaleKeys.ui_db_cell_structured.tr();
-  }
-  return '$value';
-}

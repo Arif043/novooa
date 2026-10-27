@@ -33,6 +33,9 @@ test("creates, renames and deletes collections with conflicts reported as 409", 
     {name: "Kundschaft", count: 2});
   assert.equal(deleted?.statusCode, 204);
   assert.deepEqual(names(list?.body), ["Kundschaft"]);
+  const [kundschaft] = (list?.body as {items: Array<{fields: string[]; changedAt: string; updatedAt: string}>}).items;
+  assert.deepEqual(kundschaft?.fields, ["name", "umsatz"], "Feldvorschau aus den Datensätzen");
+  assert.ok(Date.parse(kundschaft.changedAt) >= Date.parse(kundschaft.updatedAt));
 });
 
 test("deletes chosen documents and clears a collection", async (t) => {

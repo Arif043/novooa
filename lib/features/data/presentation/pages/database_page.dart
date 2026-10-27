@@ -65,16 +65,7 @@ class DatabaseView extends StatelessWidget {
         ],
         child: ColoredBox(
           color: Theme.of(context).colorScheme.surfaceContainerLowest,
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.all(
-                MediaQuery.sizeOf(context).width < 600
-                    ? AppSpacing.md
-                    : AppSpacing.lg,
-              ),
-              child: const _Workspace(),
-            ),
-          ),
+          child: const SafeArea(child: _Workspace()),
         ),
       ),
     ),
@@ -90,8 +81,8 @@ class _Workspace extends StatelessWidget {
   const _Workspace();
 
   /// Unterhalb dieser Höhe scrollt die ganze Arbeitsfläche, damit nichts überläuft.
-  static const _minimumHeight = 540.0;
-  static const _scrolledHeight = 660.0;
+  static const _minimumHeight = 640.0;
+  static const _scrolledHeight = 760.0;
 
   @override
   Widget build(BuildContext context) {
@@ -99,17 +90,23 @@ class _Workspace extends StatelessWidget {
     final busy = context.select(
       (DatabaseActionsCubit cubit) => cubit.state.isBusy,
     );
-    final content = switch (state.status) {
-      DatabaseStatus.loading => const Center(
-        child: CupertinoActivityIndicator(),
+    // Die Übersicht scrollt selbst und setzt ihre Ränder wie der Zeitplan.
+    if (state.status == DatabaseStatus.collections) {
+      return DatabaseOverview(state: state, busy: busy);
+    }
+    final content = Padding(
+      padding: EdgeInsets.all(
+        MediaQuery.sizeOf(context).width < 600 ? AppSpacing.md : AppSpacing.lg,
       ),
-      DatabaseStatus.failure => DatabaseFailureState(
-        message: state.message ?? LocaleKeys.ui_db_load_failed.tr(),
-        onRetry: context.read<DatabaseCubit>().loadCollections,
-      ),
-      DatabaseStatus.collections => DatabaseOverview(state: state, busy: busy),
-      DatabaseStatus.records => DatabaseRecordsView(state: state, busy: busy),
-    };
+      child: switch (state.status) {
+        DatabaseStatus.failure => DatabaseFailureState(
+          message: state.message ?? LocaleKeys.ui_db_load_failed.tr(),
+          onRetry: context.read<DatabaseCubit>().loadCollections,
+        ),
+        DatabaseStatus.records => DatabaseRecordsView(state: state, busy: busy),
+        _ => const Center(child: CupertinoActivityIndicator()),
+      },
+    );
     // Große Schrift braucht mehr Höhe; darunter scrollt die ganze Arbeitsfläche.
     final scale = math.max(
       1.0,

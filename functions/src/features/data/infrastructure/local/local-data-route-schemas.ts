@@ -10,7 +10,14 @@ export type DataRoutesOptions = {store: DocumentStore};
 export const DocumentDto = Type.Object({id: Type.String(), data: JsonObject, createdAt: Type.String(), updatedAt: Type.String()});
 export const CollectionDto = Type.Object({
   name: Type.String(), documentCount: Type.Integer(), createdAt: Type.String(), updatedAt: Type.String(),
+  /** Felder der jüngsten Datensätze, alphabetisch — Vorschau in der Übersicht. */
+  fields: Type.Array(Type.String()),
+  /** Letzte Änderung an der Sammlung oder einem ihrer Datensätze. */
+  changedAt: Type.String(),
 });
+
+/** So viele jüngste Datensätze bestimmen Feldvorschau und letzte Änderung einer Sammlung. */
+const collectionPreviewSize = 50;
 export const CollectionName = NonEmptyString({maxLength: 120});
 export const CollectionBody = Type.Object({name: CollectionName});
 export const DocumentFilters = Type.Optional(Type.Array(Type.Object({
@@ -31,10 +38,15 @@ export const collectionMissing = {error: "Die Datensammlung wurde nicht gefunden
 export const collectionNameTaken = {error: "Eine Datensammlung mit diesem Namen existiert bereits."};
 
 export async function collectionDto(store: DocumentStore, collection: DocumentCollection) {
+  const scope = {teamId: collection.teamId, collectionId: collection.id};
+  const recent = await store.findMany({...scope, limit: collectionPreviewSize});
+  const newest = Math.max(collection.updatedAt.getTime(), recent[0]?.updatedAt.getTime() ?? 0);
   return {
     name: collection.displayName,
-    documentCount: await store.countDocuments({teamId: collection.teamId, collectionId: collection.id}),
+    documentCount: await store.countDocuments(scope),
     createdAt: collection.createdAt.toISOString(), updatedAt: collection.updatedAt.toISOString(),
+    fields: [...new Set(recent.flatMap((document) => Object.keys(document.data)))].sort(),
+    changedAt: new Date(newest).toISOString(),
   };
 }
 

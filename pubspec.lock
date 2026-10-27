@@ -622,7 +622,7 @@ packages:
     source: hosted
     version: "0.2.2"
   intl:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: intl
       sha256: "1ca20c894b1717686a2319b8548763d812bc0aabdac580420a44c5178c57a867"
@@ -787,7 +787,7 @@ packages:
       path: "packages/novooa_runtime_client"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   objective_c:
     dependency: transitive
     description:

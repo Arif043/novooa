@@ -173,7 +173,8 @@ void main() {
           await tester.ensureVisible(find.text('Filter hinzufügen'));
           await tester.tap(find.text('Filter hinzufügen'));
           await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
+          final error = tester.takeException();
+          expect(error, isNull, reason: '$size dark=$dark: $error');
           await tester.pumpWidget(const SizedBox());
           await cubit.close();
         }

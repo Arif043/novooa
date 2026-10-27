@@ -14,7 +14,12 @@ List<RootTab> rootTabs() => [
     path: '/schedule',
     hasPageHeader: true,
   ),
-  RootTab(title: 'Datenbank', icon: CupertinoIcons.table, path: '/database'),
+  RootTab(
+    title: 'Datenbank',
+    icon: CupertinoIcons.table,
+    path: '/database',
+    hasPageHeader: true,
+  ),
   RootTab(
     title: 'Dateien',
     icon: CupertinoIcons.folder,

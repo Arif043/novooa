@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/data_sort.dart';
 import '../cubits/database_cubit.dart';
 import '../cubits/database_state.dart';
+import 'database_cell_value.dart';
 import 'database_record_actions.dart';
 import 'database_sheet.dart';
 import 'database_sheet_options.dart';
@@ -37,16 +38,23 @@ class DatabaseRecordsSheet extends StatelessWidget {
           ..sort();
     final cubit = context.read<DatabaseCubit>();
     final records = state.records;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     return DatabaseSheet(
       key: ValueKey(state.collection!.name),
       columns: fields.isEmpty ? [LocaleKeys.ui_db_import_fields.tr()] : fields,
+      columnKinds: [
+        for (final field in fields)
+          DatabaseValueKind.ofColumn(
+            records.map((record) => record.fields[field]),
+          ),
+      ],
       rows: [
         for (final record in records)
           fields.isEmpty
-              ? [LocaleKeys.ui_db_cell_empty.tr()]
+              ? const [DatabaseCellValue('—', DatabaseValueKind.empty)]
               : [
                   for (final field in fields)
-                    databaseCellText(record.fields[field]),
+                    DatabaseCellValue.of(record.fields[field], locale),
                 ],
       ],
       enabled: enabled,
