@@ -16,7 +16,8 @@ Route `/knowledge-base`, Drawer-Label **Wissensbasis**, Designsystem
 - Erfolgreiches Speichern meldet keine Snackbar; nur Fehler erscheinen
   zusätzlich als Snackbar.
 - **Rechts:** Eigenschaften, Speicherstatus, verlinkte Notizen, Backlinks.
-- Änderungen speichert ein Debounce automatisch; kein Speichern-Button.
+- Änderungen speichert ein Debounce automatisch 2 Sekunden nach der letzten
+  Eingabe (`KnowledgeBaseCubit.saveDelay`); kein Speichern-Button.
 - Kleine Displays oder große Schrift: Einspaltenansicht mit „Alle Notizen“;
   die Symbolknöpfe passen auch dort, ein Auswahlfeld ist nicht nötig.
 - Löschen verlangt eine Bestätigung.

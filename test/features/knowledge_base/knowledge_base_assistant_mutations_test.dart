@@ -78,8 +78,9 @@ void main() {
     cubit.updateContent('Neuer Inhalt');
     expect(cubit.state.isSaving, isTrue);
 
-    // Speichern ist um 650 ms entprellt.
-    await Future<void>.delayed(const Duration(milliseconds: 700));
+    await Future<void>.delayed(
+      KnowledgeBaseCubit.saveDelay + const Duration(milliseconds: 50),
+    );
 
     expect(cubit.state.isSaving, isFalse);
     expect(cubit.state.message, isNull);

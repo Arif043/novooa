@@ -130,9 +130,12 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     _scheduleSave(note);
   }
 
+  /// Wartezeit nach der letzten Eingabe, bevor automatisch gespeichert wird.
+  static const saveDelay = Duration(seconds: 2);
+
   void _scheduleSave(KnowledgeNote note) {
     _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 650), () {
+    _saveDebounce = Timer(saveDelay, () {
       unawaited(_save(note));
     });
   }
