@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
   const RootAppBar({
     super.key,
-    required this.title,
+    this.title,
     required this.onMenuPressed,
     this.actions,
   });
 
-  final Widget title;
+  final Widget? title;
   final VoidCallback onMenuPressed;
   final List<Widget>? actions;
 

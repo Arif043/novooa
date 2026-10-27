@@ -105,7 +105,9 @@ class _RootPageState extends State<RootPage> {
             usesTaskBuilderSideRail: usesTaskBuilderSideRail,
             usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
             content: content,
-            title: _shellController.title ?? Text(selectedTab.title),
+            title:
+                _shellController.title ??
+                (selectedTab.hasPageHeader ? null : Text(selectedTab.title)),
             onMenuPressed: _sideMenuController.openLeftMenu,
             menuWidthOfScreen: _menuWidthOfScreen(context),
             onNotificationPressed: _openNotificationDrawer,

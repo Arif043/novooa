@@ -18,6 +18,8 @@ Gehört zu: [Zeitplan](../index/zeitplan.md)
   Abstand: `LuminousCard` (optional antippbar), Kopf `LuminousCardHeading` mit
   getönter Symbolkachel `LuminousIconBadge` oder einem Avatar
   (`lib/core/widgets/luminous_card.dart`, Zeitplan, Fähigkeiten, Mitarbeiter).
+- Die obere Leiste der App zeigt auf diesen Seiten keinen Titel, nur Menü und
+  Aktionen — der Titel steht schon groß im Kopf (`RootTab.hasPageHeader`).
 - Laden und Fehler unter dem Kopf: `LuminousStatusPlaceholder`
   (`lib/core/widgets/luminous_status_placeholder.dart`).
 

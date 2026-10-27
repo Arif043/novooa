@@ -8,7 +8,7 @@ import 'root_app_bar.dart';
 class RootCenterPage extends StatelessWidget {
   const RootCenterPage({
     super.key,
-    required this.title,
+    this.title,
     required this.usesTaskBuilderSideRail,
     required this.usesKnowledgeBaseSideRail,
     required this.content,
@@ -17,7 +17,8 @@ class RootCenterPage extends StatelessWidget {
     required this.onNotificationPressed,
   });
 
-  final Widget title;
+  /// Fehlt bei Seiten mit eigenem Kopf; die Leiste zeigt dann nur Menü und Aktionen.
+  final Widget? title;
   final bool usesTaskBuilderSideRail;
   final bool usesKnowledgeBaseSideRail;
   final Widget content;
@@ -34,7 +35,7 @@ class RootCenterPage extends StatelessWidget {
 
   Widget _taskBuilderFrame() {
     return TaskBuilderShellFrame(
-      title: title,
+      title: title ?? const SizedBox.shrink(),
       onMenuPressed: onMenuPressed,
       menuWidthOfScreen: menuWidthOfScreen,
       child: content,
@@ -43,7 +44,7 @@ class RootCenterPage extends StatelessWidget {
 
   Widget _knowledgeBaseFrame() {
     return KnowledgeBaseShellFrame(
-      title: title,
+      title: title ?? const SizedBox.shrink(),
       onMenuPressed: onMenuPressed,
       menuWidthOfScreen: menuWidthOfScreen,
       child: content,
