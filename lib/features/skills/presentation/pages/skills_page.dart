@@ -8,13 +8,13 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/luminous_page_theme.dart';
 import 'package:syscat2/core/widgets/luminous_page_header.dart';
+import 'package:syscat2/core/widgets/luminous_status_placeholder.dart';
 
 import '../cubits/skills_cubit.dart';
 import '../cubits/skills_state.dart';
 import '../widgets/skill_card.dart';
 import '../widgets/skill_import_sheet.dart';
 import '../widgets/skills_empty_state.dart';
-import '../widgets/skills_status_placeholder.dart';
 
 /// Übersicht der Fähigkeiten (Skills). Das Skills-Verzeichnis der Anwendung ist
 /// die Quelle der Wahrheit: Die Seite zeigt, was darin liegt, und bietet den
@@ -121,9 +121,10 @@ class _SkillsBody extends StatelessWidget {
         hasScrollBody: false,
         child: Padding(
           padding: EdgeInsets.all(insets.gutter),
-          child: SkillsStatusPlaceholder(
+          child: LuminousStatusPlaceholder(
             loading: state.status == SkillsStatus.loading,
             message: state.message,
+            fallbackMessage: LocaleKeys.ui_skills_load_failed.tr(),
             onRetry: context.read<SkillsCubit>().load,
           ),
         ),

@@ -1,20 +1,24 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
-/// Laden oder Fehler unter dem Seitenkopf; der Fehler bietet „Erneut versuchen“.
-class SkillsStatusPlaceholder extends StatelessWidget {
-  const SkillsStatusPlaceholder({
+/// Laden oder Fehler unter dem Kopf einer Luminous-Listenseite; der Fehler bietet „Erneut versuchen“.
+class LuminousStatusPlaceholder extends StatelessWidget {
+  const LuminousStatusPlaceholder({
     super.key,
     required this.loading,
     required this.onRetry,
+    required this.fallbackMessage,
     this.message,
   });
 
   final bool loading;
   final String? message;
+
+  /// Gezeigt, wenn der Fehler keine eigene Meldung mitbringt.
+  final String fallbackMessage;
   final VoidCallback onRetry;
 
   @override
@@ -32,7 +36,7 @@ class SkillsStatusPlaceholder extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            message ?? LocaleKeys.ui_skills_load_failed.tr(),
+            message ?? fallbackMessage,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

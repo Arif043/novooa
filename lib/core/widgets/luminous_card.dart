@@ -2,25 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
 
-/// Karte der Luminous-Listenseiten (Zeitplan, Fähigkeiten): heller Grund, feiner Rahmen,
-/// großzügiger Innenabstand.
+/// Karte der Luminous-Listenseiten (Zeitplan, Fähigkeiten, Mitarbeiter): heller Grund, feiner
+/// Rahmen, großzügiger Innenabstand. Mit [onTap] ist die ganze Karte antippbar.
 class LuminousCard extends StatelessWidget {
-  const LuminousCard({super.key, required this.child});
+  const LuminousCard({super.key, required this.child, this.onTap});
 
   final Widget child;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.outlineVariant),
+    // Material statt DecoratedBox, damit die Tipp-Welle über dem Kartengrund sichtbar ist.
+    return Material(
+      color: colors.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: colors.outlineVariant),
         borderRadius: BorderRadius.circular(AppSpacing.gutter),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: child,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: child,
+        ),
       ),
     );
   }
@@ -50,17 +56,18 @@ class LuminousIconBadge extends StatelessWidget {
   }
 }
 
-/// Kopf einer Karte: Symbol, Titel und Untertitel nebeneinander.
+/// Kopf einer Karte: [leading] (meist [LuminousIconBadge], bei Mitarbeitern ihr Avatar),
+/// Titel und Untertitel nebeneinander.
 class LuminousCardHeading extends StatelessWidget {
   const LuminousCardHeading({
     super.key,
-    required this.icon,
+    required this.leading,
     required this.title,
     required this.subtitle,
     this.subtitleMaxLines,
   });
 
-  final IconData icon;
+  final Widget leading;
   final String title;
   final String subtitle;
   final int? subtitleMaxLines;
@@ -71,7 +78,7 @@ class LuminousCardHeading extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LuminousIconBadge(icon: icon),
+        leading,
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(

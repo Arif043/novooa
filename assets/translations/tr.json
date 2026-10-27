@@ -748,7 +748,19 @@
     "skill_files_other": "{count} dosya",
     "skill_delete_tooltip": "“{name}” yeteneğini sil",
     "skill_delete_title": "Yetenek silinsin mi?",
-    "skill_delete_body": "“{name}” klasörü tüm dosyalarıyla birlikte kalıcı olarak silinecek."
+    "skill_delete_body": "“{name}” klasörü tüm dosyalarıyla birlikte kalıcı olarak silinecek.",
+    "employees_page_title": "Çalışanlar",
+    "employees_page_subtitle": "İstem blokların için uzmanlar.",
+    "employees_count_one": "1 çalışan",
+    "employees_count_other": "{count} çalışan",
+    "employees_create": "Çalışan ekle",
+    "employees_empty_title": "Henüz çalışan yok",
+    "employees_empty_body": "Bir çalışan ekle ve onu bir istem bloğuna ata: Kısıtı sistem istemi olur, yeteneklerini blok otomatik olarak alır.",
+    "employee_skills_none": "Yetenek yok",
+    "employee_edit_tooltip": "“{name}” çalışanını düzenle",
+    "employee_delete_tooltip": "“{name}” çalışanını sil",
+    "employee_delete_title": "Çalışan silinsin mi?",
+    "employee_delete_body": "“{name}” kaldırılacak. Bu çalışanı kullanan bloklar, başka bir çalışan seçene kadar bir sonraki çalıştırmada bir mesajla durur."
   },
   "machine_learning": {
     "model_import": {

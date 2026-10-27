@@ -116,7 +116,7 @@ class _TaskTriggerTileState extends State<TaskTriggerTile> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           LuminousCardHeading(
-            icon: _iconFor(trigger),
+            leading: LuminousIconBadge(icon: _iconFor(trigger)),
             title: trigger.taskTitle,
             subtitle: triggerLabel(trigger),
           ),

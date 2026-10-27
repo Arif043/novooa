@@ -748,7 +748,19 @@
     "skill_files_other": "{count} files",
     "skill_delete_tooltip": "Delete skill “{name}”",
     "skill_delete_title": "Delete skill?",
-    "skill_delete_body": "The folder “{name}” and all its files will be removed permanently."
+    "skill_delete_body": "The folder “{name}” and all its files will be removed permanently.",
+    "employees_page_title": "Employees",
+    "employees_page_subtitle": "Specialists for your prompt blocks.",
+    "employees_count_one": "1 employee",
+    "employees_count_other": "{count} employees",
+    "employees_create": "Add employee",
+    "employees_empty_title": "No employees yet",
+    "employees_empty_body": "Add an employee and assign it to a prompt block: its constraint becomes the system prompt, and the block gets its skills automatically.",
+    "employee_skills_none": "No skills",
+    "employee_edit_tooltip": "Edit employee “{name}”",
+    "employee_delete_tooltip": "Delete employee “{name}”",
+    "employee_delete_title": "Delete employee?",
+    "employee_delete_body": "“{name}” will be removed. Blocks that use this employee stop with a message on their next run until you choose a different employee."
   },
   "machine_learning": {
     "model_import": {

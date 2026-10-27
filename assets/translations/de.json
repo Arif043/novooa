@@ -748,7 +748,19 @@
     "skill_files_other": "{count} Dateien",
     "skill_delete_tooltip": "Fähigkeit „{name}“ löschen",
     "skill_delete_title": "Fähigkeit löschen?",
-    "skill_delete_body": "Der Ordner „{name}“ wird samt allen Dateien endgültig entfernt."
+    "skill_delete_body": "Der Ordner „{name}“ wird samt allen Dateien endgültig entfernt.",
+    "employees_page_title": "Mitarbeiter",
+    "employees_page_subtitle": "Spezialisten für deine Prompt-Bausteine.",
+    "employees_count_one": "1 Mitarbeiter",
+    "employees_count_other": "{count} Mitarbeiter",
+    "employees_create": "Mitarbeiter anlegen",
+    "employees_empty_title": "Noch keine Mitarbeiter",
+    "employees_empty_body": "Lege einen Mitarbeiter an und weise ihn einem Prompt-Baustein zu: Seine Rahmenbedingung wird zum System-Prompt, seine Fähigkeiten bekommt der Baustein automatisch.",
+    "employee_skills_none": "Keine Fähigkeiten",
+    "employee_edit_tooltip": "Mitarbeiter „{name}“ bearbeiten",
+    "employee_delete_tooltip": "Mitarbeiter „{name}“ löschen",
+    "employee_delete_title": "Mitarbeiter löschen?",
+    "employee_delete_body": "„{name}“ wird entfernt. Bausteine, die ihn verwenden, brechen beim nächsten Lauf mit einer Meldung ab, bis du einen anderen Mitarbeiter wählst."
   },
   "machine_learning": {
     "model_import": {

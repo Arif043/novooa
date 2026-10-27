@@ -25,7 +25,7 @@ class SkillCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           LuminousCardHeading(
-            icon: Icons.auto_awesome_outlined,
+            leading: const LuminousIconBadge(icon: Icons.auto_awesome_outlined),
             title: skill.name,
             subtitle: skill.description,
             subtitleMaxLines: 3,
