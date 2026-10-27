@@ -9,11 +9,13 @@ Route `/knowledge-base`, Drawer-Label **Wissensbasis**, Designsystem
 
 - **Links:** Notizliste mit Suche, Inhaltsvorschau, „Notiz erstellen“.
 - **Mitte:** Dokument mit „Schreiben“, „Lesen“, „Graph“ und sichtbarem
-  Speicherstatus.
+  Speicherstatus. Die Ansichten sind Symbolknöpfe links
+  (`KnowledgeBaseModeToolbar`, Bezeichnung im Tooltip, die gewählte getönt),
+  „Notiz löschen“ steht rechts.
 - **Rechts:** Eigenschaften, Speicherstatus, verlinkte Notizen, Backlinks.
 - Änderungen speichert ein Debounce automatisch; kein Speichern-Button.
 - Kleine Displays oder große Schrift: Einspaltenansicht mit „Alle Notizen“;
-  kompakte Auswahlfelder ersetzen die Segmentauswahl.
+  die Symbolknöpfe passen auch dort, ein Auswahlfeld ist nicht nötig.
 - Löschen verlangt eine Bestätigung.
 - Ohne Notizen: zentrierter Einstieg — Vorbild des
   [Musters für leere Zustände](./leerer-zustand-muster.md).

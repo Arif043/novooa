@@ -6,9 +6,8 @@ import '../cubits/knowledge_base_cubit.dart';
 import '../cubits/knowledge_base_state.dart';
 import 'knowledge_base_editor.dart';
 import 'knowledge_base_graph_view.dart';
+import 'knowledge_base_mode_toolbar.dart';
 import 'knowledge_markdown_preview.dart';
-
-enum KnowledgeBaseMainMode { editor, preview, graph }
 
 class KnowledgeBaseMainPanel extends StatefulWidget {
   const KnowledgeBaseMainPanel({super.key, required this.state});
@@ -32,77 +31,10 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      const labels = {
-                        KnowledgeBaseMainMode.editor: 'Schreiben',
-                        KnowledgeBaseMainMode.preview: 'Lesen',
-                        KnowledgeBaseMainMode.graph: 'Graph',
-                      };
-                      if (constraints.maxWidth < 420 ||
-                          MediaQuery.textScalerOf(context).scale(14) > 21) {
-                        return DropdownButtonFormField<KnowledgeBaseMainMode>(
-                          initialValue: _mode,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Ansicht',
-                          ),
-                          items: labels.entries
-                              .map(
-                                (entry) => DropdownMenuItem(
-                                  value: entry.key,
-                                  child: Text(entry.value),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value != null) setState(() => _mode = value);
-                          },
-                        );
-                      }
-                      return CupertinoSlidingSegmentedControl<
-                        KnowledgeBaseMainMode
-                      >(
-                        groupValue: _mode,
-                        backgroundColor: colors.surfaceContainerLow,
-                        thumbColor: colors.surface,
-                        children: labels.map(
-                          (key, value) => MapEntry(
-                            key,
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 8,
-                              ),
-                              child: Text(
-                                value,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: key == _mode
-                                          ? colors.primary
-                                          : colors.onSurfaceVariant,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        onValueChanged: (value) {
-                          if (value != null) setState(() => _mode = value);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'Notiz löschen',
-                  onPressed: _delete,
-                  icon: const Icon(CupertinoIcons.trash, size: 20),
-                ),
-              ],
+            child: KnowledgeBaseModeToolbar(
+              mode: _mode,
+              onModeChanged: (value) => setState(() => _mode = value),
+              onDelete: _delete,
             ),
           ),
           Divider(height: 1, color: colors.outlineVariant),

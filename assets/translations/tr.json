@@ -760,7 +760,12 @@
     "employee_edit_tooltip": "“{name}” çalışanını düzenle",
     "employee_delete_tooltip": "“{name}” çalışanını sil",
     "employee_delete_title": "Çalışan silinsin mi?",
-    "employee_delete_body": "“{name}” kaldırılacak. Bu çalışanı kullanan bloklar, başka bir çalışan seçene kadar bir sonraki çalıştırmada bir mesajla durur."
+    "employee_delete_body": "“{name}” kaldırılacak. Bu çalışanı kullanan bloklar, başka bir çalışan seçene kadar bir sonraki çalıştırmada bir mesajla durur.",
+    "knowledge_mode_write": "Yaz",
+    "knowledge_mode_read": "Oku",
+    "knowledge_mode_graph": "Grafik",
+    "knowledge_note_delete": "Notu sil",
+    "knowledge_views": "Not görünümü"
   },
   "machine_learning": {
     "model_import": {

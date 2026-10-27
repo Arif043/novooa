@@ -194,10 +194,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(cubit.state.selectedNote!.content, 'Neuer Inhalt');
       expect(find.text('Wird gespeichert …'), findsOneWidget);
-      await tester.tap(find.text('Lesen'));
+      await tester.tap(find.byTooltip('Lesen'));
       await tester.pumpAndSettle();
       expect(find.byType(KnowledgeMarkdownPreview), findsOneWidget);
-      await tester.tap(find.text('Graph'));
+      await tester.tap(find.byTooltip('Graph'));
       await tester.pumpAndSettle();
       expect(find.byType(KnowledgeBaseGraphView), findsOneWidget);
       await tester.tap(find.byTooltip('Notiz löschen'));

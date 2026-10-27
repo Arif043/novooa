@@ -760,7 +760,12 @@
     "employee_edit_tooltip": "Mitarbeiter „{name}“ bearbeiten",
     "employee_delete_tooltip": "Mitarbeiter „{name}“ löschen",
     "employee_delete_title": "Mitarbeiter löschen?",
-    "employee_delete_body": "„{name}“ wird entfernt. Bausteine, die ihn verwenden, brechen beim nächsten Lauf mit einer Meldung ab, bis du einen anderen Mitarbeiter wählst."
+    "employee_delete_body": "„{name}“ wird entfernt. Bausteine, die ihn verwenden, brechen beim nächsten Lauf mit einer Meldung ab, bis du einen anderen Mitarbeiter wählst.",
+    "knowledge_mode_write": "Schreiben",
+    "knowledge_mode_read": "Lesen",
+    "knowledge_mode_graph": "Graph",
+    "knowledge_note_delete": "Notiz löschen",
+    "knowledge_views": "Ansicht der Notiz"
   },
   "machine_learning": {
     "model_import": {

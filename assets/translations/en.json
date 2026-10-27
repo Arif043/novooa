@@ -760,7 +760,12 @@
     "employee_edit_tooltip": "Edit employee “{name}”",
     "employee_delete_tooltip": "Delete employee “{name}”",
     "employee_delete_title": "Delete employee?",
-    "employee_delete_body": "“{name}” will be removed. Blocks that use this employee stop with a message on their next run until you choose a different employee."
+    "employee_delete_body": "“{name}” will be removed. Blocks that use this employee stop with a message on their next run until you choose a different employee.",
+    "knowledge_mode_write": "Write",
+    "knowledge_mode_read": "Read",
+    "knowledge_mode_graph": "Graph",
+    "knowledge_note_delete": "Delete note",
+    "knowledge_views": "Note view"
   },
   "machine_learning": {
     "model_import": {
