@@ -14,6 +14,7 @@ import 'package:syscat2/features/knowledge_base/domain/usecases/restore_knowledg
 import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
+import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_state.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
@@ -69,6 +70,20 @@ void main() {
     await cubit.restoreSuggestedNote(note);
     expect(cubit.state.notes.single.id, note.id);
     expect(cubit.state.notes.single.content, 'Inhalt');
+  });
+
+  test('speichert automatisch ohne Erfolgsmeldung', () async {
+    final note = await cubit.createSuggestedNote(title: 'Notiz', content: '');
+    cubit.selectNote(note.id);
+    cubit.updateContent('Neuer Inhalt');
+    expect(cubit.state.isSaving, isTrue);
+
+    // Speichern ist um 650 ms entprellt.
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+
+    expect(cubit.state.isSaving, isFalse);
+    expect(cubit.state.message, isNull);
+    expect(cubit.state.status, KnowledgeBaseStatus.ready);
   });
 }
 

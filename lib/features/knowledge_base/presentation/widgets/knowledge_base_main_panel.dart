@@ -7,6 +7,7 @@ import '../cubits/knowledge_base_state.dart';
 import 'knowledge_base_editor.dart';
 import 'knowledge_base_graph_view.dart';
 import 'knowledge_base_mode_toolbar.dart';
+import 'knowledge_save_status_label.dart';
 import 'knowledge_markdown_preview.dart';
 
 class KnowledgeBaseMainPanel extends StatefulWidget {
@@ -35,6 +36,7 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
               mode: _mode,
               onModeChanged: (value) => setState(() => _mode = value),
               onDelete: _delete,
+              saveStatus: KnowledgeSaveStatus.of(widget.state),
             ),
           ),
           Divider(height: 1, color: colors.outlineVariant),

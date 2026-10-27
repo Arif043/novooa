@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
+import 'knowledge_save_status_label.dart';
+
 enum KnowledgeBaseMainMode { editor, preview, graph }
 
-/// Ansichten der Notiz als Symbolknöpfe links, Löschen rechts. Symbole statt Beschriftung
+/// Ansichten der Notiz als Symbolknöpfe links, daneben der Speicherstatus, Löschen rechts. Symbole statt Beschriftung
 /// passen auch in schmale Fenster; die Bezeichnung steht im Tooltip und für Screenreader.
 class KnowledgeBaseModeToolbar extends StatelessWidget {
   const KnowledgeBaseModeToolbar({
@@ -14,11 +16,13 @@ class KnowledgeBaseModeToolbar extends StatelessWidget {
     required this.mode,
     required this.onModeChanged,
     required this.onDelete,
+    required this.saveStatus,
   });
 
   final KnowledgeBaseMainMode mode;
   final ValueChanged<KnowledgeBaseMainMode> onModeChanged;
   final VoidCallback onDelete;
+  final KnowledgeSaveStatus saveStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +43,13 @@ class KnowledgeBaseModeToolbar extends StatelessWidget {
             ],
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: KnowledgeSaveStatusLabel(status: saveStatus),
+          ),
+        ),
         IconButton(
           tooltip: LocaleKeys.ui_knowledge_note_delete.tr(),
           onPressed: onDelete,

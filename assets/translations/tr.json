@@ -765,7 +765,10 @@
     "knowledge_mode_read": "Oku",
     "knowledge_mode_graph": "Grafik",
     "knowledge_note_delete": "Notu sil",
-    "knowledge_views": "Not görünümü"
+    "knowledge_views": "Not görünümü",
+    "knowledge_saving": "Kaydediliyor …",
+    "knowledge_saved": "Kaydedildi",
+    "knowledge_save_failed": "Kaydedilmedi"
   },
   "machine_learning": {
     "model_import": {

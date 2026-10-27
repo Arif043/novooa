@@ -714,6 +714,9 @@ abstract class  LocaleKeys {
   static const ui_knowledge_mode_graph = 'ui.knowledge_mode_graph';
   static const ui_knowledge_note_delete = 'ui.knowledge_note_delete';
   static const ui_knowledge_views = 'ui.knowledge_views';
+  static const ui_knowledge_saving = 'ui.knowledge_saving';
+  static const ui_knowledge_saved = 'ui.knowledge_saved';
+  static const ui_knowledge_save_failed = 'ui.knowledge_save_failed';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
   static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';

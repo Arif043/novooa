@@ -149,8 +149,10 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     );
     if (isClosed) return;
     noteOrFailure.when(
-      (_) =>
-          emit(state.copyWith(isSaving: false, message: 'Notiz gespeichert.')),
+      // Kein Hinweis bei Erfolg: Das Statuslabel neben den Ansichtsknöpfen zeigt es an.
+      (_) => emit(
+        state.copyWith(status: KnowledgeBaseStatus.ready, isSaving: false),
+      ),
       (failure) => _emitFailure(failure.kind),
     );
   }

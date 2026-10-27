@@ -765,7 +765,10 @@
     "knowledge_mode_read": "Read",
     "knowledge_mode_graph": "Graph",
     "knowledge_note_delete": "Delete note",
-    "knowledge_views": "Note view"
+    "knowledge_views": "Note view",
+    "knowledge_saving": "Saving …",
+    "knowledge_saved": "Saved",
+    "knowledge_save_failed": "Not saved"
   },
   "machine_learning": {
     "model_import": {

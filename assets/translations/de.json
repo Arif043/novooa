@@ -765,7 +765,10 @@
     "knowledge_mode_read": "Lesen",
     "knowledge_mode_graph": "Graph",
     "knowledge_note_delete": "Notiz löschen",
-    "knowledge_views": "Ansicht der Notiz"
+    "knowledge_views": "Ansicht der Notiz",
+    "knowledge_saving": "Speichert …",
+    "knowledge_saved": "Gespeichert",
+    "knowledge_save_failed": "Nicht gespeichert"
   },
   "machine_learning": {
     "model_import": {
