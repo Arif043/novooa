@@ -1,4 +1,6 @@
 import {
+  type DialogInputFieldType,
+  type DialogInputValue,
   validateDialogInputValues,
 } from "../entities/dialog-input.js";
 import {
@@ -56,13 +58,18 @@ async function dialogInputOutputs(
   const json: Record<string, unknown> = {};
   for (const field of interaction.fields) {
     const name = field.name.trim();
-    const output = field.type === "image"
-      ? await imageOutput(String(values[name]), files)
-      : primitiveNodeOutputValue(values[name]);
+    const output = await fieldOutput(field.type, values[name], files);
     outputs[name] = output;
     json[name] = output.value;
   }
   return {value: {type: "json", value: json}, ...outputs};
+}
+
+/** Ein Datumsfeld ist ein `datetime`-Wert, damit Bedingungen es als Kalendertag vergleichen; die Uhrzeit bleibt Text. */
+async function fieldOutput(type: DialogInputFieldType, value: DialogInputValue, files: FileLookup): Promise<NodeOutputValue> {
+  if (type === "image") return imageOutput(String(value), files);
+  if (type === "date") return {type: "datetime", value: String(value)};
+  return primitiveNodeOutputValue(value);
 }
 
 async function imageOutput(fileId: string, {teamId, teamFileStore}: FileLookup): Promise<NodeOutputValue> {

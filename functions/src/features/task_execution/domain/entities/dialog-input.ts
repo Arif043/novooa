@@ -7,7 +7,11 @@ export type DialogInputFieldType =
   | "boolean"
   | "radio"
   /** Ein Bild; der Wert ist die `fileId` einer hochgeladenen Team-Datei. */
-  | "image";
+  | "image"
+  /** Ein Kalendertag als `YYYY-MM-DD`, ohne Uhrzeit und Zeitzone. */
+  | "date"
+  /** Eine Uhrzeit als `HH:mm` (24 Stunden), ohne Datum. */
+  | "time";
 
 export type DialogInputField = {
   name: string;
@@ -65,6 +69,8 @@ function validateDialogInputValue(
     return numberValue(field, value, false);
   }
   if (field.type === "integer") return numberValue(field, value, true);
+  if (field.type === "date") return patternValue(field, value, isCalendarDate);
+  if (field.type === "time") return patternValue(field, value, isTimeOfDay);
   return textValue(field, value);
 }
 
@@ -89,6 +95,24 @@ function textValue(field: DialogInputField, value: unknown): string {
     throw invalidValue(field);
   }
   return value;
+}
+
+function patternValue(field: DialogInputField, value: unknown, isValid: (text: string) => boolean): string {
+  if (typeof value !== "string" || !isValid(value)) throw invalidValue(field);
+  return value;
+}
+
+/** Nur echte Kalendertage: `2026-02-30` passt zum Muster, existiert aber nicht. */
+function isCalendarDate(text: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (match === null) return false;
+  const [year, month, day] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function isTimeOfDay(text: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(text);
 }
 
 function needsOptions(field: DialogInputField): boolean {

@@ -76,6 +76,42 @@ test("eine Datei, die kein Bild ist, wird abgelehnt", async () => {
   );
 });
 
+test("a date field becomes a datetime value, a time field stays text", async () => {
+  const outputs = await responseOutputsForTaskRun(dateTimeResumeState(), "", {termin: "2026-10-28", uhrzeit: "09:30"}, "team-1", {} as never);
+
+  assert.deepEqual(outputs.termin, {type: "datetime", value: "2026-10-28"});
+  assert.deepEqual(outputs.uhrzeit, {type: "string", value: "09:30"});
+  assert.deepEqual(outputs.value, {type: "json", value: {termin: "2026-10-28", uhrzeit: "09:30"}});
+});
+
+for (const [termin, uhrzeit, invalid] of [
+  ["2026-02-30", "09:30", "termin"],
+  ["28.10.2026", "09:30", "termin"],
+  ["2026-10-28", "24:00", "uhrzeit"],
+  ["2026-10-28", "9:30", "uhrzeit"],
+] as const) {
+  test(`rejects ${termin} ${uhrzeit} as an invalid ${invalid}`, async () => {
+    await assert.rejects(
+      () => responseOutputsForTaskRun(dateTimeResumeState(), "", {termin, uhrzeit}, "team-1", {} as never),
+      new RegExp(`Ungültige Eingabe für "${invalid}"`),
+    );
+  });
+}
+
+function dateTimeResumeState(): TaskResumeState {
+  return {
+    nodeResults: [{
+      nodeId: "termin-formular", primitive: "dialogInput", status: "waitingForApproval", outputs: {},
+      interaction: {
+        kind: "dialogInput",
+        instruction: "Wann passt es?",
+        fields: [{name: "termin", type: "date", options: []}, {name: "uhrzeit", type: "time", options: []}],
+      },
+    }],
+    remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "termin-formular",
+  };
+}
+
 function dialogResumeState(): TaskResumeState {
   return {
     nodeResults: [{

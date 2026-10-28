@@ -851,7 +851,21 @@
     "db_changed_days": "{count} gün önce değişti",
     "db_changed_on": "{date} tarihinde değişti",
     "db_value_true": "Evet",
-    "db_value_false": "Hayır"
+    "db_value_false": "Hayır",
+    "feldtyp_text": "Metin",
+    "feldtyp_zahl": "Sayı",
+    "feldtyp_ganze_zahl": "Tam sayı",
+    "feldtyp_fliesskommazahl": "Ondalık sayı",
+    "feldtyp_auswahl": "Seçim",
+    "feldtyp_schalter": "Anahtar",
+    "feldtyp_radio_buttons": "Radyo düğmeleri",
+    "feldtyp_bild": "Görsel",
+    "feldtyp_datum": "Tarih",
+    "feldtyp_uhrzeit": "Saat",
+    "datum_auswaehlen": "Tarih seç",
+    "uhrzeit_auswaehlen": "Saat seç",
+    "bitte_ein_datum_waehlen": "Lütfen bir tarih seçin.",
+    "bitte_eine_uhrzeit_waehlen": "Lütfen bir saat seçin."
   },
   "machine_learning": {
     "model_import": {

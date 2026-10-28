@@ -97,6 +97,7 @@ NodeOutputType dialogFieldOutputType(DialogInputFieldType type) {
     DialogInputFieldType.decimal => NodeOutputType.number,
     DialogInputFieldType.boolean => NodeOutputType.boolean,
     DialogInputFieldType.image => NodeOutputType.media,
+    DialogInputFieldType.date => NodeOutputType.datetime,
     _ => NodeOutputType.string,
   };
 }

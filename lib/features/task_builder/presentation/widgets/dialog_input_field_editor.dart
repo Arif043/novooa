@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/node_config.dart';
+import 'dialog_input_field_type_label.dart';
 
 class DialogInputFieldEditor extends StatelessWidget {
   const DialogInputFieldEditor({
@@ -81,7 +82,10 @@ class _TypeField extends StatelessWidget {
       decoration: InputDecoration(labelText: LocaleKeys.ui_datentyp.tr()),
       items: [
         for (final type in DialogInputFieldType.values)
-          DropdownMenuItem(value: type, child: Text(type.label)),
+          DropdownMenuItem(
+            value: type,
+            child: Text(dialogInputFieldTypeLabel(type)),
+          ),
       ],
       onChanged: (type) {
         if (type == null) return;

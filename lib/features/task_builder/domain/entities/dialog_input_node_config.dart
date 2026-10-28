@@ -1,18 +1,20 @@
 part of 'node_config.dart';
 
 enum DialogInputFieldType {
-  string('Text'),
-  number('Zahl'),
-  integer('Ganze Zahl'),
-  decimal('Fließkommazahl'),
-  selection('Auswahl'),
-  boolean('Schalter'),
-  radio('Radio-Buttons'),
-  image('Bild');
+  string,
+  number,
+  integer,
+  decimal,
+  selection,
+  boolean,
+  radio,
+  image,
 
-  const DialogInputFieldType(this.label);
+  /// Kalendertag, gespeichert als `YYYY-MM-DD`.
+  date,
 
-  final String label;
+  /// Uhrzeit, gespeichert als `HH:mm`.
+  time;
 
   bool get needsOptions {
     return this == DialogInputFieldType.selection ||

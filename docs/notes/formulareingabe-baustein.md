@@ -29,6 +29,20 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   gespeicherte Aufgaben damit werden nicht umgewandelt und laufen erst wieder,
   wenn der Baustein durch ein Formular ersetzt ist.
 
+## Felder „Datum“ und „Uhrzeit“
+
+- Feldtypen `date` und `time`. Beim Ausfüllen gibt es kein Tippfeld, sondern
+  die Auswahl aus `adaptive_pickers.dart`: am Desktop Kalender bzw.
+  Uhrzeit-Dialog, auf dem Handy ein Drehrad im Bottom Sheet. Angezeigt wird
+  der Wert im Format der App-Sprache (`28.10.2026`, `09:30`).
+- Gesendet wird ohne Zeitzone: das Datum als `YYYY-MM-DD`, die Uhrzeit als
+  `HH:mm` (24 Stunden). Das Backend nimmt nur echte Kalendertage
+  (`2026-02-30` nicht) und gültige Uhrzeiten an.
+- Das Datum wird ein Wert vom Typ `datetime`, damit ein
+  [Bedingter Ablauf](./bedingter-ablauf-auswertung.md) es mit „ist am“, „ist
+  vor“ und „ist nach“ vergleicht (Mitternacht in der Zeitzone der Runtime).
+  Die Uhrzeit bleibt ein `string`, weil `datetime` einen Kalendertag braucht.
+
 ## Siehe auch
 
 - [Freigaben und Pausen](./freigaben-und-pausen.md)

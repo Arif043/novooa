@@ -172,6 +172,8 @@ export const dialogInputFieldTypeSchema = z.enum([
   "boolean",
   "radio",
   "image",
+  "date",
+  "time",
 ]);
 
 export const dialogInputFieldSchema = z.object({

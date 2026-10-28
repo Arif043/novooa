@@ -851,7 +851,21 @@
     "db_changed_days": "changed {count} days ago",
     "db_changed_on": "changed on {date}",
     "db_value_true": "Yes",
-    "db_value_false": "No"
+    "db_value_false": "No",
+    "feldtyp_text": "Text",
+    "feldtyp_zahl": "Number",
+    "feldtyp_ganze_zahl": "Integer",
+    "feldtyp_fliesskommazahl": "Decimal number",
+    "feldtyp_auswahl": "Selection",
+    "feldtyp_schalter": "Switch",
+    "feldtyp_radio_buttons": "Radio buttons",
+    "feldtyp_bild": "Image",
+    "feldtyp_datum": "Date",
+    "feldtyp_uhrzeit": "Time",
+    "datum_auswaehlen": "Pick a date",
+    "uhrzeit_auswaehlen": "Pick a time",
+    "bitte_ein_datum_waehlen": "Please pick a date.",
+    "bitte_eine_uhrzeit_waehlen": "Please pick a time."
   },
   "machine_learning": {
     "model_import": {

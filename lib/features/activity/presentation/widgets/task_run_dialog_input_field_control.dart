@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/entities/media_input_submission.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
+import 'task_run_dialog_input_date_time.dart';
 import 'task_run_dialog_input_image.dart';
 import 'task_run_dialog_input_radio.dart';
 
@@ -50,6 +51,16 @@ class TaskRunDialogInputFieldControl extends StatelessWidget {
       TaskRunDialogInputFieldType.image => TaskRunDialogInputImage(
         field: field,
         value: value as MediaInputSubmission?,
+        onValueChanged: onValueChanged,
+      ),
+      TaskRunDialogInputFieldType.date => TaskRunDialogInputDate(
+        field: field,
+        value: value as String?,
+        onValueChanged: onValueChanged,
+      ),
+      TaskRunDialogInputFieldType.time => TaskRunDialogInputTime(
+        field: field,
+        value: value as String?,
         onValueChanged: onValueChanged,
       ),
     };

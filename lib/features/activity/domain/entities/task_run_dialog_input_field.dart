@@ -8,7 +8,13 @@ enum TaskRunDialogInputFieldType {
   radio,
 
   /// Wert ist beim Absenden die `fileId` des hochgeladenen Bilds.
-  image;
+  image,
+
+  /// Wert ist ein Kalendertag als `YYYY-MM-DD`.
+  date,
+
+  /// Wert ist eine Uhrzeit als `HH:mm`.
+  time;
 
   static TaskRunDialogInputFieldType fromName(String value) {
     return values.firstWhere(

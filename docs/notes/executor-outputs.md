@@ -23,7 +23,7 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
-| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen und ohne `value`; ein Bildfeld liefert `media` |
+| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen und ohne `value`; ein Bildfeld liefert `media`, ein Datumsfeld `datetime` (`YYYY-MM-DD`), ein Uhrzeitfeld `string` (`HH:mm`) |
 | `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 | `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
