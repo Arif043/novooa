@@ -4,6 +4,7 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../domain/entities/file_version.dart';
+import '../../../../../core/widgets/ios_context_menu.dart';
 import '../../localization/file_display_texts.dart';
 
 /// Eine Version im Verlauf: Zeitpunkt, Größe samt Änderung zur Vorversion,
@@ -113,6 +114,8 @@ class _Title extends StatelessWidget {
   }
 }
 
+enum _VersionAction { download, restore }
+
 class _VersionMenu extends StatelessWidget {
   const _VersionMenu({
     required this.isCurrent,
@@ -126,26 +129,25 @@ class _VersionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MenuAnchor(
-      menuChildren: [
-        MenuItemButton(
-          leadingIcon: const Icon(Icons.download_outlined),
-          onPressed: onDownload,
-          child: Text(LocaleKeys.files_version_download.tr()),
+    return IosContextMenuButton<_VersionAction>(
+      tooltip: LocaleKeys.files_more_actions.tr(),
+      entries: [
+        IosContextMenuItem(
+          value: _VersionAction.download,
+          icon: Icons.download_outlined,
+          label: LocaleKeys.files_version_download.tr(),
         ),
         if (!isCurrent)
-          MenuItemButton(
-            leadingIcon: const Icon(Icons.restore),
-            onPressed: onRestore,
-            child: Text(LocaleKeys.files_version_restore.tr()),
+          IosContextMenuItem(
+            value: _VersionAction.restore,
+            icon: Icons.restore,
+            label: LocaleKeys.files_version_restore.tr(),
           ),
       ],
-      builder: (context, controller, _) => IconButton(
-        tooltip: LocaleKeys.files_more_actions.tr(),
-        icon: const Icon(Icons.more_horiz),
-        onPressed: () =>
-            controller.isOpen ? controller.close() : controller.open(),
-      ),
+      onSelected: (action) => switch (action) {
+        _VersionAction.download => onDownload(),
+        _VersionAction.restore => onRestore(),
+      },
     );
   }
 }

@@ -50,6 +50,10 @@ class SyscatTheme {
   static const Color surfaceDark = Color(0xFF1D1B1F);
   static const Color surfaceDarkLow = Color(0xFF242227);
   static const Color surfaceDarkHigh = Color(0xFF302E33);
+
+  /// Kontextmenüs im Dunkelmodus: dunkler als die Fläche darunter, damit
+  /// sie sich wie unter iOS abheben.
+  static const Color menuSurfaceDark = Color(0xFF151515);
   static const Color surfaceDim = Color(0xFFDCD9DC);
   static const Color surfaceContainer = Color(0xFFF0EDEF);
   static const Color surfaceContainerLow = Color(0xFFF6F3F5);

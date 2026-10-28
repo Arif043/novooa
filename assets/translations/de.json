@@ -1500,6 +1500,7 @@
     "preview_of": "Vorschau von {name}",
     "image_load_failed": "Bild konnte nicht geladen werden.",
     "no_preview_for": "Keine Vorschau verfügbar für {name}",
-    "content_load_failed": "Der Inhalt dieser Version konnte nicht geladen werden."
+    "content_load_failed": "Der Inhalt dieser Version konnte nicht geladen werden.",
+    "actions_for": "Aktionen für {name}"
   }
 }

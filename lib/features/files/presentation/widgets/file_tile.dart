@@ -1,4 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
+
+import '../../../../core/widgets/ios_context_menu.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/team_file.dart';
@@ -60,18 +64,17 @@ class _FileMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<void>(
-      tooltip: 'Aktionen für $fileName',
-      itemBuilder: (_) => [
-        PopupMenuItem<void>(
-          onTap: onDelete,
-          child: const ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.delete_outline),
-            title: Text('Löschen'),
-          ),
+    return IosContextMenuButton<VoidCallback>(
+      tooltip: LocaleKeys.files_actions_for.tr(namedArgs: {'name': fileName}),
+      entries: [
+        IosContextMenuItem(
+          value: onDelete,
+          icon: Icons.delete_outline,
+          label: LocaleKeys.files_action_delete.tr(),
+          isDestructive: true,
         ),
       ],
+      onSelected: (run) => run(),
     );
   }
 }

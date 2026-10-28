@@ -1500,6 +1500,7 @@
     "preview_of": "Preview of {name}",
     "image_load_failed": "The image could not be loaded.",
     "no_preview_for": "No preview available for {name}",
-    "content_load_failed": "The content of this version could not be loaded."
+    "content_load_failed": "The content of this version could not be loaded.",
+    "actions_for": "Actions for {name}"
   }
 }

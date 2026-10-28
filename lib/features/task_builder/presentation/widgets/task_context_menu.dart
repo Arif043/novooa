@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/widgets/ios_context_menu.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/task.dart';
@@ -29,82 +30,36 @@ class TaskContextMenu extends StatelessWidget {
   }
 
   Future<void> _showContextMenu(BuildContext context) async {
-    final action = await showMenu<TaskMenuAction>(
-      context: context,
-      position: _menuPositionFor(context),
-      color: _menuColorFor(context),
-      elevation: 10,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+    final action = await showIosContextMenu<TaskMenuAction>(context, [
+      IosContextMenuItem(
+        value: TaskMenuAction.execute,
+        icon: Icons.play_arrow_rounded,
+        label: LocaleKeys.ui_ausfuehren.tr(),
       ),
-      items: [
-        PopupMenuItem(
-          value: TaskMenuAction.execute,
-          height: 36,
-          child: _TaskMenuRow(
-            icon: Icons.play_arrow_rounded,
-            label: LocaleKeys.ui_ausfuehren.tr(),
-          ),
-        ),
-        PopupMenuItem(
-          value: TaskMenuAction.rename,
-          height: 36,
-          child: _TaskMenuRow(
-            icon: Icons.edit_outlined,
-            label: LocaleKeys.ui_umbenennen.tr(),
-          ),
-        ),
-        PopupMenuItem(
-          value: TaskMenuAction.duplicate,
-          height: 36,
-          child: _TaskMenuRow(
-            icon: Icons.copy_outlined,
-            label: LocaleKeys.ui_duplizieren.tr(),
-          ),
-        ),
-        PopupMenuItem(
-          value: TaskMenuAction.editObjective,
-          height: 36,
-          child: _TaskMenuRow(
-            icon: Icons.note_alt_outlined,
-            label: LocaleKeys.ui_notiz_bearbeiten.tr(),
-          ),
-        ),
-        PopupMenuDivider(height: 8),
-        PopupMenuItem(
-          value: TaskMenuAction.delete,
-          height: 36,
-          child: _TaskMenuRow(
-            icon: Icons.delete_outline,
-            label: LocaleKeys.ui_loeschen.tr(),
-            isDestructive: true,
-          ),
-        ),
-      ],
-    );
+      IosContextMenuItem(
+        value: TaskMenuAction.rename,
+        icon: Icons.edit_outlined,
+        label: LocaleKeys.ui_umbenennen.tr(),
+      ),
+      IosContextMenuItem(
+        value: TaskMenuAction.duplicate,
+        icon: Icons.copy_outlined,
+        label: LocaleKeys.ui_duplizieren.tr(),
+      ),
+      IosContextMenuItem(
+        value: TaskMenuAction.editObjective,
+        icon: Icons.note_alt_outlined,
+        label: LocaleKeys.ui_notiz_bearbeiten.tr(),
+      ),
+      const IosContextMenuDivider(),
+      IosContextMenuItem(
+        value: TaskMenuAction.delete,
+        icon: Icons.delete_outline,
+        label: LocaleKeys.ui_loeschen.tr(),
+        isDestructive: true,
+      ),
+    ]);
     if (context.mounted && action != null) await _handleAction(context, action);
-  }
-
-  RelativeRect _menuPositionFor(BuildContext context) {
-    final button = context.findRenderObject() as RenderBox;
-    final overlay =
-        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final offset = button.localToGlobal(Offset.zero, ancestor: overlay);
-    return RelativeRect.fromLTRB(
-      offset.dx,
-      offset.dy + button.size.height,
-      overlay.size.width - offset.dx - button.size.width,
-      overlay.size.height - offset.dy,
-    );
-  }
-
-  Color _menuColorFor(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    if (colorScheme.brightness == Brightness.dark) {
-      return const Color(0xFF151515);
-    }
-    return colorScheme.surface;
   }
 
   Future<void> _handleAction(
@@ -171,35 +126,5 @@ class TaskContextMenu extends StatelessWidget {
       builder: (_) => DeleteTaskDialog(taskTitle: task.title),
     );
     if (confirmed ?? false) await cubit.deleteTask(task);
-  }
-}
-
-class _TaskMenuRow extends StatelessWidget {
-  const _TaskMenuRow({
-    required this.icon,
-    required this.label,
-    this.isDestructive = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isDestructive;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isDestructive
-        ? Theme.of(context).colorScheme.error
-        : Theme.of(context).colorScheme.onSurface;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
   }
 }

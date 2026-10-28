@@ -1392,6 +1392,7 @@ abstract class  LocaleKeys {
   static const files_image_load_failed = 'files.image_load_failed';
   static const files_no_preview_for = 'files.no_preview_for';
   static const files_content_load_failed = 'files.content_load_failed';
+  static const files_actions_for = 'files.actions_for';
   static const files = 'files';
 
 }

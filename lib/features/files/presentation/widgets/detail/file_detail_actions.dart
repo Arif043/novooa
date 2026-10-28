@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 
+import '../../../../../core/widgets/ios_context_menu.dart';
 import 'file_detail_commands.dart';
 
 typedef _Action = ({IconData icon, String label, Future<void> Function()? run});
@@ -79,6 +80,10 @@ class FileDetailActions extends StatelessWidget {
   ];
 }
 
+typedef _Command = Future<void> Function();
+
+Future<void> _nothing() async {}
+
 class _MoreMenu extends StatelessWidget {
   const _MoreMenu({required this.actions, required this.onDelete});
 
@@ -87,31 +92,26 @@ class _MoreMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final error = Theme.of(context).colorScheme.error;
-    return MenuAnchor(
-      menuChildren: [
+    return IosContextMenuButton<_Command>(
+      tooltip: LocaleKeys.files_more_actions.tr(),
+      icon: Icons.more_vert,
+      entries: [
         for (final action in actions)
-          MenuItemButton(
-            leadingIcon: Icon(action.icon),
-            onPressed: action.run,
-            child: Text(action.label),
+          IosContextMenuItem(
+            value: action.run ?? _nothing,
+            icon: action.icon,
+            label: action.label,
+            enabled: action.run != null,
           ),
-        const Divider(),
-        MenuItemButton(
-          leadingIcon: Icon(Icons.delete_outline, color: error),
-          onPressed: onDelete,
-          child: Text(
-            LocaleKeys.files_action_delete.tr(),
-            style: TextStyle(color: error),
-          ),
+        const IosContextMenuDivider(),
+        IosContextMenuItem(
+          value: onDelete,
+          icon: Icons.delete_outline,
+          label: LocaleKeys.files_action_delete.tr(),
+          isDestructive: true,
         ),
       ],
-      builder: (context, controller, _) => IconButton(
-        tooltip: LocaleKeys.files_more_actions.tr(),
-        icon: const Icon(Icons.more_vert),
-        onPressed: () =>
-            controller.isOpen ? controller.close() : controller.open(),
-      ),
+      onSelected: (run) => run(),
     );
   }
 }

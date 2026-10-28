@@ -14,7 +14,9 @@ Widgets unter `presentation/widgets/detail/`.
   Inspektor folgt dem Inhalt.
 - **Aktionen:** Umbenennen, Herunterladen, Bild bearbeiten (PNG/JPEG) und
   Kopieren als Symbolknöpfe; Verschieben, Neue Version hochladen und Löschen
-  im Menü. Unter 600 px Breite liegt alles im Menü. Semantik der Aktionen
+  im Menü. Unter 600 px Breite liegt alles im Menü. Menüs sind das
+  iOS-artige Kontextmenü wie unter „Aufgaben“ (`IosContextMenuButton` in
+  `core/widgets/ios_context_menu.dart`). Semantik der Aktionen
   steht in [Dateiaktionen](./datei-aktionen.md).
 - **Inspektor**, Reiter **Versionen**: neueste zuerst, „Aktuell“ an der
   `currentVersionId` (nicht an der Auswahl), Zeitpunkt relativ und absolut,

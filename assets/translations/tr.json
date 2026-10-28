@@ -1500,6 +1500,7 @@
     "preview_of": "{name} önizlemesi",
     "image_load_failed": "Görsel yüklenemedi.",
     "no_preview_for": "{name} için önizleme yok",
-    "content_load_failed": "Bu sürümün içeriği yüklenemedi."
+    "content_load_failed": "Bu sürümün içeriği yüklenemedi.",
+    "actions_for": "{name} için işlemler"
   }
 }
