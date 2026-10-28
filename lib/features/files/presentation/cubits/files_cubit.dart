@@ -14,6 +14,7 @@ import '../../domain/usecases/upload_team_file.dart';
 import '../../domain/usecases/watch_team_files.dart';
 import '../../domain/usecases/watch_team_folders.dart';
 import '../../../teams/domain/usecases/get_current_team_id.dart';
+import '../localization/file_failure_message.dart';
 import 'files_state.dart';
 
 class FilesCubit extends Cubit<FilesState> {
@@ -73,8 +74,12 @@ class FilesCubit extends Cubit<FilesState> {
       (_) => emit(
         state.copyWith(isUploading: false, message: 'Datei hochgeladen.'),
       ),
-      (failure) =>
-          emit(state.copyWith(isUploading: false, message: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          isUploading: false,
+          message: fileFailureMessage(failure.kind),
+        ),
+      ),
     );
   }
 
@@ -99,7 +104,10 @@ class FilesCubit extends Cubit<FilesState> {
         ),
       ),
       (failure) => emit(
-        state.copyWith(isCreatingFolder: false, message: failure.message),
+        state.copyWith(
+          isCreatingFolder: false,
+          message: fileFailureMessage(failure.kind),
+        ),
       ),
     );
   }
@@ -114,7 +122,8 @@ class FilesCubit extends Cubit<FilesState> {
     if (isClosed) return;
     deletedOrFailure.when(
       (_) => emit(state.copyWith(message: 'Datei gelöscht.')),
-      (failure) => emit(state.copyWith(message: failure.message)),
+      (failure) =>
+          emit(state.copyWith(message: fileFailureMessage(failure.kind))),
     );
   }
 
@@ -143,7 +152,7 @@ class FilesCubit extends Cubit<FilesState> {
     emit(
       FilesState(
         status: FilesLoadStatus.failure,
-        message: FileFailure(kind).message,
+        message: fileFailureMessage(kind),
       ),
     );
   }

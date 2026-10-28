@@ -7,27 +7,24 @@ enum FileFailureKind {
   createFolderFailed,
   deleteFailed,
   invalidFolderName,
+  invalidFileName,
+
+  /// Im Zielverzeichnis gibt es schon eine Datei mit diesem Namen.
+  nameTaken,
+  renameFailed,
+  moveFailed,
+  copyFailed,
+  restoreFailed,
+  saveFailed,
+
+  /// Die Person hat die Auswahl abgebrochen; kein Fehler, den man meldet.
+  cancelled,
 }
 
+/// Fehler der Dateiablage; den sichtbaren Text liefert die Presentation
+/// (`fileFailureMessage`).
 class FileFailure {
   const FileFailure(this.kind);
 
   final FileFailureKind kind;
-
-  String get message {
-    return switch (kind) {
-      FileFailureKind.unauthenticated =>
-        'Du musst angemeldet sein, um Dateien zu nutzen.',
-      FileFailureKind.noFileSelected => 'Es wurde keine Datei ausgewählt.',
-      FileFailureKind.loadFailed => 'Dateien konnten nicht geladen werden.',
-      FileFailureKind.uploadFailed => 'Datei konnte nicht hochgeladen werden.',
-      FileFailureKind.downloadFailed =>
-        'Dateiinhalt konnte nicht geladen werden.',
-      FileFailureKind.createFolderFailed =>
-        'Verzeichnis konnte nicht erstellt werden.',
-      FileFailureKind.deleteFailed => 'Datei konnte nicht gelöscht werden.',
-      FileFailureKind.invalidFolderName =>
-        'Gib einen Namen für das Verzeichnis ein.',
-    };
-  }
 }

@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../domain/entities/team_file.dart';
@@ -20,7 +22,9 @@ class ImageContentView extends StatelessWidget {
         child: Image.memory(
           bytes,
           fit: BoxFit.contain,
-          semanticLabel: 'Vorschau von ${file.displayName}',
+          semanticLabel: LocaleKeys.files_preview_of.tr(
+            namedArgs: {'name': file.displayName},
+          ),
           errorBuilder: (context, error, stackTrace) => const _ImageLoadError(),
         ),
       ),
@@ -43,7 +47,7 @@ class _ImageLoadError extends StatelessWidget {
           color: theme.colorScheme.error,
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Text('Bild konnte nicht geladen werden.'),
+        Text(LocaleKeys.files_image_load_failed.tr()),
       ],
     );
   }

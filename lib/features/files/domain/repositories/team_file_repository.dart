@@ -1,6 +1,7 @@
 import 'package:multiple_result/multiple_result.dart';
 
 import '../entities/file_failure.dart';
+import '../entities/file_name.dart';
 import '../entities/team_file.dart';
 import '../entities/team_folder.dart';
 import '../entities/team_id.dart';
@@ -22,6 +23,26 @@ abstract interface class TeamFileRepository {
   Future<Result<Unit, FileFailure>> deleteFile({
     required TeamId teamId,
     required String fileId,
+  });
+
+  /// Nur der Name ändert sich; Versionen bleiben. `nameTaken`, wenn der Name
+  /// im Verzeichnis schon vergeben ist.
+  Future<Result<TeamFile, FileFailure>> renameFile({
+    required TeamFile file,
+    required FileName name,
+  });
+
+  /// `folderId == null` ist die oberste Ebene.
+  Future<Result<TeamFile, FileFailure>> moveFile({
+    required TeamFile file,
+    required String? folderId,
+  });
+
+  /// Neue Datei mit dem Inhalt der aktuellen Version im selben Verzeichnis;
+  /// ist [name] vergeben, hängt die Runtime eine Nummer an.
+  Future<Result<TeamFile, FileFailure>> copyFile({
+    required TeamFile file,
+    required FileName name,
   });
 
   Future<Result<TeamFolder, FileFailure>> createFolder({

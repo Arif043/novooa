@@ -1,85 +1,84 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/theme/luminous_page_theme.dart';
+import '../../../../core/widgets/luminous_status_placeholder.dart';
 import '../../domain/entities/team_file.dart';
+import '../cubits/file_actions_cubit.dart';
+import '../cubits/file_actions_state.dart';
 import '../cubits/file_detail_cubit.dart';
 import '../cubits/file_detail_state.dart';
-import '../widgets/file_content_viewer.dart';
-import '../widgets/file_version_timeline.dart';
+import '../widgets/detail/file_action_feedback.dart';
+import '../widgets/detail/file_detail_layout.dart';
 
 class FileDetailPage extends StatelessWidget {
   const FileDetailPage({super.key, required this.file});
 
   final TeamFile file;
 
+  static Route<void> route(TeamFile file) =>
+      MaterialPageRoute<void>(builder: (_) => FileDetailPage(file: file));
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<FileDetailCubit>()..load(file),
-      child: _FileDetailView(file: file),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => serviceLocator<FileDetailCubit>()..load(file),
+        ),
+        BlocProvider(create: (_) => serviceLocator<FileActionsCubit>()),
+      ],
+      child: Theme(
+        data: LuminousPageTheme.from(Theme.of(context)),
+        child: const _FileDetailView(),
+      ),
     );
   }
 }
 
 class _FileDetailView extends StatelessWidget {
-  const _FileDetailView({required this.file});
-
-  final TeamFile file;
+  const _FileDetailView();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(file.displayName)),
-      body: BlocConsumer<FileDetailCubit, FileDetailState>(
-        listenWhen: (previous, current) => current.message != previous.message,
-        listener: _showMessage,
-        builder: (_, state) => _FileDetailBody(file: file, state: state),
-      ),
-    );
-  }
-
-  void _showMessage(BuildContext context, FileDetailState state) {
-    final message = state.message;
-    if (message != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    }
-  }
-}
-
-class _FileDetailBody extends StatelessWidget {
-  const _FileDetailBody({required this.file, required this.state});
-
-  final TeamFile file;
-  final FileDetailState state;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.status == FileDetailStatus.failure) {
-      return Center(
-        child: Text(state.message ?? 'Datei konnte nicht geladen werden.'),
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) => constraints.maxWidth >= 760
-          ? Row(
-              children: [
-                Expanded(
-                  child: FileContentViewer(file: file, state: state),
-                ),
-                FileVersionTimeline(state: state),
-              ],
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: FileContentViewer(file: file, state: state),
-                ),
-                FileVersionTimeline(state: state),
-              ],
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      body: SafeArea(
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<FileActionsCubit, FileActionsState>(
+              listener: (context, state) => showFileActionFeedback(
+                context,
+                state,
+                onOpenCopy: (copy) => Navigator.of(
+                  context,
+                ).pushReplacement(FileDetailPage.route(copy)),
+              ),
             ),
+            BlocListener<FileDetailCubit, FileDetailState>(
+              listenWhen: (_, current) => current is FileDetailDeleted,
+              listener: (context, _) => Navigator.of(context).maybePop(),
+            ),
+          ],
+          child: BlocBuilder<FileDetailCubit, FileDetailState>(
+            builder: (context, state) => switch (state) {
+              FileDetailReady() => FileDetailLayout(state: state),
+              FileDetailLoading() || FileDetailDeleted() => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              FileDetailFailure() => LuminousStatusPlaceholder(
+                loading: false,
+                message: LocaleKeys.files_file_load_failed.tr(),
+                fallbackMessage: LocaleKeys.files_file_load_failed.tr(),
+                onRetry: context.read<FileDetailCubit>().retry,
+              ),
+            },
+          ),
+        ),
+      ),
     );
   }
 }

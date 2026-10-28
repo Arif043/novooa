@@ -734,7 +734,7 @@ packages:
     source: hosted
     version: "0.13.0"
   material_ui:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: material_ui
       sha256: fbfb53cab6c4629438feeade5f3d305f72944bc9d9f25786b19106d32b80ec45
@@ -908,6 +908,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  pro_image_editor:
+    dependency: "direct main"
+    description:
+      name: pro_image_editor
+      sha256: dcf88aef2f36f1e7f5d51f36ef9d07b48cc77df9eb6821725f6d0454dc838dda
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.21.1"
   provider:
     dependency: transitive
     description:

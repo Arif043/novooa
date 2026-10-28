@@ -9,6 +9,8 @@ export type WriteTeamFileInput = {
   contentType: string;
   folderId?: string | null;
   targetFileId: string | null;
+  /** Immer eine neue Datei anlegen, auch wenn eine gleichnamige in der Wurzel liegt (Kopie). */
+  forceNewFile?: boolean;
   /** Gesetzt, wenn ein Lauf schreibt, der selbst durch Event-Trigger ausgelöst wurde. */
   triggerChain?: readonly string[];
 };

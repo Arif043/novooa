@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/file_content_kind.dart';
-import '../../domain/entities/team_file.dart';
 import '../cubits/file_detail_state.dart';
 import 'content/image_content_view.dart';
 import 'content/pdf_content_view.dart';
@@ -10,76 +13,84 @@ import 'content/spreadsheet_content_view.dart';
 import 'content/text_content_view.dart';
 import 'content/unsupported_content_view.dart';
 
-/// Picks the right viewer/editor for [file]'s content type (Strategy
-/// pattern) and shows the four standard async states: loading, error,
-/// empty (unsupported type) and success.
+/// Wählt die Ansicht zur Dateiart (Strategy) und zeigt Laden, Fehler,
+/// keine Vorschau und Inhalt.
 class FileContentViewer extends StatelessWidget {
   const FileContentViewer({
     super.key,
-    required this.file,
     required this.state,
+    required this.isSaving,
+    required this.onSaveText,
+    required this.onDownload,
+    required this.onRetry,
     this.classifier = const FileContentKindClassifier(),
   });
 
-  final TeamFile file;
-  final FileDetailState state;
+  final FileDetailReady state;
+  final bool isSaving;
+  final ValueChanged<String> onSaveText;
+  final VoidCallback onDownload;
+  final VoidCallback onRetry;
   final FileContentKindClassifier classifier;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ContentTypeLabel(file: file),
-          const SizedBox(height: AppSpacing.md),
-          Expanded(
-            child: _Body(file: file, state: state, classifier: classifier),
-          ),
-        ],
-      ),
-    );
+    return switch (state.content) {
+      FileContentLoading() => const Center(child: CircularProgressIndicator()),
+      FileContentFailed() => _ContentError(onRetry: onRetry),
+      FileContentLoaded(:final bytes) => _viewFor(bytes),
+    };
   }
-}
 
-class _Body extends StatelessWidget {
-  const _Body({
-    required this.file,
-    required this.state,
-    required this.classifier,
-  });
-
-  final TeamFile file;
-  final FileDetailState state;
-  final FileContentKindClassifier classifier;
-
-  @override
-  Widget build(BuildContext context) {
-    final bytes = state.bytes;
-    if (bytes == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  Widget _viewFor(Uint8List bytes) {
+    final file = state.file;
     return switch (classifier.classify(
       file.contentType,
       fileName: file.displayName,
     )) {
-      FileContentKind.text => TextContentView(state: state),
+      FileContentKind.text => TextContentView(
+        bytes: bytes,
+        versionId: state.selectedVersionId,
+        isSaving: isSaving,
+        onSave: onSaveText,
+      ),
       FileContentKind.image => ImageContentView(file: file, bytes: bytes),
       FileContentKind.pdf => PdfContentView(bytes: bytes),
       FileContentKind.spreadsheet => SpreadsheetContentView(bytes: bytes),
-      FileContentKind.unsupported => UnsupportedContentView(file: file),
+      FileContentKind.unsupported => UnsupportedContentView(
+        file: file,
+        onDownload: onDownload,
+      ),
     };
   }
 }
 
-class _ContentTypeLabel extends StatelessWidget {
-  const _ContentTypeLabel({required this.file});
+class _ContentError extends StatelessWidget {
+  const _ContentError({required this.onRetry});
 
-  final TeamFile file;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Text(file.contentType, style: Theme.of(context).textTheme.bodySmall);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              LocaleKeys.files_content_load_failed.tr(),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: Text(LocaleKeys.ui_erneut_versuchen.tr()),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

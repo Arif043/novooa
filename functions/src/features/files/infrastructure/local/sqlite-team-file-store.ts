@@ -112,6 +112,7 @@ export class SQLiteTeamFileStore implements TeamFileStore, TeamFileContentReader
 
   private async writtenFileFrom(input: WriteTeamFileInput): Promise<WrittenFile> {
     if (input.targetFileId !== null) return this.versionedFileFrom(input);
+    if (input.forceNewFile === true) return newFileFrom(input);
     const existingFile = await this.existingFileByNameFor(input);
     if (existingFile !== null) return versionFromExisting(input, existingFile);
     return newFileFrom(input);

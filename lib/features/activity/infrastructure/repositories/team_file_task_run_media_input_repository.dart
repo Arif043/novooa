@@ -35,7 +35,8 @@ class TeamFileTaskRunMediaInputRepository
     );
     return fileOrFailure.when(
       (file) => file.id,
-      (failure) => throw StateError(failure.message),
+      (failure) =>
+          throw StateError('Bild-Upload fehlgeschlagen: ${failure.kind.name}'),
     );
   }
 }

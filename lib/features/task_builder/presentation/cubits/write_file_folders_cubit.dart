@@ -1,3 +1,4 @@
+import 'package:syscat2/features/files/presentation/localization/file_failure_message.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:async';
@@ -76,7 +77,7 @@ class WriteFileFoldersCubit extends Cubit<WriteFileFoldersState> {
   }
 
   String? _failedCreationWith(FileFailure failure) {
-    return _failedCreation(failure.message);
+    return _failedCreation(fileFailureMessage(failure.kind));
   }
 
   String? _failedCreation(String message) {

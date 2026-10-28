@@ -37,6 +37,10 @@ class SessionAwareWorkspaceApiClient implements WorkspaceApiClient {
       _observe(() => _inner.put(path, body));
 
   @override
+  Future<Map<String, Object?>> patch(String path, Map<String, Object?> body) =>
+      _observe(() => _inner.patch(path, body));
+
+  @override
   Future<Map<String, Object?>> putStream(
     String path, {
     required Stream<List<int>> body,

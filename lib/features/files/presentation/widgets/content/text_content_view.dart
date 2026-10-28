@@ -1,18 +1,28 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
-import '../../cubits/file_detail_cubit.dart';
-import '../../cubits/file_detail_state.dart';
 
 /// Editable text/JSON viewer. Decodes the raw bytes lazily (only text kinds
 /// ever reach this widget), so binary content is never routed through here.
 class TextContentView extends StatefulWidget {
-  const TextContentView({super.key, required this.state});
+  const TextContentView({
+    super.key,
+    required this.bytes,
+    required this.versionId,
+    required this.isSaving,
+    required this.onSave,
+  });
 
-  final FileDetailState state;
+  final List<int> bytes;
+
+  /// Wechselt die Version, übernimmt das Feld deren Inhalt.
+  final String? versionId;
+  final bool isSaving;
+  final ValueChanged<String> onSave;
 
   @override
   State<TextContentView> createState() => _TextContentViewState();
@@ -25,17 +35,16 @@ class _TextContentViewState extends State<TextContentView> {
   @override
   void initState() {
     super.initState();
-    _versionId = widget.state.selectedVersion?.id;
-    _controller = TextEditingController(text: _decode(widget.state.bytes));
+    _versionId = widget.versionId;
+    _controller = TextEditingController(text: _decode(widget.bytes));
   }
 
   @override
   void didUpdateWidget(covariant TextContentView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final versionId = widget.state.selectedVersion?.id;
-    if (versionId != _versionId && widget.state.bytes != null) {
-      _versionId = versionId;
-      _controller.text = _decode(widget.state.bytes);
+    if (widget.versionId != _versionId) {
+      _versionId = widget.versionId;
+      _controller.text = _decode(widget.bytes);
     }
   }
 
@@ -45,15 +54,14 @@ class _TextContentViewState extends State<TextContentView> {
     super.dispose();
   }
 
-  String _decode(List<int>? bytes) =>
-      utf8.decode(bytes ?? const [], allowMalformed: true);
+  String _decode(List<int> bytes) => utf8.decode(bytes, allowMalformed: true);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SaveBar(isSaving: widget.state.isSaving, onSave: _save),
+        _SaveBar(isSaving: widget.isSaving, onSave: _save),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
           child: TextField(
@@ -63,9 +71,9 @@ class _TextContentViewState extends State<TextContentView> {
             minLines: null,
             textAlignVertical: TextAlignVertical.top,
             style: const TextStyle(fontFamily: 'monospace'),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Dateiinhalt',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: LocaleKeys.files_text_hint.tr(),
             ),
           ),
         ),
@@ -73,7 +81,7 @@ class _TextContentViewState extends State<TextContentView> {
     );
   }
 
-  void _save() => context.read<FileDetailCubit>().save(_controller.text);
+  void _save() => widget.onSave(_controller.text);
 }
 
 class _SaveBar extends StatelessWidget {
@@ -91,7 +99,7 @@ class _SaveBar extends StatelessWidget {
         icon: isSaving
             ? const _SmallSpinner()
             : const Icon(Icons.save_outlined),
-        label: const Text('Neue Version sichern'),
+        label: Text(LocaleKeys.files_text_save_version.tr()),
       ),
     );
   }

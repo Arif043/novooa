@@ -139,6 +139,7 @@ import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
 import 'standalone_script_packages_dependency_configuration.dart';
 import 'standalone_data_dependency_configuration.dart';
+import 'standalone_file_detail_dependency_configuration.dart';
 import 'standalone_workspace_transfer_dependency_configuration.dart';
 
 Future<void> configureStandaloneDependencies(
@@ -189,6 +190,7 @@ Future<void> configureStandaloneDependencies(
     locator,
     runtimeUri: profile.workspaceApiUri,
   );
+  configureStandaloneFileDetailDependencies(locator);
   configureStandaloneWorkspaceTransferDependencies(locator);
   configureStandaloneDataDependencies(locator);
   configureStandaloneScriptPackagesDependencies(locator);

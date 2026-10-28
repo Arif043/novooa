@@ -14,6 +14,7 @@
 
 - [Dateien-Seite](../notes/dateien-seite.md)
 - [Datei-Detailansicht](../notes/datei-detailansicht.md)
+- [Dateiaktionen](../notes/datei-aktionen.md)
 - [Muster für leere Zustände](../notes/leerer-zustand-muster.md)
 - [Luminous-Seitenstil](../notes/luminous-seitenstil.md)
 

@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_state.dart';
 import 'package:syscat2/features/files/domain/entities/team_folder_tree.dart';
+import 'package:syscat2/features/files/presentation/widgets/team_folder_choice_list.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_new_folder_row.dart';
 
 /// Zielverzeichnis für eine neue Datei: oberste Ebene oder ein bestehendes
@@ -64,7 +65,6 @@ class _FolderChoices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = flattenFolderTree(state.folders);
     final parentLabel = selectedFolderId == null
         ? null
         : folderPathLabel(selectedFolderId!, state.folders);
@@ -75,22 +75,10 @@ class _FolderChoices extends StatelessWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 200),
           child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _FolderTile(
-                  label: LocaleKeys.ui_oberste_ebene.tr(),
-                  depth: 0,
-                  selected: selectedFolderId == null,
-                  onTap: () => onSelected(null),
-                ),
-                for (final entry in entries)
-                  _FolderTile(
-                    label: entry.folder.name,
-                    depth: entry.depth + 1,
-                    selected: entry.folder.id == selectedFolderId,
-                    onTap: () => onSelected(entry.folder.id),
-                  ),
-              ],
+            child: TeamFolderChoiceList(
+              folders: state.folders,
+              selectedFolderId: selectedFolderId,
+              onSelected: onSelected,
             ),
           ),
         ),
@@ -113,43 +101,6 @@ class _FolderChoices extends StatelessWidget {
     if (folderId == null) return false;
     onSelected(folderId);
     return true;
-  }
-}
-
-class _FolderTile extends StatelessWidget {
-  const _FolderTile({
-    required this.label,
-    required this.depth,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final int depth;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: LocaleKeys.ui_directory_named.tr(namedArgs: {'name': label}),
-      child: ListTile(
-        dense: true,
-        minTileHeight: 48,
-        contentPadding: EdgeInsets.only(left: depth * AppSpacing.md),
-        leading: Icon(
-          selected ? Icons.folder_open : Icons.folder_outlined,
-          color: selected ? colors.primary : colors.onSurfaceVariant,
-        ),
-        title: Text(label, overflow: TextOverflow.ellipsis),
-        trailing: selected ? Icon(Icons.check, color: colors.primary) : null,
-        selected: selected,
-        onTap: onTap,
-      ),
-    );
   }
 }
 

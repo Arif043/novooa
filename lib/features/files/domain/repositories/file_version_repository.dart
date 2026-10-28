@@ -18,4 +18,8 @@ abstract interface class FileVersionRepository {
     required String ownerUid,
     required UploadFileInput input,
   });
+
+  /// Der Inhalt von [version] wird eine neue aktuelle Version; nichts wird
+  /// überschrieben.
+  Future<Result<TeamFile, FileFailure>> restoreVersion(FileVersion version);
 }

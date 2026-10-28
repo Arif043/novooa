@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/team_file.dart';
 import '../../domain/entities/file_content_kind.dart';
+import '../localization/file_display_texts.dart';
 import 'file_kind_badge.dart';
 
 class FileTile extends StatelessWidget {
@@ -35,7 +36,7 @@ class FileTile extends StatelessWidget {
       subtitle: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Text(
-          '${fileKindLabel(_kind)} · ${_formatBytes(file.sizeBytes)}',
+          '${fileKindLabel(_kind)} · ${FileDisplayTexts.of(context).size(file.sizeBytes)}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: textTheme.bodySmall,
@@ -49,13 +50,6 @@ class FileTile extends StatelessWidget {
     file.contentType,
     fileName: file.displayName,
   );
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    final kib = bytes / 1024;
-    if (kib < 1024) return '${kib.toStringAsFixed(1)} KB';
-    return '${(kib / 1024).toStringAsFixed(1)} MB';
-  }
 }
 
 class _FileMenu extends StatelessWidget {

@@ -6,6 +6,7 @@ import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/file_failure.dart';
+import 'package:syscat2/features/files/domain/entities/file_name.dart';
 import 'package:syscat2/features/files/domain/entities/team_file.dart';
 import 'package:syscat2/features/files/domain/entities/team_folder.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
@@ -80,6 +81,24 @@ class _FakeTeamFileRepository implements TeamFileRepository {
   }
 
   Future<void> close() => _controller.close();
+
+  @override
+  Future<Result<TeamFile, FileFailure>> renameFile({
+    required TeamFile file,
+    required FileName name,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<TeamFile, FileFailure>> moveFile({
+    required TeamFile file,
+    required String? folderId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<TeamFile, FileFailure>> copyFile({
+    required TeamFile file,
+    required FileName name,
+  }) => throw UnimplementedError();
 
   @override
   Future<Result<Unit, FileFailure>> deleteFile({

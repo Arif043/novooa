@@ -17,6 +17,11 @@ abstract class WorkspaceApiClient {
     required Duration timeout,
   }) => post(path, body);
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body);
+
+  /// Teiländerung einer Ressource. Clients ohne eigene Umsetzung (etwa
+  /// Test-Doubles) melden das, statt still einen anderen Aufruf zu senden.
+  Future<Map<String, Object?>> patch(String path, Map<String, Object?> body) =>
+      throw UnsupportedError('PATCH wird von diesem Client nicht unterstützt.');
   Future<Map<String, Object?>> putStream(
     String path, {
     required Stream<List<int>> body,
@@ -72,6 +77,11 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
   @override
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body) {
     return _request('PUT', path, body: body);
+  }
+
+  @override
+  Future<Map<String, Object?>> patch(String path, Map<String, Object?> body) {
+    return _request('PATCH', path, body: body);
   }
 
   @override

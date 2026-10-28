@@ -5,6 +5,7 @@ import 'package:multiple_result/multiple_result.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 
 import '../../domain/entities/file_failure.dart';
+import '../../domain/entities/file_name.dart';
 import '../../domain/entities/file_version.dart';
 import '../../domain/entities/team_file.dart';
 import '../../domain/entities/team_folder.dart';
@@ -12,13 +13,40 @@ import '../../domain/entities/team_id.dart';
 import '../../domain/entities/upload_file_input.dart';
 import '../../domain/repositories/file_version_repository.dart';
 import '../../domain/repositories/team_file_repository.dart';
+import 'local_file_json_mapper.dart';
+import 'local_file_mutation_requests.dart';
 
 class LocalTeamFileRepository
     implements TeamFileRepository, FileVersionRepository {
-  const LocalTeamFileRepository(this._client, this._channel);
+  LocalTeamFileRepository(this._client, this._channel)
+    : _mutations = LocalFileMutationRequests(_client);
 
   final WorkspaceApiClient _client;
   final WorkspaceRealtimeChannel _channel;
+  final LocalFileMutationRequests _mutations;
+  static const _mapper = LocalFileJsonMapper();
+
+  @override
+  Future<Result<TeamFile, FileFailure>> renameFile({
+    required TeamFile file,
+    required FileName name,
+  }) => _mutations.rename(file, name);
+
+  @override
+  Future<Result<TeamFile, FileFailure>> moveFile({
+    required TeamFile file,
+    required String? folderId,
+  }) => _mutations.move(file, folderId);
+
+  @override
+  Future<Result<TeamFile, FileFailure>> copyFile({
+    required TeamFile file,
+    required FileName name,
+  }) => _mutations.copy(file, name);
+
+  @override
+  Future<Result<TeamFile, FileFailure>> restoreVersion(FileVersion version) =>
+      _mutations.restore(version);
 
   @override
   Future<Result<Unit, FileFailure>> deleteFile({
@@ -45,7 +73,7 @@ class LocalTeamFileRepository
     }
     try {
       return Success(
-        _folderFrom(
+        _mapper.folderFrom(
           await _client.post('/v1/folders', {
             'name': name.trim(),
             'parentFolderId': parentFolderId,
@@ -118,7 +146,7 @@ class LocalTeamFileRepository
         'contentBase64': base64Encode(input.bytes),
         'folderId': folderId,
       });
-      return Success(_fileFrom(response));
+      return Success(_mapper.fileFrom(response));
     } on Object {
       return const Error(FileFailure(FileFailureKind.uploadFailed));
     }
@@ -126,17 +154,17 @@ class LocalTeamFileRepository
 
   Future<List<TeamFile>> _loadFiles() async {
     final response = await _client.get('/v1/files');
-    return _items(response).map(_fileFrom).toList(growable: false);
+    return _items(response).map(_mapper.fileFrom).toList(growable: false);
   }
 
   Future<List<TeamFolder>> _loadFolders() async {
     final response = await _client.get('/v1/folders');
-    return _items(response).map(_folderFrom).toList(growable: false);
+    return _items(response).map(_mapper.folderFrom).toList(growable: false);
   }
 
   Future<List<FileVersion>> _loadVersions(String fileId) async {
     final response = await _client.get('/v1/files/$fileId/versions');
-    return _items(response).map(_versionFrom).toList(growable: false);
+    return _items(response).map(_mapper.versionFrom).toList(growable: false);
   }
 
   List<Map<dynamic, dynamic>> _items(Map<String, Object?> response) {
@@ -146,72 +174,4 @@ class LocalTeamFileRepository
     }
     return items.whereType<Map>().toList(growable: false);
   }
-
-  TeamFile _fileFrom(Map<dynamic, dynamic> value) {
-    final data = _data(value);
-    return TeamFile(
-      id: _string(data['id']),
-      teamId: TeamId(_string(data['teamId'])),
-      ownerUid: _string(data['ownerUid']),
-      displayName: _string(data['displayName']),
-      storagePath: _string(data['storagePath']),
-      currentVersionId: _string(data['currentVersionId']),
-      contentType: _string(
-        data['contentType'],
-        fallback: 'application/octet-stream',
-      ),
-      sizeBytes: _integer(data['sizeBytes']),
-      createdAt: _date(data['createdAt']),
-      updatedAt: _date(data['updatedAt']),
-      currentVersionCreatedAt: _date(data['currentVersionCreatedAt']),
-      folderId: _nullableString(data['folderId']),
-    );
-  }
-
-  TeamFolder _folderFrom(Map<dynamic, dynamic> value) {
-    final data = _data(value);
-    return TeamFolder(
-      id: _string(data['id']),
-      teamId: TeamId(_string(data['teamId'])),
-      ownerUid: _string(data['ownerUid']),
-      name: _string(data['name']),
-      createdAt: _date(data['createdAt']),
-      updatedAt: _date(data['updatedAt']),
-      parentFolderId: _nullableString(data['parentFolderId']),
-    );
-  }
-
-  FileVersion _versionFrom(Map<dynamic, dynamic> value) {
-    final data = _data(value);
-    return FileVersion(
-      id: _string(data['id']),
-      fileId: _string(data['fileId']),
-      teamId: TeamId(_string(data['teamId'])),
-      createdByUid: _string(data['createdByUid']),
-      displayName: _string(data['displayName']),
-      storagePath: _string(data['storagePath']),
-      contentType: _string(
-        data['contentType'],
-        fallback: 'application/octet-stream',
-      ),
-      sizeBytes: _integer(data['sizeBytes']),
-      createdAt: _date(data['createdAt']),
-    );
-  }
-
-  Map<String, Object?> _data(Map<dynamic, dynamic> value) => {
-    for (final entry in value.entries) entry.key.toString(): entry.value,
-  };
-
-  DateTime _date(Object? value) => value is String
-      ? DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0)
-      : DateTime.fromMillisecondsSinceEpoch(0);
-
-  int _integer(Object? value) => value is int ? value : 0;
-
-  String _string(Object? value, {String fallback = ''}) =>
-      value is String ? value : fallback;
-
-  String? _nullableString(Object? value) =>
-      value is String && value.isNotEmpty ? value : null;
 }

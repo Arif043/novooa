@@ -18,11 +18,24 @@ export const FileVersionDto = Type.Object({
   storagePath: Type.String(), contentType: Type.String(), sizeBytes: Type.Integer(), createdAt: Type.String(),
 });
 
+/** Dateiname ohne Pfadanteile, nicht `.` oder `..`. */
+const FileNameSchema = Type.String({minLength: 1, maxLength: 255, pattern: "^(?!\\.{1,2}$)[^/\\\\]+$"});
+
 /** Dateiname ohne Pfadanteile; Inhalt als Base64. */
 export const FileUpload = Type.Object({
-  name: Type.String({minLength: 1, maxLength: 255, pattern: "^(?!\\.{1,2}$)[^/\\\\]+$"}),
+  name: FileNameSchema,
   contentBase64: Type.String({pattern: "^[A-Za-z0-9+/]*={0,2}$"}),
   contentType: Type.Optional(Type.String({maxLength: 200})),
+  folderId: Type.Optional(NullableString),
+});
+/** Umbenennen und/oder Verschieben; `folderId: null` ist die oberste Ebene, fehlend = Ordner bleibt. */
+export const FileChange = Type.Object({
+  name: Type.Optional(FileNameSchema),
+  folderId: Type.Optional(NullableString),
+});
+/** Kopie: Wunschname (sonst der Name der Quelle) und Zielordner (sonst der der Quelle). */
+export const FileCopy = Type.Object({
+  name: Type.Optional(FileNameSchema),
   folderId: Type.Optional(NullableString),
 });
 export const NewFolder = Type.Object({

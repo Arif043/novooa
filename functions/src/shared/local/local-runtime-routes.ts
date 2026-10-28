@@ -11,7 +11,9 @@ import {type MailConnectorSummary} from "../../features/communication/domain/ent
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
 import {dataRoutes} from "../../features/data/infrastructure/local/local-data-routes.js";
 import {fileSettingsRoutes} from "../../features/files/infrastructure/local/local-file-settings-routes.js";
+import {fileMutationRoutes} from "../../features/files/infrastructure/local/local-file-mutation-routes.js";
 import {fileResourceRoutes} from "../../features/files/infrastructure/local/local-file-resource-routes.js";
+import {SQLiteTeamFileMutations} from "../../features/files/infrastructure/local/sqlite-team-file-mutations.js";
 import {knowledgeNoteRoutes} from "../../features/knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
 import {languageModelDefaultsRoutes} from "../../features/language_models/infrastructure/local/local-language-model-defaults-routes.js";
 import {languageModelRoutes} from "../../features/language_models/infrastructure/local/local-language-model-routes.js";
@@ -119,6 +121,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(applicationLogRoutes, {store: services.applicationLogs, notifier});
   await api.register(knowledgeNoteRoutes, {database, notifier});
   await api.register(fileResourceRoutes, {database, fileStore: services.teamFiles, notifier});
+  await api.register(fileMutationRoutes, {database, mutations: new SQLiteTeamFileMutations(database, services.teamFiles), notifier});
   await api.register(assistantRoutes, services.assistants);
   await api.register(workspaceTransferRoutes, workspaceTransferRoutesOptions({database, runtimeRoot, notifier}));
 }

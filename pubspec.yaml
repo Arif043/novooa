@@ -76,6 +76,8 @@ dependencies:
   easy_localization: ^3.0.8
   novooa_runtime_client:
     path: packages/novooa_runtime_client
+  pro_image_editor: ^14.21.1
+  material_ui: ^1.2.0
 
 dev_dependencies:
   # Datumsdaten für Unit-Tests ohne flutter_localizations; Version gibt das Flutter-SDK vor.

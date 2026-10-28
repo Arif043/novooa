@@ -196,6 +196,12 @@ class _FakeApiClient implements WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path) async => const {};
 
   @override
+  Future<Map<String, Object?>> patch(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
+
+  @override
   Future<Map<String, Object?>> get(String path) async => const {};
 
   @override

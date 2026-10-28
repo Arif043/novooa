@@ -12,7 +12,6 @@ import '../../features/files/domain/usecases/watch_file_versions.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/files/domain/usecases/watch_team_folders.dart';
 import '../../features/files/infrastructure/repositories/local_team_file_repository.dart';
-import '../../features/files/presentation/cubits/file_detail_cubit.dart';
 import '../../features/files/presentation/cubits/files_cubit.dart';
 import '../../features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
 import '../../features/knowledge_base/domain/usecases/create_knowledge_note.dart';
@@ -152,14 +151,6 @@ void configureStandaloneWorkspaceDependencies(
         locator<CreateTeamFolder>(),
         locator<DeleteTeamFile>(),
         locator<GetCurrentTeamId>(),
-      ),
-    )
-    ..registerFactory(
-      () => FileDetailCubit(
-        locator<AuthRepository>(),
-        locator<WatchFileVersions>(),
-        locator<DownloadFileVersion>(),
-        locator<CreateFileVersion>(),
       ),
     )
     ..registerFactory(

@@ -64,9 +64,7 @@ class FilesContent {
     final file = state.visibleFiles[index - folders.length];
     return FileTile(
       file: file,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => FileDetailPage(file: file)),
-      ),
+      onTap: () => Navigator.of(context).push(FileDetailPage.route(file)),
       onDelete: () => _confirmDelete(context, file),
     );
   }

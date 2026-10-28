@@ -79,6 +79,12 @@ class _FailingClient implements WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path) async => throw error;
 
   @override
+  Future<Map<String, Object?>> patch(
+    String path,
+    Map<String, Object?> body,
+  ) async => throw error;
+
+  @override
   Future<Map<String, Object?>> get(String path) async => throw error;
 
   @override

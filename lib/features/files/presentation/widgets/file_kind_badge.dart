@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -43,9 +45,9 @@ class FileKindBadge extends StatelessWidget {
 }
 
 String fileKindLabel(FileContentKind kind) => switch (kind) {
-  FileContentKind.pdf => 'PDF-Dokument',
-  FileContentKind.image => 'Bild',
-  FileContentKind.text => 'Textdokument',
-  FileContentKind.spreadsheet => 'Tabelle',
-  FileContentKind.unsupported => 'Datei',
-};
+  FileContentKind.pdf => LocaleKeys.files_kind_pdf,
+  FileContentKind.image => LocaleKeys.files_kind_image,
+  FileContentKind.text => LocaleKeys.files_kind_text,
+  FileContentKind.spreadsheet => LocaleKeys.files_kind_spreadsheet,
+  FileContentKind.unsupported => LocaleKeys.files_kind_file,
+}.tr();
