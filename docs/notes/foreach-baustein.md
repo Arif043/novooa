@@ -8,11 +8,13 @@ Gehört zu: [Aufgabe](../index/aufgabe.md) · [ML-Modelle](../index/ml-modelle.m
 JSON value -> RFC-6901 pointer -> serielle Graph-Ausführungen -> strukturierte JSON-Liste
 ```
 
-- Konfiguration: `itemsTemplate`, `itemsPointer` und eingebetteter Graph.
-  Zuerst wird `itemsTemplate` aufgelöst, dann der Pointer auf den
-  JSON-Wert angewandt (sonst auf den `value` des direkten Vorgängers); leer = ganzer Wert (z. B.
-  wenn ein Modell direkt eine Liste liefert), `/regions` bei einem Objekt mit
-  diesem Feld.
+- Konfiguration: `itemsTemplate` (Feld „Liste“, Pflicht), `itemsPointer`
+  (Feld „Elemente aus“) und eingebetteter Graph. Zuerst wird `itemsTemplate`
+  aufgelöst, dann der Pointer auf diesen JSON-Wert angewandt: leer = ganzer
+  Wert (z. B. wenn ein Modell direkt eine Liste liefert), `/regions` bei einem
+  Objekt mit diesem Feld. Ein leeres Feld „Liste“ ergibt keine Liste — der
+  Baustein scheitert mit einem Typfehler; es gibt keinen Rückfall auf den
+  direkten Vorgänger.
 - Jede Iteration bekommt `iteration` mit `index` und `value`
   (`{{iteration.value.bounds}}`, `{{iteration.index}}`). Der synthetische
   `value`-Vorgänger bleibt für Bausteine ohne eigene Zuordnung; echte Kanten
