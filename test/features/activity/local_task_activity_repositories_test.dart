@@ -67,14 +67,9 @@ void main() {
 }
 
 class RecordingWorkspaceApiClient extends WorkspaceApiClient {
-  RecordingWorkspaceApiClient({Map<String, Object?>? interaction})
-    : _interaction = interaction;
+  RecordingWorkspaceApiClient({this._interaction});
 
   final Map<String, Object?>? _interaction;
-  // Initialisierender Formalparameter (this._interaction) ist hier nicht
-  // möglich, weil der Konstruktorparameter benannt ("interaction") anders
-  // heißt als das private Feld — bewusste Namensklarheit im Aufruf
-  // (`RecordingWorkspaceApiClient(interaction: ...)`).
   String? reviewedRunId;
 
   @override

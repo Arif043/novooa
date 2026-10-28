@@ -45,7 +45,7 @@ class TaskBuilderHeader extends StatelessWidget {
                         ),
                         if (wide) ...[
                           const SizedBox(width: 12),
-                          Container(
+                          SizedBox(
                             width: 36,
                             height: 36,
                             // decoration: BoxDecoration(

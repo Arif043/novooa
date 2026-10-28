@@ -21,8 +21,8 @@ class FilesBreadcrumbs extends StatelessWidget {
           style: TextButton.styleFrom(
             minimumSize: const Size(AppSpacing.xxl, AppSpacing.xxl),
           ),
-          child: const Text('Alle Dateien'),
           onPressed: context.read<FilesCubit>().openRoot,
+          child: const Text('Alle Dateien'),
         ),
         for (final folder in state.breadcrumbs) ...[
           const Icon(Icons.chevron_right, size: AppSpacing.md),

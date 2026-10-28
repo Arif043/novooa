@@ -31,8 +31,14 @@ Manuell mit anderem Endpunkt:
 ```powershell
 flutter build windows `
   --dart-define=WORKSPACE_API_URL=http://192.168.1.100:8090 `
-  --release
+  --release `
+  --obfuscate `
+  --split-debug-info=build\symbols
 ```
+
+Das CLI verwendet diese Schutzoptionen ebenfalls. Die Symboltabellen unter
+`build\symbols` auf dem Windows-Build-Rechner für `flutter symbolize`
+aufbewahren, aber nicht ausliefern.
 
 Updates: Client neu bauen (git pull), Runtime mit
 `docker compose -f docker-compose.local.yaml up --build --detach`.
@@ -49,3 +55,4 @@ Web-UI für die Konfiguration, Lizenzaktivierung, Start ohne Docker.
 - [Windows-Zielrechner vorbereiten](./windows-zielrechner.md)
 - [SSH-Fehlersuche unter Windows](./windows-ssh-fehlersuche.md)
 - [Lokaler Start der Runtime](./runtime-lokaler-start.md)
+- [Quellcode-Schutz der Images](./runtime-quellcode-schutz.md)

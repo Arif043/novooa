@@ -63,9 +63,8 @@ class TrackTaskExecution {
   TrackTaskExecution(
     this._repository, {
     TaskActivityClock? clock,
-    TaskActivityIdFactory? idFactory,
-  }) : _clock = clock ?? DateTime.now,
-       _idFactory = idFactory;
+    this._idFactory,
+  }) : _clock = clock ?? DateTime.now;
 
   final TaskActivityRepository _repository;
   final TaskActivityClock _clock;

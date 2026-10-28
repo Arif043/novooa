@@ -1,0 +1,87 @@
+// Im gebauten Runtime-Image ausführen; benötigt root nur für den Schlüssel-Init.
+import assert from "node:assert/strict";
+import {spawn, execFile} from "node:child_process";
+import {once} from "node:events";
+import {chown, mkdtemp, readFile, readdir, rm, stat} from "node:fs/promises";
+import {join} from "node:path";
+import {promisify} from "node:util";
+import {setTimeout as delay} from "node:timers/promises";
+import test from "node:test";
+
+const execute = promisify(execFile);
+const entryDirectory = "/app/functions/lib/shared/local";
+
+async function runCommand(entry, environment, identity = {}) {
+  return execute(process.execPath, [join(entryDirectory, entry)], {env: environment, ...identity});
+}
+
+async function waitForHealth(runtime) {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    assert.equal(runtime.exitCode, null, "Runtime ist vorzeitig beendet worden.");
+    const response = await fetch("http://127.0.0.1:8080/healthz").catch(() => null);
+    if (response?.ok) return;
+    await delay(250);
+  }
+  throw new Error("Runtime wurde nicht gesund.");
+}
+
+async function withRuntime(environment, check) {
+  const runtime = spawn(process.execPath, [join(entryDirectory, "local-runtime-entrypoint.js")], {
+    env: environment, uid: 1000, gid: 1000, stdio: ["ignore", "inherit", "inherit"],
+  });
+  try {
+    await waitForHealth(runtime);
+    await check();
+  } finally {
+    if (runtime.exitCode === null) {
+      const closed = once(runtime, "exit");
+      runtime.kill("SIGTERM");
+      await closed;
+    }
+  }
+}
+
+async function checkRoutes() {
+  const setup = await fetch("http://127.0.0.1:8080/v1/setup");
+  assert.equal(setup.status, 200);
+  assert.equal((await setup.json()).needsSetup, true);
+  const tasks = await fetch("http://127.0.0.1:8080/v1/tasks");
+  assert.equal(tasks.status, 401);
+}
+
+async function checkKeyInitialization(environment) {
+  await runCommand("local-runtime-keyring-init-cli.js", environment);
+  const keyFile = environment.LOCAL_RUNTIME_MASTER_KEY_FILE;
+  const keyring = JSON.parse(await readFile(keyFile, "utf8"));
+  const metadata = await stat(keyFile);
+  assert.equal(metadata.uid, 1000);
+  assert.equal(metadata.mode & 0o777, 0o600);
+  await runCommand("local-runtime-keyring-init-cli.js", environment);
+  assert.equal(JSON.parse(await readFile(keyFile, "utf8")).activeKeyId, keyring.activeKeyId);
+  return keyring;
+}
+
+async function checkRuntime(environment) {
+  const initialKeyring = await checkKeyInitialization(environment);
+  await withRuntime(environment, checkRoutes);
+  await runCommand("local-runtime-key-rotation-cli.js", environment, {uid: 1000, gid: 1000});
+  const rotated = JSON.parse(await readFile(environment.LOCAL_RUNTIME_MASTER_KEY_FILE, "utf8"));
+  assert.notEqual(rotated.activeKeyId, initialKeyring.activeKeyId);
+  assert.equal(Object.keys(rotated.keys).length, 2);
+  await withRuntime(environment, checkRoutes);
+}
+
+test("gehärtete Runtime startet, migriert, schützt Routen und übersteht Schlüsselrotation", {timeout: 60000}, async () => {
+  assert.equal(process.getuid(), 0, "Container mit --user 0 starten.");
+  assert.equal((await readdir(entryDirectory)).length, 3, "Nur drei Bündel dürfen ausgeliefert werden.");
+  const root = await mkdtemp("/tmp/novooa-protected-check-");
+  await chown(root, 1000, 1000);
+  try {
+    await checkRuntime({
+      ...process.env, LOCAL_RUNTIME_ROOT: root, LOCAL_RUNTIME_MASTER_KEY_FILE: join(root, "keys/keyring.json"),
+      NOVOOA_LOCAL_DEVELOPMENT: "true", HOST: "127.0.0.1", PORT: "8080",
+    });
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});

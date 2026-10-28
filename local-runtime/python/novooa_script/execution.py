@@ -9,7 +9,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-CHILD = str(Path(__file__).with_name("child.py"))
+# child.py läuft als eigener, isolierter Prozess (python -I <pfad>). Im
+# gehärteten Image liegt statt der Quelle nur die sourceless child.pyc; in der
+# Entwicklung die child.py. Beide sind per Pfad startbar.
+_CHILD_PYC = Path(__file__).with_name("child.pyc")
+CHILD = str(_CHILD_PYC if _CHILD_PYC.exists() else Path(__file__).with_name("child.py"))
 TIMEOUT_SECONDS = float(os.environ.get("SCRIPT_TIMEOUT_SECONDS", "10"))
 MAX_RESULT_BYTES = 2 * 1024 * 1024
 MAX_PRINTED_BYTES = 256 * 1024

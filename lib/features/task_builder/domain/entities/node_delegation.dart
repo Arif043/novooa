@@ -36,7 +36,8 @@ NodeDelegation normalizedNodeDelegation({
   required String? employeeId,
   required List<SkillAttachment> skillAttachments,
 }) {
-  if (employeeId != null)
+  if (employeeId != null) {
     return (employeeId: employeeId, skillAttachments: const []);
+  }
   return (employeeId: null, skillAttachments: skillAttachments);
 }

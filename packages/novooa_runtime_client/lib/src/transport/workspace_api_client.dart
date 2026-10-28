@@ -44,10 +44,9 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     required Uri baseUri,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
-    AuthHeaderProvider? authHeaderProvider,
+    this._authHeaderProvider,
   }) : _baseUri = validatedWorkspaceBaseUri(baseUri),
-       _client = client ?? http.Client(),
-       _authHeaderProvider = authHeaderProvider;
+       _client = client ?? http.Client();
 
   final Uri _baseUri;
   final http.Client _client;

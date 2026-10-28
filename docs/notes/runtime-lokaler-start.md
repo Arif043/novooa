@@ -5,7 +5,7 @@
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 ```bash
-flutter build web            # die Runtime liefert dieses Build selbst aus
+flutter build web --release --no-source-maps
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
@@ -28,3 +28,4 @@ Nur für die UI ohne Runtime: [UI-Vorschau](./ui-vorschau.md).
 
 - [Docker-Stack der Runtime](./runtime-docker-stack.md)
 - [Entwicklungsmodus ohne Lizenz](./runtime-entwicklungsmodus.md)
+- [Quellcode-Schutz der Images](./runtime-quellcode-schutz.md)

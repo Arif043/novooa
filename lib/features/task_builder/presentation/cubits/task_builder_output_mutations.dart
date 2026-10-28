@@ -135,8 +135,9 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
   String _defaultOutputBase(NodeConfig config, String key, String? valueBase) {
     if (hasFlatOutputFields(config)) return _normalizedOutputName(key);
     if (key == WorkflowOutput.primaryOutputKey) {
-      if (_isDecisionPrompt(config))
+      if (_isDecisionPrompt(config)) {
         return nodeTextDefaults.decisionOutputBase();
+      }
       return valueBase ?? nodeTextDefaults.outputBase(config.primitive);
     }
     return nodeTextDefaults.outputFieldBase(key);

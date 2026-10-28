@@ -2,8 +2,9 @@ import '../../domain/entities/employee.dart';
 import '../../domain/entities/employee_draft.dart';
 
 Employee employeeFromJson(Object? value) {
-  if (value is! Map)
+  if (value is! Map) {
     throw const FormatException('Ein Mitarbeiter ist ungültig.');
+  }
   final skills = value['skills'];
   return Employee(
     id: value['id'] as String? ?? '',

@@ -20,10 +20,9 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
     this._loginClient,
     this._availability, {
     required this.onboarding,
-    bool isWeb = kIsWeb,
+    this._isWeb = kIsWeb,
     Future<void> Function()? onSignedOut,
-  }) : _isWeb = isWeb,
-       _onSignedOut = onSignedOut ?? _noOp,
+  }) : _onSignedOut = onSignedOut ?? _noOp,
        super(const RuntimeConnectionLoading());
 
   final RuntimeEndpointStore _endpoints;

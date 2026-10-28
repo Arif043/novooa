@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["lib/**", "node_modules/**", "drizzle/**", "cloudrun/**", "*.config.ts", "*.config.mjs"],
+    ignores: ["lib/**", "dist-protected/**", "node_modules/**", "drizzle/**", "cloudrun/**", "*.config.ts", "*.config.mjs"],
   },
   {
     files: ["src/**/*.ts"],

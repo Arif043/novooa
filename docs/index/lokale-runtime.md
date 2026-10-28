@@ -11,6 +11,7 @@
 - [Ports und Netze der Runtime](../notes/runtime-ports-und-netze.md)
 - [Volumes und Datenablage der Runtime](../notes/runtime-volumes-und-datenablage.md)
 - [Images, Updates und Neustarts](../notes/runtime-images-und-updates.md)
+- [Quellcode-Schutz der ausgelieferten Images](../notes/runtime-quellcode-schutz.md)
 - [Lokaler Start der Runtime](../notes/runtime-lokaler-start.md)
 - [Entwicklungsmodus ohne Lizenz](../notes/runtime-entwicklungsmodus.md)
 

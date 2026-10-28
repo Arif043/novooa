@@ -48,7 +48,10 @@ class FcmBootstrapper {
     required bool requestPermission,
   }) async {
     try {
-      if (user == null) return _clearCurrentRegistration();
+      if (user == null) {
+        await _clearCurrentRegistration();
+        return;
+      }
       await _unregisterPreviousUser(user);
       _currentUser = user;
       final token = await _tokenProvider.currentToken(

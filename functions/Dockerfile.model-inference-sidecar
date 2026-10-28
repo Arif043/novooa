@@ -1,3 +1,18 @@
+# Härtungs-Stage: Python-Module mit Nuitka zu nativen .so kompilieren
+# (siehe local-runtime/python/harden_python.py).
+FROM python:3.12-slim AS harden
+
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends build-essential \
+  && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir nuitka
+
+WORKDIR /src
+COPY local-runtime/python/novooa_ml ./novooa_ml
+COPY local-runtime/python/novooa_bundles ./novooa_bundles
+COPY local-runtime/python/harden_python.py ./harden_python.py
+RUN python harden_python.py /src && rm -f harden_python.py
+
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -7,7 +22,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends espeak-ng &&
 COPY local-runtime/python/requirements.txt /tmp/requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY local-runtime/python /app/python
+# Nur die gehärteten Module statt des Quelltexts.
+COPY --from=harden /src /app/python
 
 # Daten des ML-Dienstes (Bündel, Mandantenliste); gehören dem unprivilegierten Nutzer.
 RUN mkdir -p /var/lib/novooa-ml && chown -R 65532:65532 /var/lib/novooa-ml
@@ -18,4 +34,6 @@ ENV PORT=8081 \
 
 USER 65532
 
-CMD ["python", "-m", "novooa_ml.inference_server"]
+# -m novooa_ml startet den gehärteten Launcher (novooa_ml/__main__.py), der die
+# kompilierte inference_server.so aufruft.
+CMD ["python", "-m", "novooa_ml"]
