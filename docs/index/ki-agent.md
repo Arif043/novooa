@@ -8,6 +8,7 @@
 - [Agentenmodell über Remote Config](../notes/agent-modell-remote-config.md)
 - [Relay des Aufgabenstudio-Agenten](../notes/aufgabenstudio-agent-relay.md)
 - [Antwortsprache des Agenten](../notes/agent-antwortsprache.md)
+- [Framework für LLM-Aufrufe](../notes/llm-aufruf-framework.md)
 
 ## Aufbau
 

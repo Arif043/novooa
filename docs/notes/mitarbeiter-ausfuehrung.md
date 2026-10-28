@@ -1,6 +1,6 @@
 # Ausführung eines Mitarbeiters
 
-> Ein Mitarbeiter läuft als einzelner `ai.generate`-Turn ohne gespeicherten Verlauf, mit der Rahmenbedingung als System-Prompt.
+> Ein Mitarbeiter läuft als einzelner Modellaufruf ohne gespeicherten Verlauf; im Prompt-Baustein ist seine Rahmenbedingung ein eigener Systemabschnitt neben der Grundrolle.
 
 Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
 
@@ -10,10 +10,14 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
    ab. **Seine Fähigkeiten ersetzen die des Bausteins** und werden nach
    `<workspace>/skills/<name>/` kopiert. Auch ohne Fähigkeiten entsteht ein
    Workspace, damit die Rahmenbedingung ankommt.
-2. [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts)
-   ruft `ai.generate({model, system: constraint, prompt: anweisung, use,
-   output, config})` auf. `use` reicht Retry-, Dateisystem- und
-   Skill-Middleware durch. Leere Rahmenbedingung → kein System-Prompt.
+2. **Prompt-Baustein:** Der Aufruf läuft über das
+   [LLM-Framework](./llm-aufruf-framework.md). Die Rahmenbedingung steht als
+   `<employee name="…">` im Systemteil, die Rolle verweist darauf; sie ersetzt
+   die Grundanweisungen nicht mehr. Leere Rahmenbedingung → kein Abschnitt.
+   **Iterative Verfeinerung** nutzt noch
+   [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts):
+   dort ist die Rahmenbedingung der ganze System-Prompt (Umstellung geplant).
+   `use` reicht Retry-, Dateisystem- und Skill-Middleware durch.
 3. **Kein `defineAgent`:** Genkits Agent (Beta, 1.42) legt die Modellantwort
    samt Parser-Funktion in seinen Session-Zustand und kopiert ihn mit
    `structuredClone`. Mit Ausgabeschema (strukturierte Ausgabe, Entscheidung)
@@ -25,8 +29,8 @@ In der [Teamarbeit](./teamwork-ausfuehrung.md) führt jeder Mitarbeiter dagegen
 ein Gespräch über den ganzen Lauf (`EmployeeConversation`, `defineAgent` ohne
 Ausgabeschema).
 
-Bilder im Prompt gehen als Teil der Anweisung mit; die Rahmenbedingung bleibt
-auch dann der System-Prompt.
+Bilder im Prompt gehen als Medienteile mit; die Rahmenbedingung bleibt auch
+dann im Systemteil.
 
 ## Siehe auch
 

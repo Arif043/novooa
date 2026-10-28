@@ -17,6 +17,10 @@ import {type LanguageModelFailure} from "../../../../language_models/domain/enti
 import {languageModelFailureFrom} from "../../../../language_models/infrastructure/errors/language-model-failure-mapper.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
+import {type LlmGateway} from "../../../../language_models/domain/prompting/llm-gateway.js";
+import {type GenkitLlmBinding} from "../../../../language_models/infrastructure/genkit/llm/genkit-llm-binding.js";
+import {createLlmGateway} from "../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
+import {ReadableLlmCallLog} from "../runner/readable-llm-call-log.js";
 
 export type {PromptNodeInput, PromptNodeOutput, PromptNodeOutputType} from "./prompt-node-types.js";
 export {languageModelFor} from "./prompt-language-model.js";
@@ -34,10 +38,10 @@ export type GenkitPromptExecutorDependencies = {
  * vorher übersetzt) zu einer `LanguageModelFailure`.
  */
 export class GenkitPromptExecutor implements PromptExecutor {
-  private readonly logger: ApplicationLogger;
+  private readonly gateway: LlmGateway<GenkitLlmBinding>;
 
   constructor(private readonly dependencies: GenkitPromptExecutorDependencies) {
-    this.logger = dependencies.logger ?? new FirebaseApplicationLogger();
+    this.gateway = createLlmGateway(new ReadableLlmCallLog(dependencies.logger ?? new FirebaseApplicationLogger()));
   }
 
   execute(request: PromptNodeInput): ResultAsync<PromptNodeOutput, LanguageModelFailure> {
@@ -55,7 +59,7 @@ export class GenkitPromptExecutor implements PromptExecutor {
 
   private callFor(request: PromptNodeInput, languageModel: ResolvedGenkitLanguageModel | undefined): PromptModelCall {
     const {ai, workspace} = this.dependencies;
-    const base = {ai: languageModel?.ai ?? ai, workspace, logger: this.logger};
+    const base = {ai: languageModel?.ai ?? ai, workspace, gateway: this.gateway};
     if (languageModel) {
       const config = languageModel.generationConfig.configFor(request.generationOptions);
       return {...base, model: languageModel.model, config, logContext: languageModel.logContext};

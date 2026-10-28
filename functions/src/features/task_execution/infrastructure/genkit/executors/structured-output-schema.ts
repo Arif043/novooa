@@ -1,44 +1,11 @@
-import {z} from "genkit";
 import {type NodeOutputValue, primitiveNodeOutputValue} from "../../../domain/entities/workflow-value.js";
 import {ModelOutputSchemaError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
 import {type StructuredOutputField} from "./prompt-node-types.js";
 
 export type StructuredFieldValue = string | number | boolean;
 
-/** Das Ausgabeschema einer strukturierten Ausgabe aus den Feldern des Bausteins. */
-export function structuredSchemaFor(fields: StructuredOutputField[]) {
-  const shape = fields.reduce<Record<string, z.ZodTypeAny>>((schema, field) => {
-    schema[field.name.trim()] = fieldSchemaFor(field);
-    return schema;
-  }, {});
-  return z.object(shape);
-}
-
-/** Schema eines Felds samt Beschreibung; Typen, die das Modell als Text liefert, bekommen einen Formathinweis. */
-export function fieldSchemaFor(field: Pick<StructuredOutputField, "type" | "description">): z.ZodTypeAny {
-  const description = [field.description.trim(), formatHintFor(field.type)].filter(Boolean).join(" ");
-  const base = baseSchemaFor(field.type);
-  return description.length === 0 ? base : base.describe(description);
-}
-
-// `number`/`boolean` nutzen Zods Coercion (Genkits eigene Empfehlung für
-// robuste strukturierte Ausgaben), da Modelle Zahlen/Wahrheitswerte
-// gelegentlich als String statt als natives JSON liefern. JSON kommt als Text,
-// weil freie Objekte in den Ausgabeschemas der Anbieter nicht überall erlaubt sind.
-function baseSchemaFor(type: StructuredOutputField["type"]): z.ZodTypeAny {
-  switch (type) {
-    case "number": return z.coerce.number();
-    case "boolean": return z.coerce.boolean();
-    case "datetime": return z.string().refine(isDateTime, "Erwartet Datum und Uhrzeit nach ISO 8601.");
-    default: return z.string().min(1);
-  }
-}
-
-function formatHintFor(type: StructuredOutputField["type"]): string {
-  if (type === "datetime") return "Datum und Uhrzeit nach ISO 8601, z. B. 2026-10-18T09:30:00.";
-  if (type === "json") return "Gültiges JSON als Text.";
-  return "";
-}
+// Schema-Aufbau liegt im LLM-Framework; hier nur die Umwandlung der Modellausgabe in Workflow-Werte.
+export {fieldSchemaFor, structuredSchemaFor} from "../../../../language_models/infrastructure/genkit/llm/llm-output-schema.js";
 
 /** Typisierte Workflow-Werte der definierten Felder; ungültiges JSON ist ein Schemafehler des Modells. */
 export function fieldOutputsFor(
@@ -67,10 +34,6 @@ function parsedJson(name: string, value: unknown): unknown {
   }
 }
 
-function isDateTime(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/.test(value.trim()) &&
-    !Number.isNaN(Date.parse(value));
-}
 
 /** Nur die im Baustein definierten Felder; zusätzliche Felder des Modells fallen weg. */
 export function definedFieldsOf<T>(

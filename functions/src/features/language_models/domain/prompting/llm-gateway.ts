@@ -1,0 +1,41 @@
+import {type LlmPrompt} from "./llm-prompt.js";
+
+export type LlmStructuredFieldType = "string" | "number" | "boolean" | "datetime" | "json";
+
+export type LlmStructuredField = {
+  readonly name: string;
+  readonly description: string;
+  readonly type: LlmStructuredFieldType;
+};
+
+/** Was der Aufruf liefern soll; das Schema dazu baut der Adapter, nicht die Aufrufstelle. */
+export type LlmOutputSpec =
+  | {readonly kind: "text"}
+  | {readonly kind: "choice"; readonly choices: readonly string[]}
+  | {readonly kind: "structured"; readonly fields: readonly LlmStructuredField[]}
+  | {readonly kind: "image"};
+
+/**
+ * Ein Aufruf eines Sprachmodells. `Binding` ist für die Domain opak: Modell, Konfiguration und
+ * Werkzeuge stellt die Infrastruktur (z. B. Genkit) bereit.
+ */
+export type LlmRequest<Binding> = {
+  readonly binding: Binding;
+  readonly prompt: LlmPrompt;
+  /** Lesbare Bezeichnung für das Protokoll, z. B. „Prompt / Text (Mitarbeiter: Rezeption)“. */
+  readonly label: string;
+  readonly output: LlmOutputSpec;
+};
+
+export type LlmResponse = {
+  readonly text: string;
+  /** Gewählte Option (`choice`) oder Objekt mit den Feldern (`structured`). */
+  readonly data?: unknown;
+  /** Data-URL des erzeugten Bilds (`image`). */
+  readonly mediaUrl?: string;
+};
+
+/** Der eine Weg zu einem Sprachmodell; Protokoll und Fehlerübersetzung legen sich als Decorator darum. */
+export interface LlmGateway<Binding> {
+  generate(request: LlmRequest<Binding>): Promise<LlmResponse>;
+}

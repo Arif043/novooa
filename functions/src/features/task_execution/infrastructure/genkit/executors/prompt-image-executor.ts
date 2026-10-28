@@ -1,34 +1,21 @@
 import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
-import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {fileOutputFor} from "../../../domain/services/file-output-values.js";
 import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition.js";
-import {formatModelCallFinished, formatModelCallStarted} from "../runner/structured-logger.js";
 import {imageDataFromDataUrl, imageExtensionFor} from "./image-data-url.js";
-import {promptContentFor} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
-import {type PromptModelCall} from "./prompt-model-call.js";
-import {withTranslatedGenkitErrors} from "../../../../language_models/infrastructure/errors/genkit-error-translator.js";
+import {bindingFor, type PromptModelCall} from "./prompt-model-call.js";
+import {promptNodePrompt} from "./prompt-node-prompt.js";
+import {promptNodeLabel} from "./prompt-text-executor.js";
 import {ModelEmptyResponseError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
 
-/** Bildmodelle verlangen die Bild-Modalität; Generierungsoptionen gelten hier nicht. */
+/** Bildmodelle verlangen die Bild-Modalität; die setzt der Gateway, Generierungsoptionen gelten hier nicht. */
 export async function executeImagePrompt(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
-  const prompt = promptContentFor(input, call.workspace);
-  const label = input.employee ? `Prompt / Bild (Mitarbeiter: ${input.employee.name})` : "Prompt / Bild";
-  const startedAt = Date.now();
-  call.logger.readableInfo(formatModelCallStarted({
-    label, model: call.logContext, prompt: prompt.text, outputSchema: "dataUrl: Bild-Data-URL",
-    mediaCount: input.mediaUrls.length,
-  }));
-  const response = await withTranslatedGenkitErrors(() => call.ai.generate({
-    model: call.model, prompt: prompt.content,
-    config: {responseModalities: ["IMAGE"]}, use: aiTurnMiddleware(call.workspace),
-  }));
-  const dataUrl = response.media?.url;
+  const response = await call.gateway.generate({
+    binding: bindingFor(call), prompt: promptNodePrompt(input, call.workspace),
+    label: promptNodeLabel(input, "Bild"), output: {kind: "image"},
+  });
+  const dataUrl = response.mediaUrl;
   if (!isImageDataUrl(dataUrl)) throw new ModelEmptyResponseError("Der Bild-Prompt lieferte keine Bild-Data-URL.");
-  call.logger.readableInfo(formatModelCallFinished({
-    label, durationMs: Date.now() - startedAt,
-    text: `Bild generiert (${dataUrl.length} Zeichen)`,
-  }));
   return {answer: dataUrl, outputs: {dataUrl: {type: "string", value: dataUrl}}};
 }
 

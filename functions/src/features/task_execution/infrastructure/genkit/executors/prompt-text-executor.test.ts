@@ -82,7 +82,7 @@ test("json-Feld kommt als Text und wird geparst; ungültiges JSON ist ein Schema
   const field = fieldFor("json", {name: "kunde", description: "Der Kunde"});
   const fieldSchema = (structuredSchemaFor([field]).shape as Record<string, {description?: string}>).kunde;
 
-  assert.equal(fieldSchema.description, "Der Kunde Gültiges JSON als Text.");
+  assert.equal(fieldSchema.description, "Der Kunde Valid JSON as text.");
   assert.deepEqual(fieldOutputsFor({kunde: "{\"name\":\"Ada\"}"}, [field]), {kunde: {type: "json", value: {name: "Ada"}}});
   assert.throws(() => fieldOutputsFor({kunde: "{kaputt"}, [field]), /Das Feld „kunde“ enthält kein gültiges JSON/);
 });

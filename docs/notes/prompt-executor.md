@@ -24,8 +24,14 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   strukturierte Ausgabe verlangt Genkit dann über Anweisungen im Prompt.
 - **Generierungsoptionen** (Temperatur, Antwortlänge, Kontextfenster,
   Nachdenken) pro Baustein: [Generierungsoptionen](./generierungsoptionen.md).
-- Das Protokoll nennt pro Modellaufruf die Optionen und die Zahl der Bilder;
-  Bilder stehen nie im Eingabetext, sondern gehen als eigene Medienteile mit.
+- **Prompt:** baut `prompt-node-prompt.ts` mit dem
+  [LLM-Framework](./llm-aufruf-framework.md): englische Rolle („ein Schritt
+  einer automatisierten Aufgabe, nur das Ergebnis“), ggf. Mitarbeiter,
+  Anhänge, kurzer Formathinweis und Antwortsprache im Systemteil; die
+  Anweisung wörtlich als `<task>`. Der Aufruf läuft über `LlmGateway`.
+- Das Protokoll nennt pro Modellaufruf den gerenderten Prompt, die Optionen
+  und die Zahl der Bilder; Bilder stehen nie im Eingabetext, sondern gehen
+  als eigene Medienteile mit.
 - Anweisungen nutzen `{{name}}` und Dot-Pfade (`{{kunde.name}}`); Anhänge im
   read-only Workspace. Transiente Modellfehler: exponentieller Backoff.
 - Optional ein [Mitarbeiter](../index/mitarbeiter.md) **oder** eigene

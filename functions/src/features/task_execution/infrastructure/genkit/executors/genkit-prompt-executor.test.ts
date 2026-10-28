@@ -18,6 +18,9 @@ import {type LanguageModelDefaultsStore} from "../../../../language_models/domai
 import {defaultGenerationOptions} from "../../../../language_models/domain/entities/generation-options.js";
 import {ModelEmptyResponseError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
 import {type PromptModelCall} from "./prompt-model-call.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {createLlmGateway} from "../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
+import {ReadableLlmCallLog} from "../runner/readable-llm-call-log.js";
 
 test("returns only a data URL for an image prompt", async () => {
   const generatedImage = "data:image/png;base64,aW1hZ2U=";
@@ -153,9 +156,12 @@ function fakeAi(
 }
 
 function imageCall(ai: PromptModelCall["ai"]): PromptModelCall {
-  return {ai, model: "image-model" as never, config: {}, logContext: {}, logger: silentLogger()};
+  return {
+    ai, model: "image-model" as never, config: {}, logContext: {},
+    gateway: createLlmGateway(new ReadableLlmCallLog(silentLogger())),
+  };
 }
 
-function silentLogger(): PromptModelCall["logger"] {
+function silentLogger(): ApplicationLogger {
   return {readableInfo() {}, readableError() {}, info() {}, error() {}, exception() {}};
 }

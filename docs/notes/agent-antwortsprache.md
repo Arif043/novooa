@@ -8,7 +8,9 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
   Anfragekörper von Callable, Runtime-Route und Relay.
 - `promptWithAnswerLanguage` hängt die Antwortsprache an den Nutzerprompt.
 - Fehlt `locale` (ältere Clients), antwortet der Agent deutsch.
-- Die System-Prompts selbst sind noch deutsch.
+- Die System-Prompts der Agenten sind noch deutsch; mit der Umstellung auf das
+  [LLM-Framework](./llm-aufruf-framework.md) (geplant) werden sie englisch,
+  die Antwortsprache steuert dann der Abschnitt `response_language`.
 
 ## Siehe auch
 

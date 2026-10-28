@@ -10,7 +10,7 @@ test("provides a media template value as a Genkit media part", async () => {
     runContext() as never,
   );
   assert.deepEqual(prompts, [[
-    {text: "Kannst du das Bild sehen?"},
+    {text: "<task>\nKannst du das Bild sehen?\n</task>"},
     {media: {url: "data:image/png;base64,iVBORw0KGgo="}},
   ]]);
 });

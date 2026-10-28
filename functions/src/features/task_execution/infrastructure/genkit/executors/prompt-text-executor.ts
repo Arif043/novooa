@@ -1,82 +1,50 @@
-import {z} from "genkit";
-import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
-import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
-import {formatModelCallFinished, formatModelCallStarted} from "../runner/structured-logger.js";
-import {promptContentFor, validStructuredFields} from "./prompt-node-input.js";
-import {type PromptContent, type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
-import {type PromptModelCall} from "./prompt-model-call.js";
-import {definedFieldsOf, fieldOutputsFor, structuredSchemaFor} from "./structured-output-schema.js";
-import {withTranslatedGenkitErrors} from "../../../../language_models/infrastructure/errors/genkit-error-translator.js";
+import {type LlmOutputSpec, type LlmResponse} from "../../../../language_models/domain/prompting/llm-gateway.js";
 import {ModelOutputSchemaError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
+import {validStructuredFields} from "./prompt-node-input.js";
+import {promptNodePrompt} from "./prompt-node-prompt.js";
+import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
+import {bindingFor, type PromptModelCall} from "./prompt-model-call.js";
+import {definedFieldsOf, fieldOutputsFor} from "./structured-output-schema.js";
 
 export {fieldOutputsFor, structuredSchemaFor} from "./structured-output-schema.js";
 
-type ModelResponse<T> = {output: T | undefined; text: string};
 
 export async function executeTextPrompt(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
-  const prompt = promptContentFor(input, call.workspace);
-  const response = await logged(call, input, prompt, "Text", undefined,
-    () => generate<z.ZodTypeAny>(call, input, prompt));
+  const response = await generate(call, input, "Text", {kind: "text"});
   return {answer: response.text, outputs: textOutputs(response.text)};
 }
 
 export async function executeDecisionPrompt(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
   if (input.choices.length === 0) throw new Error("Decision prompt requires at least one choice.");
-  const prompt = promptContentFor(input, call.workspace);
-  const schema = z.object({answer: z.enum(input.choices as [string, ...string[]])});
-  const response = await logged(call, input, prompt, "Entscheidung", "answer: enum",
-    () => generate(call, input, prompt, schema));
-  const answer = response.output?.answer;
-  if (answer === undefined) throw new ModelOutputSchemaError(`Die Entscheidung des Modells fehlt: ${response.text}`);
+  const response = await generate(call, input, "Entscheidung", {kind: "choice", choices: input.choices});
+  const answer = response.data;
+  if (typeof answer !== "string") throw new ModelOutputSchemaError(`Die Entscheidung des Modells fehlt: ${response.text}`);
   return {answer, outputs: textOutputs(answer)};
 }
 
 export async function executeStructuredPrompt(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
   const fields = validStructuredFields(input.structuredFields);
   if (fields.length === 0) throw new Error("Strukturierte Ausgabe benötigt mindestens ein Feld.");
-  const prompt = promptContentFor(input, call.workspace);
-  const fieldNames = fields.map((field) => field.name).join(", ");
-  const response = await logged(call, input, prompt, "Strukturierte Ausgabe", fieldNames,
-    () => generate(call, input, prompt, structuredSchemaFor(fields)));
-  const rawOutput: Record<string, unknown> | undefined = response.output;
-  if (rawOutput === undefined) throw new ModelOutputSchemaError(`Das Modell lieferte keine strukturierte Ausgabe: ${response.text}`);
-  const output = definedFieldsOf(rawOutput, fields);
+  const response = await generate(call, input, "Strukturierte Ausgabe", {kind: "structured", fields});
+  if (!isRecord(response.data)) throw new ModelOutputSchemaError(`Das Modell lieferte keine strukturierte Ausgabe: ${response.text}`);
+  const output = definedFieldsOf(response.data, fields);
   return {answer: JSON.stringify(output), outputs: fieldOutputsFor(output, fields)};
 }
 
-async function logged<T>(
-  call: PromptModelCall, input: PromptNodeInput, prompt: PromptContent, kind: string,
-  outputSchema: string | undefined, run: () => Promise<ModelResponse<T>>,
-): Promise<ModelResponse<T>> {
-  const label = input.employee ? `Prompt / ${kind} (Mitarbeiter: ${input.employee.name})` : `Prompt / ${kind}`;
-  const startedAt = Date.now();
-  call.logger.readableInfo(formatModelCallStarted({
-    label, model: call.logContext, prompt: prompt.text, outputSchema,
-    mediaCount: input.mediaUrls.length, options: call.config,
-  }));
-  const response = await run();
-  call.logger.readableInfo(formatModelCallFinished({
-    label, durationMs: Date.now() - startedAt, text: response.text, output: response.output,
-  }));
-  return response;
+/** Ein Aufruf über das LLM-Framework; mit Mitarbeiter steht seine Rahmenbedingung im Systemteil. */
+function generate(call: PromptModelCall, input: PromptNodeInput, kind: string, output: LlmOutputSpec): Promise<LlmResponse> {
+  return call.gateway.generate({
+    binding: bindingFor(call), prompt: promptNodePrompt(input, call.workspace), label: promptNodeLabel(input, kind), output,
+  });
 }
 
-/** Mit Mitarbeiter ist seine Rahmenbedingung der System-Prompt, auch wenn Bilder dabei sind. */
-async function generate<S extends z.ZodTypeAny>(
-  call: PromptModelCall, input: PromptNodeInput, prompt: PromptContent, schema?: S,
-): Promise<ModelResponse<z.infer<S>>> {
-  const output = schema ? {schema} : undefined;
-  const use = aiTurnMiddleware(call.workspace);
-  return withTranslatedGenkitErrors(async () => {
-    if (input.employee) {
-      const response = await runEmployeeAgentTurn(call.ai, {
-        employee: input.employee, model: call.model, prompt: prompt.content, use, output, config: call.config,
-      });
-      return {output: response.data ?? undefined, text: response.text};
-    }
-    const response = await call.ai.generate({model: call.model, prompt: prompt.content, output, use, config: call.config});
-    return {output: response.output ?? undefined, text: response.text};
-  });
+/** Bezeichnung im Protokoll, mit Mitarbeiter, falls einer den Baustein ausführt. */
+export function promptNodeLabel(input: PromptNodeInput, kind: string): string {
+  return input.employee ? `Prompt / ${kind} (Mitarbeiter: ${input.employee.name})` : `Prompt / ${kind}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function textOutputs(text: string) {

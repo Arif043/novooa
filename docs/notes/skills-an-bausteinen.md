@@ -24,7 +24,8 @@ Fähigkeiten **oder** einen [Mitarbeiter](./mitarbeiter.md), nie beides
    gefaltete Beschreibungen (`description: >`) nicht. Originale bleiben.
 2. [`node-attachment-genkit.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/node-attachment-genkit.ts)
    hängt `skills({skillPaths: [<skillsDir>]})` aus `@genkit-ai/middleware` an:
-   ein System-Prompt-Fragment listet die Skills, `use_skill` liefert die
+   ein `<skills>`-Block im Systemteil listet die Skills (passt zum XML-Format
+   des [LLM-Frameworks](./llm-aufruf-framework.md)), `use_skill` liefert die
    `SKILL.md` (Progressive Disclosure), weitere Dateien liest das Modell über
    die `filesystem`-Middleware.
 3. Fehlt ein Skill, bricht der Baustein ab: „Der Skill „x“ wurde nicht

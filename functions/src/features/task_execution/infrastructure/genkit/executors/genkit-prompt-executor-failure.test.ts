@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {GenkitError} from "genkit";
 import {GenkitPromptExecutor, type PromptNodeInput} from "./genkit-prompt-executor.js";
-import {type PromptModelCall} from "./prompt-model-call.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {ollamaGenerationConfig} from "../../../../language_models/infrastructure/genkit/generation-config/ollama-generation-config.js";
 import {defaultGenerationOptions, generationOptionsFrom} from "../../../../language_models/domain/entities/generation-options.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
@@ -72,6 +72,6 @@ function fakeResolver(): GenkitLanguageModelResolver {
   }};
 }
 
-function silentLogger(): PromptModelCall["logger"] {
+function silentLogger(): ApplicationLogger {
   return {readableInfo() {}, readableError() {}, info() {}, error() {}, exception() {}};
 }

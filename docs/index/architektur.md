@@ -8,6 +8,7 @@
 - [Backend: Feature-First-Struktur](../notes/backend-feature-first.md)
 - [Backend: Schichtregeln](../notes/backend-schichtregeln.md)
 - [Fehlerschichtung eines Modellaufrufs](../notes/fehlerschichtung-modellaufruf.md)
+- [Framework für LLM-Aufrufe](../notes/llm-aufruf-framework.md)
 - [Kern-Entitäten](../notes/kern-entitaeten.md)
 - [Lokalisierung](../notes/lokalisierung.md)
 - [Genkit-Flow-Konventionen](../notes/genkit-flow-konventionen.md)
