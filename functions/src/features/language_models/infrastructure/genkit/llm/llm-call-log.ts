@@ -24,3 +24,9 @@ export interface LlmCallLog {
   started(entry: LlmCallStarted): void;
   finished(entry: LlmCallFinished): void;
 }
+
+/** Für Aufrufe ohne Protokoll, z. B. die In-App-Agenten. */
+export const silentLlmCallLog: LlmCallLog = {
+  started: () => undefined,
+  finished: () => undefined,
+};

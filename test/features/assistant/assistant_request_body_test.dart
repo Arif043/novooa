@@ -20,4 +20,24 @@ void main() {
 
     expect(body.containsKey('locale'), isFalse);
   });
+
+  test('schickt die jüngsten Nachrichten als Verlauf, nicht die ältesten', () {
+    final conversation = [
+      for (var index = 1; index <= 12; index++)
+        AssistantMessage.user('Nachricht $index'),
+      AssistantMessage.user('Aktuelle Frage'),
+    ];
+
+    final body = assistantRequestBody(
+      history: conversation,
+      question: 'Aktuelle Frage',
+    );
+
+    final texts = (body['history']! as List)
+        .map((message) => (message as Map)['text'])
+        .toList();
+    expect(texts, [
+      for (var index = 5; index <= 12; index++) 'Nachricht $index',
+    ]);
+  });
 }

@@ -31,8 +31,9 @@ Gehört zu: [Architektur](../index/architektur.md)
   trägt auch Werkzeuge, `maxTurns` und ein fortgesetztes Gespräch
   (`continuation`, aus `LlmResponse.conversation`); Textfelder dürfen mit
   `allowEmpty` leer bleiben;
-  `output` ist `text`, `choice`, `structured` oder `image` — das Schema baut
-  der Adapter (`llm-output-schema.ts`), der Prompt nennt das Format nur
+  `output` ist `text`, `choice`, `structured`, `image` oder `schema` (ein
+  fertiges Schema der Infrastruktur, für die Domain opak) — das Schema baut
+  sonst der Adapter (`llm-output-schema.ts`), der Prompt nennt das Format nur
   kurz. `GenkitLlmGateway` ist der einzige Aufruf von `ai.generate`.
 - **Decorators** (`llm-gateway-factory.ts`): außen Fehlerübersetzung
   (`withTranslatedGenkitErrors`), darin das Protokoll mit dem gerenderten
@@ -43,18 +44,25 @@ Gehört zu: [Architektur](../index/architektur.md)
 
 ## Stand der Umstellung
 
-- Umgestellt: alle Bausteine der Aufgabenausführung —
-  [Prompt-Baustein](./prompt-executor.md) (`prompt-node-prompt.ts`),
-  [Iterative Verfeinerung](./iterative-verfeinerung.md)
+Alle LLM-Aufrufe laufen über das Framework:
+
+- **Aufgabenausführung:** [Prompt-Baustein](./prompt-executor.md)
+  (`prompt-node-prompt.ts`), [Iterative Verfeinerung](./iterative-verfeinerung.md)
   (`iterative-refinement-prompts.ts`) und [Teamarbeit](./teamwork-ausfuehrung.md)
   (Orchestrator, Prüfung, Systemteil und Aufträge der Mitglieder). Gemeinsame
   Formulierungen (Anhänge, Verweis auf den Mitarbeiter) stehen in
   `workflow-prompt-sections.ts`; die Rolle verweist nur auf `<employee>`, wenn
   es eine Rahmenbedingung gibt.
+- **In-App-Agenten:** Aufgabenstudio-Agent und Wissensbasis-Agent über
+  `GenkitAssistantResponder` (Verlauf aus dem Client als `history`, Ausgabeart
+  `schema` für das Zod-Schema mit Commands, Aktionskontext für die Werkzeuge),
+  die drei Subagenten über `defineSubagentTool`
+  ([Antwortsprache des Agenten](./agent-antwortsprache.md)).
 - Mitglieder der Teamarbeit führen ein zustandsbehaftetes Genkit-Gespräch
   (`EmployeeConversation`); sie nutzen Builder und Renderer, aber nicht den
-  Gateway.
-- Geplant: Aufgabenstudio-Agent und seine Subagenten, Wissensbasis-Agent.
+  Gateway — ohne Protokoll und Fehlerübersetzung je Turn.
+- Protokoll: Aufrufe der Aufgabenausführung erscheinen im Ausführungsprotokoll
+  (`ReadableLlmCallLog`); die Agenten laufen mit `silentLlmCallLog`.
 
 ## Siehe auch
 

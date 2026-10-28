@@ -1,12 +1,10 @@
-const urlPattern = /(?:https?:\/\/|www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?:\:\d{1,5})?(?:\/[^\s<>()\[\]{}]*)?/gi;
+const urlPattern = /(?:https?:\/\/|www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?::\d{1,5})?(?:\/[^\s<>()[\]{}]*)?/gi;
 
-export function promptWithUrlContext(question: string): string {
-  const urls = publicUrlsIn(question);
-  if (urls.length === 0) return question;
-  return `Öffentliche Webseiten, die du für diese Frage auswerten sollst:\n${urls.join("\n")}\n\nNutzerfrage:\n${question}`;
-}
-
-function publicUrlsIn(text: string): string[] {
+/**
+ * Öffentliche Webseiten aus der Frage, normalisiert für Genkits URL Context (nackte Domains bekommen
+ * `https://`, E-Mail-Adressen zählen nicht). Der Agent bekommt sie als `<context name="public_urls">`.
+ */
+export function publicUrlsIn(text: string): string[] {
   const urls = new Set<string>();
   for (const match of text.matchAll(urlPattern)) addUrl(urls, match, text);
   return [...urls];

@@ -11,6 +11,9 @@ abstract interface class AssistantDatasource {
   });
 }
 
+/// So viele frühere Nachrichten gehen als Verlauf mit.
+const maximumHistoryMessages = 8;
+
 /// Gemeinsamer Anfrage-Body für beide Transporte — identisches
 /// Nachrichtenformat, nur die Übertragung unterscheidet sich. Die zuletzt
 /// angehängte Nachricht in [history] ist immer die aktuelle [question]
@@ -24,9 +27,13 @@ Map<String, Object?> assistantRequestBody({
   final priorMessages = history.length > 1
       ? history.sublist(0, history.length - 1)
       : const <AssistantMessage>[];
+  // Die jüngsten Nachrichten tragen den aktuellen Zusammenhang; ältere fallen weg.
+  final recent = priorMessages.length > maximumHistoryMessages
+      ? priorMessages.sublist(priorMessages.length - maximumHistoryMessages)
+      : priorMessages;
   return {
     'question': question,
-    'history': priorMessages.take(8).map(_messageMap).toList(growable: false),
+    'history': recent.map(_messageMap).toList(growable: false),
     'locale': ?languageCode,
   };
 }

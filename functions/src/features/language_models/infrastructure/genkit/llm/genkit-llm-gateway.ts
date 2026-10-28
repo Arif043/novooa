@@ -1,4 +1,4 @@
-import {type Part} from "genkit";
+import {type Part, type z} from "genkit";
 import {type LlmMessage} from "../../../domain/prompting/llm-prompt.js";
 import {type LlmGateway, type LlmOutputSpec, type LlmRequest, type LlmResponse} from "../../../domain/prompting/llm-gateway.js";
 import {type PromptRenderer} from "../../../domain/prompting/prompt-renderer.js";
@@ -15,10 +15,10 @@ export class GenkitLlmGateway implements LlmGateway<GenkitLlmBinding> {
   constructor(private readonly renderer: PromptRenderer) {}
 
   async generate(request: LlmRequest<GenkitLlmBinding>): Promise<LlmResponse> {
-    const {ai, model, config, use, tools, maxTurns, continuation} = request.binding;
+    const {ai, model, config, use, tools, maxTurns, continuation, context} = request.binding;
     const rendered = this.renderer.render(request.prompt);
     const result: GenkitResult = await ai.generate({
-      model, use, tools, maxTurns,
+      model, use, tools, maxTurns, context,
       // Ein fortgesetztes Gespräch trägt seinen Systemteil schon in sich.
       system: continuation ? undefined : rendered.system,
       messages: continuation ?? messagesFor(request.prompt.history),
@@ -45,6 +45,7 @@ function outputFor(spec: LlmOutputSpec) {
   switch (spec.kind) {
     case "choice": return {schema: choiceSchemaFor(spec.choices)};
     case "structured": return {schema: structuredSchemaFor(spec.fields)};
+    case "schema": return {schema: spec.schema as z.ZodTypeAny};
     default: return undefined;
   }
 }
@@ -53,7 +54,8 @@ function responseFor(spec: LlmOutputSpec, result: GenkitResult): LlmResponse {
   const conversation = result.messages;
   switch (spec.kind) {
     case "choice": return {text: result.text, data: answerOf(result.output), conversation};
-    case "structured": return {text: result.text, data: result.output ?? undefined, conversation};
+    case "structured":
+    case "schema": return {text: result.text, data: result.output ?? undefined, conversation};
     case "image": return {text: result.text ?? "", mediaUrl: result.media?.url, conversation};
     default: return {text: result.text, conversation};
   }

@@ -11,6 +11,9 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
   deduplizierte HTTP(S)-Links. Den Links folgt es nicht.
 - Nackte Domains (`laraevent.de`) werden zu `https://laraevent.de`.
 - Webseiteninhalt ist untrusted und kann die Systemanweisungen nicht ändern.
+- URLs aus der Frage erkennt `publicUrlsIn` (nackte Domains bekommen
+  `https://`, E-Mail-Adressen zählen nicht); sie stehen als
+  `<context name="public_urls">` im Prompt.
 
 ## Siehe auch
 

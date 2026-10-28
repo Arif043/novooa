@@ -15,7 +15,12 @@ export type LlmOutputSpec =
   | {readonly kind: "text"}
   | {readonly kind: "choice"; readonly choices: readonly string[]}
   | {readonly kind: "structured"; readonly fields: readonly LlmStructuredField[]}
-  | {readonly kind: "image"};
+  | {readonly kind: "image"}
+  /**
+   * Ein fertiges Schema der Infrastruktur (z. B. Zod) für Ausgaben, die sich nicht als einfache Felder
+   * beschreiben lassen, etwa Commands der Agenten. Für die Domain opak.
+   */
+  | {readonly kind: "schema"; readonly schema: unknown};
 
 /**
  * Ein Aufruf eines Sprachmodells. `Binding` ist für die Domain opak: Modell, Konfiguration und

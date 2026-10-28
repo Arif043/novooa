@@ -1,12 +1,12 @@
-import {type GenerateOptions, type MessageData, type ModelArgument} from "genkit";
-import {type GenkitBeta} from "genkit/beta";
+import {type GenerateOptions, type Genkit, type MessageData, type ModelArgument} from "genkit";
 
 /**
  * Was die Domain als `Binding` nicht kennt: Genkit-Instanz, Modell, anbieterspezifische
  * Konfiguration und Middleware (Retry, Dateisystem, Skills). Baut die Aufrufstelle.
  */
 export type GenkitLlmBinding = {
-  ai: GenkitBeta;
+  /** Nur `generate` wird gebraucht; so passen `Genkit` wie `GenkitBeta`. */
+  ai: Pick<Genkit, "generate">;
   model: ModelArgument;
   /** Aus den Generierungsoptionen übersetzte Konfiguration; bei Bildern ersetzt der Gateway sie. */
   config: Record<string, unknown>;
@@ -22,4 +22,6 @@ export type GenkitLlmBinding = {
    * schon; der neue Prompt bringt dann nur die Folgenachricht.
    */
   continuation?: MessageData[];
+  /** Aktionskontext für Werkzeuge, z. B. Team und Berechtigung des Agenten-Aufrufs. */
+  context?: GenerateOptions["context"];
 };

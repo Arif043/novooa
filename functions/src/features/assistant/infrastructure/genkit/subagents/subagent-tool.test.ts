@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {PromptBuilder} from "../../../../language_models/domain/prompting/prompt-builder.js";
 import {z} from "genkit";
 import {DelegationBudget} from "./delegation-budget.js";
 import {defineSubagentTool, type SubagentGenkit, type SubagentResult} from "./subagent-tool.js";
@@ -29,7 +30,7 @@ function toolFor(
     name: "testagent",
     description: "Test",
     model: "test/model",
-    systemPrompt: "System",
+    instructions: PromptBuilder.create().role("System"),
     tools: [],
     inputSchema: z.object({frage: z.string()}),
     outputSchema,

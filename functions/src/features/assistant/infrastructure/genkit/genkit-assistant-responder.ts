@@ -1,14 +1,22 @@
-import {z, type Genkit, type ModelArgument, type ToolArgument} from "genkit";
+import {type Genkit, type ModelArgument, type ToolArgument, type z} from "genkit";
+import {type LlmGateway} from "../../../language_models/domain/prompting/llm-gateway.js";
+import {type PromptBuilder} from "../../../language_models/domain/prompting/prompt-builder.js";
+import {type GenkitLlmBinding} from "../../../language_models/infrastructure/genkit/llm/genkit-llm-binding.js";
+import {silentLlmCallLog, type LlmCallLog} from "../../../language_models/infrastructure/genkit/llm/llm-call-log.js";
+import {createLlmGateway} from "../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
 import {type AssistantExecutionContext} from "../../domain/entities/assistant-execution-context.js";
-import {type AssistantMessage} from "../../domain/entities/assistant-message.js";
 import {type AssistantRequest} from "../../domain/entities/assistant-request.js";
 import {type AssistantResponder} from "../../domain/repositories/assistant-responder.js";
 import {genkitContextFrom} from "./assistant-genkit-context.js";
+import {assistantPrompt} from "./assistant-prompt.js";
 
 export type GenkitAssistantResponderDependencies<TResponse> = {
   ai: Genkit;
   model: ModelArgument;
-  systemPrompt: string;
+  /** Name im Protokoll, z. B. „Aufgabenstudio-Agent“. */
+  label: string;
+  /** Feste Anweisungen des Agenten (Systemteil); Frage, Verlauf und Sprache ergänzt der Responder. */
+  instructions: PromptBuilder;
   tools: ToolArgument[];
   modelConfig: Record<string, unknown>;
   /**
@@ -18,44 +26,34 @@ export type GenkitAssistantResponderDependencies<TResponse> = {
    * schwaches lokales Modell es in ```json-Codezäune verpackt.
    */
   outputSchema: z.ZodTypeAny;
-  promptFromRequest?: (request: AssistantRequest) => string;
   /** Obergrenze der Tool-Runden; Orchestratoren mit Subagenten setzen sie niedriger. */
   maxTurns?: number;
   responseFromOutput: (output: unknown, text: string) => TResponse;
+  log?: LlmCallLog;
 };
 
-export class GenkitAssistantResponder<TResponse>
-  implements AssistantResponder<TResponse> {
-  constructor(
-    private readonly dependencies: GenkitAssistantResponderDependencies<TResponse>,
-  ) {}
+/**
+ * Ein Turn eines In-App-Agenten über das LLM-Framework. Zustandslos: Den Verlauf schickt der Client
+ * mit jeder Frage, deshalb passt derselbe Responder in Runtime und Relay.
+ */
+export class GenkitAssistantResponder<TResponse> implements AssistantResponder<TResponse> {
+  private readonly gateway: LlmGateway<GenkitLlmBinding>;
 
-  async respond(
-    request: AssistantRequest,
-    context: AssistantExecutionContext,
-  ): Promise<TResponse> {
-    const response = await this.dependencies.ai.generate({
-      model: this.dependencies.model,
-      system: this.dependencies.systemPrompt,
-      messages: request.history.map(messageForModel),
-      prompt: this.promptFor(request),
-      tools: this.dependencies.tools,
-      context: genkitContextFrom(context),
-      maxTurns: this.dependencies.maxTurns ?? 20,
-      config: this.dependencies.modelConfig,
-      output: {schema: this.dependencies.outputSchema},
+  constructor(private readonly dependencies: GenkitAssistantResponderDependencies<TResponse>) {
+    this.gateway = createLlmGateway(dependencies.log ?? silentLlmCallLog);
+  }
+
+  async respond(request: AssistantRequest, context: AssistantExecutionContext): Promise<TResponse> {
+    const {ai, model, label, instructions, tools, modelConfig, outputSchema, maxTurns, responseFromOutput} = this.dependencies;
+    const response = await this.gateway.generate({
+      binding: {
+        ai, model, config: modelConfig, logContext: {agent: label}, tools,
+        maxTurns: maxTurns ?? 20, context: genkitContextFrom(context),
+      },
+      prompt: assistantPrompt(instructions, request),
+      label,
+      output: {kind: "schema", schema: outputSchema},
     });
-    return this.dependencies.responseFromOutput(response.output, response.text);
+    return responseFromOutput(response.data, response.text);
   }
-
-  private promptFor(request: AssistantRequest): string {
-    return this.dependencies.promptFromRequest?.(request) ?? request.question;
-  }
-}
-
-function messageForModel(message: AssistantMessage) {
-  return {
-    role: message.role === "agent" ? "model" as const : "user" as const,
-    content: [{text: message.text}],
-  };
 }

@@ -25,7 +25,11 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 - **Team:** Der Callable löst das aktive Team auf (System- und Teammodelle).
 - **Umsetzung:** `defineSubagentTool`
   (`assistant/infrastructure/genkit/subagents`) erzeugt je Anfrage ein
-  `ai.dynamicTool`, damit Modell und Budget nur für diese Anfrage gelten. Specs:
+  `ai.dynamicTool`, damit Modell und Budget nur für diese Anfrage gelten. Der
+  Aufruf läuft über das [LLM-Framework](./llm-aufruf-framework.md): Die Spec
+  liefert Anweisungen als `PromptBuilder`, die Eingabe des Orchestrators kommt
+  als `<context name="input">` (Daten, keine Anweisung), freie Texte in der
+  Sprache der Anfrage. Specs:
   `machine_learning/infrastructure/genkit/model-catalog-subagent.ts`,
   `task_execution/infrastructure/genkit/assistant/subagents/`. Delegationen
   erscheinen als verschachtelte Spans im Genkit-Trace.
