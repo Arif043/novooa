@@ -6,7 +6,8 @@
     "greeting_day_named": "Guten Tag, {name}!",
     "greeting_evening": "Guten Abend!",
     "greeting_evening_named": "Guten Abend, {name}!",
-    "sign_out": "Abmelden"
+    "sign_out": "Abmelden",
+    "results": "Ergebnisse"
   },
   "task_builder": {
     "primitives": {
@@ -1527,5 +1528,47 @@
     "drive_upload": "In Google Drive gespeichert: {label}",
     "external_action": "{plugin}: {label}",
     "round": "Runde {round}"
+  },
+  "results": {
+    "title": "Ergebnisse",
+    "subtitle": "Was deine Aufgaben getan und bewirkt haben.",
+    "empty_title": "Noch keine Ergebnisse",
+    "empty_body": "Sobald eine Aufgabe läuft, siehst du hier, was dabei herausgekommen ist.",
+    "empty_action": "Zu den Aufgaben",
+    "no_match": "Kein Lauf passt zu diesem Filter.",
+    "load_failed": "Die Ergebnisse konnten nicht geladen werden.",
+    "run_load_failed": "Dieser Lauf konnte nicht geladen werden.",
+    "filter_all": "Alle",
+    "status_queued": "Eingereiht",
+    "status_running": "Läuft",
+    "status_waiting": "Wartet auf dich",
+    "status_rejected": "Abgelehnt",
+    "status_succeeded": "Erfolgreich",
+    "status_failed": "Fehlgeschlagen",
+    "duration_seconds": "{seconds} s",
+    "duration_minutes": "{minutes} min {seconds} s",
+    "started_by": "von {name}",
+    "by_trigger": "durch einen Auslöser",
+    "effects_one": "1 Folge",
+    "effects_many": "{count} Folgen",
+    "no_effects": "Keine Folgen",
+    "result_title": "Ergebnis",
+    "no_output": "Dieser Lauf hat kein Endergebnis geliefert.",
+    "failure_title": "Woran es gescheitert ist",
+    "flow_title": "Ablauf",
+    "no_graph": "Für diesen Lauf gibt es keinen gespeicherten Graphen, er ist älter als die Ergebnisansicht. Die Bausteine stehen hier als Liste.",
+    "node_succeeded": "Ausgeführt",
+    "node_failed": "Fehlgeschlagen",
+    "node_skipped": "Übersprungen",
+    "node_waiting": "Wartet",
+    "node_not_run": "Nicht ausgeführt",
+    "round_of": "Runde {round} von {count}",
+    "previous_round": "Vorherige Runde",
+    "next_round": "Nächste Runde",
+    "no_values": "Keine Werte",
+    "open_result": "Ergebnis ansehen",
+    "node_details": "Details zu {name}",
+    "zoom_in": "Vergrößern",
+    "zoom_out": "Verkleinern"
   }
 }

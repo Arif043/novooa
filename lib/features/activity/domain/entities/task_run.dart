@@ -34,6 +34,10 @@ class TaskRun {
     this.reviewOutput,
     this.interaction,
     this.message,
+    this.startedAt,
+    this.completedAt,
+    this.triggerType,
+    this.startedByName,
   });
 
   final UniqueId id;
@@ -47,6 +51,23 @@ class TaskRun {
   final String? reviewOutput;
   final TaskRunInteraction? interaction;
   final String? message;
+
+  /// Beginn und Ende der Ausführung; fehlen, solange sie nicht begonnen bzw. geendet hat.
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+
+  /// Auslöserart bei automatischen Läufen (`schedule`, `event`, …).
+  final String? triggerType;
+
+  /// Wer den Lauf von Hand gestartet hat.
+  final String? startedByName;
+
+  Duration? get duration {
+    final start = startedAt;
+    final end = completedAt;
+    if (start == null || end == null || end.isBefore(start)) return null;
+    return end.difference(start);
+  }
 
   String? get reviewInstruction => interaction?.instruction;
 

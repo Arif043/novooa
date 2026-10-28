@@ -15,7 +15,7 @@ RUN npm run build
 COPY functions/scripts ./scripts
 RUN npm run harden:node
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS protected-runtime
 
 WORKDIR /app/functions
 
@@ -39,3 +39,34 @@ USER node
 EXPOSE 8080
 
 CMD ["node", "lib/shared/local/local-runtime-entrypoint.js"]
+
+# Die Web-Variante baut das Frontend aus dem Checkout, ohne lokalen Bind-Mount.
+FROM debian:bookworm-slim AS web-build
+
+ARG FLUTTER_VERSION=3.47.5
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils zip \
+  && rm -rf /var/lib/apt/lists/*
+RUN git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git /opt/flutter
+ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${PATH}" \
+    CI=true
+RUN flutter config --no-analytics && flutter precache --web
+
+WORKDIR /src
+COPY pubspec.yaml pubspec.lock ./
+COPY packages/novooa_runtime_client/pubspec.yaml ./packages/novooa_runtime_client/pubspec.yaml
+RUN flutter pub get --enforce-lockfile
+COPY packages/novooa_runtime_client/lib ./packages/novooa_runtime_client/lib
+COPY lib ./lib
+COPY assets ./assets
+COPY web ./web
+RUN flutter build web --release --no-source-maps --no-pub
+# Abhängigkeiten können eigene Maps als Assets mitbringen, unabhängig vom Compiler-Schalter.
+RUN find build/web -type f -name '*.map' -delete
+
+FROM protected-runtime AS web-runtime
+COPY --from=web-build /src/build/web /app/web
+ENV LOCAL_RUNTIME_WEB_DIRECTORY=/app/web
+
+# API-only-Ziel für Schlüssel-Kommandos und Builds ohne Web-App.
+FROM protected-runtime AS runtime

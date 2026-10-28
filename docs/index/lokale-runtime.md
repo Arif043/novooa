@@ -12,6 +12,7 @@
 - [Volumes und Datenablage der Runtime](../notes/runtime-volumes-und-datenablage.md)
 - [Images, Updates und Neustarts](../notes/runtime-images-und-updates.md)
 - [Quellcode-Schutz der ausgelieferten Images](../notes/runtime-quellcode-schutz.md)
+- [Deployment mit Coolify](../notes/coolify-deployment.md)
 - [Lokaler Start der Runtime](../notes/runtime-lokaler-start.md)
 - [Entwicklungsmodus ohne Lizenz](../notes/runtime-entwicklungsmodus.md)
 
@@ -124,8 +125,7 @@
 5. Token-Ablage im Browser entscheiden und dokumentieren.
 6. Widget-Test: Start im Web lädt ohne Adresseingabe.
 7. `Origin`-Prüfung beim WebSocket-Upgrade für Web-Clients.
-8. Web-App aus dem Runtime-Image oder aus einem gemounteten Volume ausliefern?
-9. PWA-Politur für Windows/Linux.
+8. PWA-Politur für Windows/Linux.
 
 ## Verwandt
 

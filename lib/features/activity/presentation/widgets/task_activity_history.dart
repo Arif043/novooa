@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
+import '../cubits/activity_cubit.dart';
 import 'activity_tab_content.dart';
 import 'activity_tile.dart';
 import 'task_activity_detail_page.dart';
@@ -52,6 +54,12 @@ class TaskActivityHistory extends StatelessWidget {
         builder: (_) => TaskActivityDetailPage(
           taskActivity: taskActivity,
           nodeActivities: _nodeActivitiesFor(taskActivity),
+          run: context
+              .read<ActivityCubit>()
+              .state
+              .runs
+              .where((run) => run.id == taskActivity.runId)
+              .firstOrNull,
         ),
       ),
     );

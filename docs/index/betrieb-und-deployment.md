@@ -17,6 +17,10 @@
 - [SSH-Fehlersuche unter Windows](../notes/windows-ssh-fehlersuche.md)
 - [Lokaler Start der Runtime](../notes/runtime-lokaler-start.md)
 
+## Runtime auf Servern
+
+- [Deployment mit Coolify](../notes/coolify-deployment.md)
+
 ## Offene Punkte
 
 - Staging-Firebase-Projekt anlegen.

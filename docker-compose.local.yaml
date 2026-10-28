@@ -1,31 +1,23 @@
-name: novooa-local
+# Lokal und Coolify verwenden dieselben Dienste; siehe docs/notes/coolify-deployment.md.
+name: ${NOVOOA_INSTANCE:-novooa-local}
 
 services:
   runtime:
     build:
       context: .
       dockerfile: functions/Dockerfile.local-runtime
+      target: web-runtime
+      args:
+        FLUTTER_VERSION: ${FLUTTER_VERSION:-3.47.5}
     environment:
       PORT: "8080"
-      # Kalendertage in Bedingungen („ist am“) gelten in dieser Zeitzone.
       TZ: ${TZ:-Europe/Berlin}
-      # Liefert die Web-App unter derselben Herkunft aus wie die API — damit
-      # entfallen CORS und Mixed Content (siehe
-      # docs/notes/runtime-liefert-web-app.md). Ohne Verzeichnis bleibt die
-      # Runtime eine reine API.
       LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
-      # Erlaubte Browser-Herkünfte für CORS, kommagetrennt. Leer = keine fremde
-      # Herkunft. Nötig für Web-Builds von Kunden-Dashboards und für die
-      # Entwicklung (z.B. http://localhost:59193).
       LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
-      # Der ML-Dienst des Servers; die Runtime meldet sich dort mit ihrer Lizenz-ID an.
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
-      # Optionale Obergrenze je hochgeladener Modelldatei in Bytes; leer = nur der freie Platz begrenzt.
       MODEL_ARTIFACT_MAX_BYTES: ${NOVOOA_MODEL_ARTIFACT_MAX_BYTES:-}
-      # Script-Bausteine laufen in einem eigenen, abgeschotteten Container (siehe novooa-script).
       SCRIPT_RUNNER_URL: http://novooa-script:8091
-      # Installiert auf Klick Python-Pakete für Script-Bausteine (siehe novooa-packages).
       SCRIPT_PACKAGES_URL: http://novooa-packages:8092
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
@@ -33,10 +25,6 @@ services:
       LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL: ${LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeTaskBuilderRelay}
       LOCAL_RUNTIME_MAIL_RELAY_URL: ${LOCAL_RUNTIME_MAIL_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeMailRelay}
       LOCAL_RUNTIME_GOOGLE_RELAY_URL: ${LOCAL_RUNTIME_GOOGLE_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeGoogleRelay}
-      # Skill-Katalog (skills.sh) über das Relay in Firebase: Die Runtime weist sich mit ihrer Lizenz aus, das Relay
-      # prüft sie und ruft den Vercel-Proxy (relay/skills-sh-proxy) auf. Leer setzen (SKILLS_SH_RELAY_URL=) schaltet
-      # den Katalog ab; Import per GitHub/ZIP/Ordner geht immer. SKILLS_SH_BASE_URL / SKILLS_SH_TOKEN sind nur für
-      # den direkten Zugang in der Entwicklung (siehe docs/notes/skills-sh-katalog.md).
       SKILLS_SH_RELAY_URL: ${SKILLS_SH_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeSkillsRelay}
       SKILLS_SH_BASE_URL: ${SKILLS_SH_BASE_URL:-}
       SKILLS_SH_TOKEN: ${SKILLS_SH_TOKEN:-}
@@ -51,27 +39,31 @@ services:
       novooa-packages:
         condition: service_healthy
     ports:
-      # Reguläre API auf allen Host-Schnittstellen, damit Clients im LAN die
-      # private IPv4-Adresse des Hosts verwenden können. Der Verkehr ist dabei
-      # unverschlüsselt — diesen Port niemals aus dem Internet erreichbar
-      # machen; für externen Zugriff gehört ein eigener Reverse Proxy mit
-      # Domain und Zertifikat davor (siehe docs/notes/reverse-proxy-externer-zugriff.md).
-      # Mehrere Stacks auf einem Server brauchen je einen eigenen Port (NOVOOA_RUNTIME_PORT).
-      - "${NOVOOA_RUNTIME_PORT:-8090}:8080"
+      # Coolify: Bind-Adresse 127.0.0.1 und Port 0 (zufälliger freier Host-Port).
+      - "${NOVOOA_RUNTIME_BIND_ADDRESS:-0.0.0.0}:${NOVOOA_RUNTIME_PORT:-8090}:8080"
     volumes:
       - novooa-data:/var/lib/novooa
       - novooa-keys:/var/lib/novooa-keys
-      # Als Bind-Mount statt COPY ins Image: So lässt sich die Web-App mit
-      # `flutter build web` neu bauen, ohne das Image anzufassen. Vor dem
-      # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
-      # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
-      - ./build/web:/app/web:ro
     networks:
       - novooa-public
       - novooa-private
       - novooa-script
       - novooa-packages
       - novooa-ml
+    labels:
+      - traefik.enable=${NOVOOA_PROXY_ENABLED:-false}
+      - traefik.docker.network=${COOLIFY_PROXY_NETWORK:-${COMPOSE_PROJECT_NAME}_novooa-public}
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.entrypoints=http
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.middlewares=${COMPOSE_PROJECT_NAME}-https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.permanent=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.entrypoints=https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls.certresolver=${COOLIFY_CERTIFICATE_RESOLVER:-letsencrypt}
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.service=${COMPOSE_PROJECT_NAME}
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=8080
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
@@ -81,11 +73,6 @@ services:
       timeout: 2s
       retries: 12
 
-  # Führt die Python-Scripts der Script-Bausteine aus. Abgeschottet: Das Netz
-  # ist intern (kein Zugang nach außen, erreichbar nur von der Runtime), das
-  # Dateisystem schreibgeschützt (nur /tmp, ohne Ausführung), kein Root, alle
-  # Linux-Rechte abgegeben, Grenzen für Speicher, CPU und Prozesse. Pro Lauf
-  # startet der Dienst einen frischen Prozess mit eigenem Arbeitsverzeichnis.
   novooa-script:
     build:
       context: .
@@ -94,36 +81,24 @@ services:
       HOST: 0.0.0.0
       PORT: "8091"
       SCRIPT_MAX_PROCESSES: "64"
-    expose:
-      - "8091"
+    expose: ["8091"]
     networks:
       - novooa-script
-    # Ein Init-Prozess als PID 1 sammelt beendete Kindprozesse ein. Sonst bleiben die
-    # Nachkommen eines Scripts (fork) als Zombies stehen und füllen pids_limit.
     init: true
     user: "65532:65532"
     read_only: true
     tmpfs:
       - /tmp:size=256m,mode=1777,noexec,nosuid
-    # Paketumgebungen der Bausteine, nur lesend; schreiben darf allein novooa-packages.
     volumes:
       - novooa-script-packages:/packages:ro
-    # Der Paketdienst bindet das Volume zuerst ein; so übernimmt ein neues Volume
-    # Besitzer und Rechte von /packages aus seinem Image.
     depends_on:
       novooa-packages:
         condition: service_healthy
-    cap_drop:
-      - ALL
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-    # Speicher und Prozessgrenze gehören zusammen: Ein leerer Python-Prozess belegt rund 8 MB, ein
-    # Thread kaum etwas. 64 Prozesse brauchen so etwa 512 MB; dazu kommen ~64 MB für Server und Init
-    # und Platz für die Daten der Scripts. Wer SCRIPT_MAX_PROCESSES anhebt, hebt mem_limit mit an
-    # (Faustregel: 64 MB + Prozesse x 8 MB, plus gut ein Drittel Reserve) und pids_limit auf Prozesse + 32.
     mem_limit: 768m
     cpus: 1.0
-    # 64 Prozesse/Threads für Scripts (SCRIPT_MAX_PROCESSES) plus 32 Reserve für Server, Init und Healthcheck.
     pids_limit: 96
     restart: unless-stopped
     healthcheck:
@@ -132,10 +107,6 @@ services:
       timeout: 2s
       retries: 12
 
-  # Installiert Python-Pakete von PyPI in Umgebungen pro Paketliste (Volume
-  # novooa-script-packages). Als einziger Python-Dienst mit Zugang nach außen;
-  # nur fertige Pakete (Wheels), damit beim Installieren kein fremder Code läuft.
-  # Der Script-Container selbst bleibt ohne Netz.
   novooa-packages:
     build:
       context: .
@@ -144,8 +115,7 @@ services:
       HOST: 0.0.0.0
       PORT: "8092"
       SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES: ${NOVOOA_SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES:-2147483648}
-    expose:
-      - "8092"
+    expose: ["8092"]
     networks:
       - novooa-packages
       - novooa-packages-egress
@@ -153,10 +123,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=512m,mode=1777,noexec,nosuid
-    volumes:
-      - novooa-script-packages:/packages
-    cap_drop:
-      - ALL
+    volumes: [novooa-script-packages:/packages]
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
     mem_limit: 1g
@@ -171,9 +139,9 @@ services:
     build:
       context: .
       dockerfile: functions/Dockerfile.local-runtime
+      target: runtime
     user: "0:0"
     network_mode: none
-    # Erzeugt beim ersten Start den Schlüsselbund im Volume novooa-keys; danach rotiert ihn die Runtime selbst.
     command: [node, lib/shared/local/local-runtime-keyring-init-cli.js]
     environment:
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
@@ -185,6 +153,7 @@ services:
     build:
       context: .
       dockerfile: functions/Dockerfile.local-runtime
+      target: runtime
     user: "0:0"
     network_mode: none
     command: [node, lib/shared/local/local-runtime-key-rotation-cli.js]
@@ -198,7 +167,6 @@ services:
       - novooa-data:/var/lib/novooa
       - novooa-keys:/var/lib/novooa-keys
 
-  # Testumgebung für das Shopware-Plugin; nur mit `--profile dev`.
   shopware:
     profiles: [dev]
     image: dockware/play:latest
@@ -213,15 +181,15 @@ services:
 
 networks:
   novooa-public:
+    external: ${NOVOOA_PROXY_ENABLED:-false}
+    name: ${COOLIFY_PROXY_NETWORK:-${COMPOSE_PROJECT_NAME}_novooa-public}
   novooa-private:
     internal: true
   novooa-script:
     internal: true
   novooa-packages:
     internal: true
-  # Nur für novooa-packages: Download von PyPI.
   novooa-packages-egress:
-  # Zum ML-Dienst des Servers (docker-compose.server.yaml), den sich alle Stacks teilen.
   novooa-ml:
     external: true
 

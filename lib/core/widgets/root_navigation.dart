@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../root_tab.dart';
 
@@ -47,6 +49,12 @@ List<RootTab> rootTabs() => [
     title: 'Aktivitäten',
     icon: CupertinoIcons.rectangle_grid_1x2,
     path: '/activity',
+  ),
+  RootTab(
+    title: LocaleKeys.navigation_results.tr(),
+    icon: CupertinoIcons.chart_bar_square,
+    path: '/results',
+    hasPageHeader: true,
   ),
   RootTab(title: 'Einstellungen', icon: CupertinoIcons.gear, path: '/settings'),
 ];

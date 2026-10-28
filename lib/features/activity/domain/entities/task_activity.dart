@@ -35,6 +35,9 @@ class TaskActivity {
     this.conversation = const [],
     this.effects = const [],
     this.origin = RunOrigin.unknown,
+    this.parentNodeId,
+    this.iteration,
+    this.selectedBranchId,
   });
 
   final UniqueId id;
@@ -74,4 +77,13 @@ class TaskActivity {
 
   /// Woher der Lauf kommt; nur die Standalone-Runtime liefert sie.
   final RunOrigin origin;
+
+  /// Umschließender Zweig oder umschließende Schleife; `null` auf oberster Ebene.
+  final String? parentNodeId;
+
+  /// Runde der umschließenden Schleife (ab 0).
+  final int? iteration;
+
+  /// Der Zweig, den ein Bedingter Ablauf genommen hat.
+  final String? selectedBranchId;
 }

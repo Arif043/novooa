@@ -22,9 +22,11 @@ server {
 }
 ```
 
-Damit die Runtime nicht zusätzlich direkt erreichbar bleibt, wird das
-Port-Mapping in `docker-compose.local.yaml` beschränkt:
-`"127.0.0.1:8090:8080"` statt `"8090:8080"`.
+Damit die Runtime nicht zusätzlich direkt erreichbar bleibt, wird
+`NOVOOA_RUNTIME_BIND_ADDRESS=127.0.0.1` gesetzt. Die gemeinsame
+`docker-compose.local.yaml` bindet den Host-Port dann nur an Loopback.
+Für [Coolify](./coolify-deployment.md) sind Proxy-Netz und HTTPS-Router
+bereits enthalten und werden über Umgebungsvariablen aktiviert.
 
 Warum zwingend: Über `http` laufen Session-Token und Inhalte im Klartext.
 Webhooks setzen diesen Aufbau ebenfalls voraus.

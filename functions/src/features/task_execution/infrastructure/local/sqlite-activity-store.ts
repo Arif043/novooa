@@ -1,15 +1,11 @@
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {writeActivity} from "./sqlite-activity-write.js";
-import {
-  type NodeExecutionResult,
-} from "../../domain/entities/task.js";
-import {
-  type ActivityStore,
-  type TaskActivityInput,
-} from "../../domain/repositories/activity-store.js";
+import {type NodeExecutionResult} from "../../domain/entities/task.js";
+import {type ActivityStore, type TaskActivityInput} from "../../domain/repositories/activity-store.js";
 import {type FailedNode} from "../../domain/entities/node-execution-failure.js";
 import {type TaskRunDocument} from "../../domain/repositories/task-run-store.js";
+import {type ActivityRowDraft, failedRows, resultRows} from "./nested-activity-rows.js";
 
 export class SQLiteActivityStore implements ActivityStore {
   private lastTimestamp = 0;
@@ -25,14 +21,9 @@ export class SQLiteActivityStore implements ActivityStore {
     return new Date(this.lastTimestamp).toISOString().replace("T", " ").replace("Z", "");
   }
 
-  async writeNodeActivities(
-    teamId: string,
-    run: TaskRunDocument,
-    results: NodeExecutionResult[],
-  ) {
-    for (const result of results) {
-      await this.writeNodeActivity(teamId, run, result);
-    }
+  /** Je Baustein eine Zeile, dazu die Zeilen seiner Zweige und Schleifenrunden. */
+  async writeNodeActivities(teamId: string, run: TaskRunDocument, results: NodeExecutionResult[]) {
+    for (const result of results) await this.writeRows(teamId, run, resultRows(result, {runId: run.runId}));
   }
 
   async writeTaskActivity(teamId: string, input: TaskActivityInput) {
@@ -40,20 +31,12 @@ export class SQLiteActivityStore implements ActivityStore {
   }
 
   async writeFailedNodeActivity(teamId: string, run: TaskRunDocument, failedNode: FailedNode) {
-    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: failedNode.nodeId, target: "node", primitive: failedNode.primitive, title: failedNode.nodeId, status: "failed", input: "", output: "", outputs_json: "{}", message: failedNode.message, failure_code: failedNode.failureCode ?? null, failure_details_json: failedNode.failureDetails ? JSON.stringify(failedNode.failureDetails) : null, console_json: JSON.stringify(failedNode.console ?? {}), conversation_json: JSON.stringify(failedNode.conversation ?? []), effects_json: JSON.stringify(failedNode.effects ?? []), duration_ms: null, created_at: this.nextTimestamp()});
+    await this.writeRows(teamId, run, failedRows(failedNode, {runId: run.runId}));
   }
 
-  private async writeNodeActivity(
-    teamId: string,
-    run: TaskRunDocument,
-    result: NodeExecutionResult,
-  ) {
-    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: result.nodeId, target: "node", primitive: result.primitive, title: result.nodeId, status: nodeStatus(result.status), input: "", output: "", outputs_json: JSON.stringify(result.outputs), message: result.message ?? "", console_json: JSON.stringify(result.console ?? {}), conversation_json: JSON.stringify(result.conversation ?? []), effects_json: JSON.stringify(result.effects ?? []), duration_ms: null, created_at: this.nextTimestamp()});
+  private async writeRows(teamId: string, run: TaskRunDocument, rows: ActivityRowDraft[]) {
+    for (const row of rows) {
+      await writeActivity(this.database, teamId, run.taskId, {...row, id: randomUUID(), created_at: this.nextTimestamp()});
+    }
   }
-}
-
-function nodeStatus(status: NodeExecutionResult["status"]): string {
-  if (status === "executed") return "succeeded";
-  if (status === "waitingForApproval") return "waiting";
-  return "skipped";
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
+import 'package:syscat2/features/results/presentation/pages/results_page.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
 import 'package:syscat2/features/data/presentation/pages/database_page.dart';
 import 'package:syscat2/features/employees/presentation/pages/employees_page.dart';
@@ -18,6 +19,7 @@ class AppRouter {
   static const String plans = '/plans';
   static const String schedule = '/schedule';
   static const String activity = '/activity';
+  static const String results = '/results';
   static const String files = '/files';
   static const String database = '/database';
   static const String knowledgeBase = '/knowledge-base';
@@ -76,6 +78,11 @@ class AppRouter {
                 notificationOpenId: state.uri.queryParameters['open'],
               ),
             ),
+          ),
+          GoRoute(
+            path: results,
+            pageBuilder: (context, state) =>
+                _shellPage(state, const ResultsPage()),
           ),
           GoRoute(
             path: files,

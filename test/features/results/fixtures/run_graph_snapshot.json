@@ -1,0 +1,295 @@
+{
+ "id": "task-1",
+ "title": "Beispiel",
+ "objective": "",
+ "nodes": [
+  {
+   "id": "node.1",
+   "primitive": "dialogInput",
+   "title": "Formulareingabe",
+   "description": "Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde.",
+   "outputs": [
+    {
+     "key": "Rechnungsnummer",
+     "name": "Rechnungsnummer",
+     "showOnCanvas": true
+    },
+    {
+     "key": "Name",
+     "name": "Name",
+     "showOnCanvas": true
+    },
+    {
+     "key": "Betrag",
+     "name": "Betrag",
+     "showOnCanvas": true
+    }
+   ],
+   "config": {
+    "instruction": "Bitte fülle das Formular aus.",
+    "fields": [
+     {
+      "name": "Rechnungsnummer",
+      "type": "string",
+      "options": []
+     },
+     {
+      "name": "Name",
+      "type": "string",
+      "options": []
+     },
+     {
+      "name": "Betrag",
+      "type": "decimal",
+      "options": []
+     }
+    ],
+    "primitive": "dialogInput"
+   }
+  },
+  {
+   "id": "node.2",
+   "primitive": "documentLookup",
+   "title": "Datensatz suchen",
+   "description": "Findet einen Datensatz über sichtbare Felder und Bedingungen.",
+   "outputs": [
+    {
+     "key": "value",
+     "name": "Datensatz",
+     "showOnCanvas": true
+    },
+    {
+     "key": "found",
+     "name": "Gefunden",
+     "showOnCanvas": true
+    },
+    {
+     "key": "record",
+     "name": "Eintrag",
+     "showOnCanvas": false
+    },
+    {
+     "key": "message",
+     "name": "Nachricht",
+     "showOnCanvas": false
+    }
+   ],
+   "config": {
+    "primitive": "documentLookup",
+    "collectionName": "Rechnung",
+    "filters": [
+     {
+      "field": "Rechnungsnummer",
+      "operator": "equals",
+      "value": "{{Rechnungsnummer}}"
+     }
+    ]
+   }
+  },
+  {
+   "id": "node.3",
+   "primitive": "conditionalFlow",
+   "title": "Bedingter Ablauf",
+   "description": "Verzweigt den Ablauf anhand von Regeln.",
+   "outputs": [
+    {
+     "key": "value",
+     "name": "Bedingung",
+     "showOnCanvas": true
+    }
+   ],
+   "config": {
+    "primitive": "conditionalFlow",
+    "valueTemplate": "",
+    "choices": [],
+    "branches": [
+     {
+      "id": "branch.1",
+      "label": "Bedingung 1",
+      "nodeIds": [],
+      "graph": {
+       "nodes": [
+        {
+         "id": "node.4",
+         "primitive": "stringInput",
+         "title": "Texteingabe",
+         "description": "Gibt einen festen Text als Ausgabe weiter.",
+         "outputs": [
+          {
+           "key": "value",
+           "name": "Eingabe",
+           "showOnCanvas": true
+          }
+         ],
+         "config": {
+          "primitive": "stringInput",
+          "value": "Wurde schon eingetragen"
+         }
+        }
+       ],
+       "edges": []
+      },
+      "condition": {
+       "kind": "comparison",
+       "left": "{{Gefunden}}",
+       "operator": "isTrue",
+       "right": ""
+      }
+     },
+     {
+      "id": "branch.2",
+      "label": "Sonst",
+      "nodeIds": [],
+      "graph": {
+       "nodes": [
+        {
+         "id": "node.5",
+         "primitive": "saveDocument",
+         "title": "Datensatz speichern",
+         "description": "Legt einen Datensatz an oder aktualisiert seine Felder.",
+         "outputs": [
+          {
+           "key": "value",
+           "name": "Speichern",
+           "showOnCanvas": true
+          },
+          {
+           "key": "created",
+           "name": "Angelegt",
+           "showOnCanvas": false
+          },
+          {
+           "key": "count",
+           "name": "Anzahl",
+           "showOnCanvas": false
+          },
+          {
+           "key": "records",
+           "name": "Eintraege",
+           "showOnCanvas": false
+          }
+         ],
+         "config": {
+          "primitive": "saveDocument",
+          "collectionName": "Rechnung",
+          "filters": [],
+          "fields": [
+           {
+            "field": "Rechnungsnummer",
+            "value": "{{Rechnungsnummer}}"
+           },
+           {
+            "field": "Name",
+            "value": "{{Name}}"
+           },
+           {
+            "field": "Betrag",
+            "value": "{{Betrag}}"
+           }
+          ]
+         }
+        },
+        {
+         "id": "node.6",
+         "primitive": "tableFromCollection",
+         "title": "Sammlung als Tabelle",
+         "description": "Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter.",
+         "outputs": [
+          {
+           "key": "value",
+           "name": "Tabelle",
+           "showOnCanvas": true
+          },
+          {
+           "key": "rowCount",
+           "name": "Zeilen",
+           "showOnCanvas": false
+          }
+         ],
+         "config": {
+          "primitive": "tableFromCollection",
+          "collectionName": "Rechnung"
+         }
+        },
+        {
+         "id": "node.7",
+         "primitive": "writeFile",
+         "title": "Datei schreiben",
+         "description": "Schreibt die vorherige Ausgabe als Datei.",
+         "outputs": [
+          {
+           "key": "value",
+           "name": "Dateischreiben",
+           "showOnCanvas": true
+          },
+          {
+           "key": "fileId",
+           "name": "DateiId",
+           "showOnCanvas": false
+          },
+          {
+           "key": "versionId",
+           "name": "VersionId",
+           "showOnCanvas": false
+          },
+          {
+           "key": "displayName",
+           "name": "Dateiname",
+           "showOnCanvas": false
+          },
+          {
+           "key": "contentType",
+           "name": "Dateityp",
+           "showOnCanvas": false
+          },
+          {
+           "key": "sizeBytes",
+           "name": "Groesse",
+           "showOnCanvas": false
+          },
+          {
+           "key": "folderId",
+           "name": "OrdnerId",
+           "showOnCanvas": false
+          },
+          {
+           "key": "isNewFile",
+           "name": "NeueDatei",
+           "showOnCanvas": false
+          }
+         ],
+         "config": {
+          "primitive": "writeFile",
+          "contentTemplate": "{{Tabelle}}",
+          "fileName": "Rechnungen.xlsx",
+          "contentType": "text/plain"
+         }
+        }
+       ],
+       "edges": [
+        {
+         "from": "node.5",
+         "to": "node.6"
+        },
+        {
+         "from": "node.6",
+         "to": "node.7"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "edges": [
+  {
+   "from": "node.1",
+   "to": "node.2"
+  },
+  {
+   "from": "node.2",
+   "to": "node.3"
+  }
+ ]
+}

@@ -1,3 +1,4 @@
+import {type NestedRun} from "./nested-run.js";
 import {type RunEffect} from "./run-effect.js";
 import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
 import {
@@ -383,6 +384,8 @@ export type NodeExecutionResult = {
   conversation?: TeamworkConversationEntry[];
   /** Folgen des Bausteins, auch aus seinem Teilgraphen; fehlt, wenn er nichts bewirkt hat. */
   effects?: RunEffect[];
+  /** Was im Teilgraph eines Zweigs oder einer Schleife lief; fehlt bei anderen Bausteinen. */
+  nested?: NestedRun[];
   interaction?: TaskRunInteraction;
   dialogInput?: DialogInputDefinition;
 };

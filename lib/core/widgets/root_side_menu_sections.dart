@@ -106,7 +106,7 @@ class _SideMenuTile extends StatelessWidget {
     return switch (tab.path) {
       '/files' || '/knowledge-base' => SyscatTheme.backgroundDark,
       '/schedule' || '/tasks' => SyscatTheme.primaryOrange,
-      '/activity' || '/settings' => SyscatTheme.info,
+      '/activity' || '/results' || '/settings' => SyscatTheme.info,
       _ => SyscatTheme.primaryOrange,
     };
   }

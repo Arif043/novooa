@@ -59,6 +59,10 @@ class LocalTaskRunRepository implements TaskRunRepository {
       reviewOutput: _nullableString(data['reviewOutput']),
       interaction: _interactionFrom(data['interaction']),
       message: _messageFrom(data['error']),
+      startedAt: _dateOrNull(data['startedAt']),
+      completedAt: _dateOrNull(data['completedAt']),
+      triggerType: _nullableString(data['triggerType']),
+      startedByName: _personName(data['startedBy']),
     );
   }
 
@@ -112,4 +116,10 @@ class LocalTaskRunRepository implements TaskRunRepository {
       value is String ? value : fallback;
   String? _nullableString(Object? value) =>
       value is String && value.isNotEmpty ? value : null;
+
+  String? _personName(Object? person) {
+    if (person is! Map) return null;
+    final name = person['displayName'];
+    return name is String && name.isNotEmpty ? name : null;
+  }
 }

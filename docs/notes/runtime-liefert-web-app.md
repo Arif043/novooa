@@ -9,6 +9,11 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 | `LOCAL_RUNTIME_WEB_DIRECTORY` | Verzeichnis des Web-Builds | Runtime bleibt reine API |
 | `LOCAL_RUNTIME_ALLOWED_ORIGINS` | kommagetrennte Herkünfte mit CORS-Freigabe | keine fremde Herkunft |
 
+`docker-compose.local.yaml` verwendet das Docker-Build-Ziel `web-runtime`:
+Flutter baut die Web-App im Image, die Runtime liefert sie aus `/app/web`
+aus. Ein lokaler Bind-Mount ist nicht nötig. Das Ziel `runtime` bleibt für
+reine API-Builds verfügbar.
+
 - Ausgeliefert über `@fastify/static` mit SPA-Fallback auf `index.html`;
   `/v1/*` und `/healthz` werden nie von Dateien überschattet
   ([Fastify-Plugins](./runtime-fastify-plugins.md)).

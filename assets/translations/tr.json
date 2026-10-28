@@ -6,7 +6,8 @@
     "greeting_day_named": "İyi günler, {name}!",
     "greeting_evening": "İyi akşamlar!",
     "greeting_evening_named": "İyi akşamlar, {name}!",
-    "sign_out": "Çıkış yap"
+    "sign_out": "Çıkış yap",
+    "results": "Sonuçlar"
   },
   "task_builder": {
     "primitives": {
@@ -1527,5 +1528,47 @@
     "drive_upload": "Google Drive'a kaydedildi: {label}",
     "external_action": "{plugin}: {label}",
     "round": "Tur {round}"
+  },
+  "results": {
+    "title": "Sonuçlar",
+    "subtitle": "Görevlerinin ne yaptığı ve neye yol açtığı.",
+    "empty_title": "Henüz sonuç yok",
+    "empty_body": "Bir görev çalıştığında, burada ortaya ne çıktığını görürsün.",
+    "empty_action": "Görevlere git",
+    "no_match": "Bu filtreye uyan çalıştırma yok.",
+    "load_failed": "Sonuçlar yüklenemedi.",
+    "run_load_failed": "Bu çalıştırma yüklenemedi.",
+    "filter_all": "Tümü",
+    "status_queued": "Sırada",
+    "status_running": "Çalışıyor",
+    "status_waiting": "Seni bekliyor",
+    "status_rejected": "Reddedildi",
+    "status_succeeded": "Başarılı",
+    "status_failed": "Başarısız",
+    "duration_seconds": "{seconds} sn",
+    "duration_minutes": "{minutes} dk {seconds} sn",
+    "started_by": "{name} tarafından",
+    "by_trigger": "bir tetikleyiciyle",
+    "effects_one": "1 sonuç",
+    "effects_many": "{count} sonuç",
+    "no_effects": "Sonuç yok",
+    "result_title": "Sonuç",
+    "no_output": "Bu çalıştırma nihai bir sonuç üretmedi.",
+    "failure_title": "Ne ters gitti",
+    "flow_title": "Akış",
+    "no_graph": "Bu çalıştırma için kayıtlı bir grafik yok; sonuç görünümünden daha eski. Yapı taşları burada liste olarak gösteriliyor.",
+    "node_succeeded": "Çalıştırıldı",
+    "node_failed": "Başarısız",
+    "node_skipped": "Atlandı",
+    "node_waiting": "Bekliyor",
+    "node_not_run": "Çalıştırılmadı",
+    "round_of": "Tur {round} / {count}",
+    "previous_round": "Önceki tur",
+    "next_round": "Sonraki tur",
+    "no_values": "Değer yok",
+    "open_result": "Sonucu görüntüle",
+    "node_details": "{name} ayrıntıları",
+    "zoom_in": "Yakınlaştır",
+    "zoom_out": "Uzaklaştır"
   }
 }

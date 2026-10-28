@@ -31,7 +31,8 @@ import {
 import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
 import {nestedNodeFailureOf} from "./nested-node-failure.js";
 import {err, ok, type Result, ResultAsync} from "neverthrow";
-import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
+import {formatTaskStarted} from "./structured-logger.js";
+import {finishedOutput} from "./task-graph-output.js";
 import {
   logNodeHeaderLine,
   logSkippedBranches,
@@ -40,7 +41,8 @@ import {
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {createTaskRunContext, type ExecuteWorkflowGraph} from "./workflow-graph-run-context.js";
 import {RunEffectRecorder} from "../../../domain/services/run-effect-recorder.js";
-import {adoptReplayedEffects, withEffects} from "./node-result-effects.js";
+import {adoptReplayedEffects, type NodeRunTrace, withTrace} from "./node-result-effects.js";
+import {NestedRunCollector} from "./nested-run-collector.js";
 import {recordsHttpEffects} from "../../../domain/services/effect-recording-services.js";
 export function executeTaskGraph(
   ai: GenkitBeta,
@@ -69,19 +71,6 @@ export function resumeTaskGraph(
     .map((runState) => runState.status === "waitingForApproval"
       ? pausedOutput(input, runState)
       : completedOutput(input, runState.nodeResults));
-}
-
-function finishedOutput(input: TaskGraphInput, runState: NodeRunState, runtime: TaskGraphRuntime): TaskGraphOutput {
-  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
-  const results = runState.nodeResults;
-  const output = completedOutput(input, results);
-  runtime.logger.readableInfo(formatTaskFinished(
-    output.taskId,
-    results.filter((result) => result.status === "executed").length,
-    results.filter((result) => result.status === "skipped").length,
-    output.finalOutput.length,
-  ));
-  return output;
 }
 
 type GraphRunOptions = {
@@ -123,9 +112,10 @@ async function runNodes(
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, skipNode, results);
     const step = journaledStep(runtime.stepJournal, options.stepScope, node.id);
     const effects = (options.effects ?? RunEffectRecorder.root()).child(node.id, scope.iteration?.index);
+    const trace = {effects, nested: new NestedRunCollector()};
     // Bausteine liefern Failures als Wert; was dennoch geworfen wird (Infrastruktur, noch nicht
     // umgestellte Executoren), wird hier, an der Grenze, ebenfalls zur Failure.
-    const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, async () => withEffects(await runNodeWithTrail(ai, {
+    const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, async () => withTrace(await runNodeWithTrail(ai, {
       node,
       runContext: createTaskRunContext({
         input,
@@ -133,7 +123,7 @@ async function runNodes(
         currentGraph: graph,
         results,
         scope,
-        executeGraph: embeddedGraphRunner(ai, input, runtime, step, effects),
+        executeGraph: embeddedGraphRunner(ai, input, runtime, step, trace),
         effects,
         recordHttp: recordsHttpEffects(node.primitive),
       }),
@@ -148,9 +138,9 @@ async function runNodes(
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       executorRegistry: runtime.executorRegistry,
       logger: runtime.logger,
-    }), effects), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState), effects.effects))
+    }), trace), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState), trace))
       .andThen((nodeResultOrFailure) => nodeResultOrFailure.mapErr(
-        (failure) => failedNodeExecution(node, failure, newResults(graph, results, initialState), effects.effects),
+        (failure) => failedNodeExecution(node, failure, newResults(graph, results, initialState), trace),
       ));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
@@ -181,15 +171,19 @@ function embeddedGraphRunner(
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
   containerStep: JournaledStep | undefined,
-  containerEffects: RunEffectRecorder,
+  container: NodeRunTrace,
 ): ExecuteWorkflowGraph {
   let callIndex = 0;
   return async (embeddedGraph, embeddedScope) => {
     const stepScope = containerStep?.key.nested(callIndex++);
     const initialState = {nodeResults: [], remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
     const stateOrFailure = await runNodes(ai, input, runtime, {
-      initialState, scope: embeddedScope, graph: embeddedGraph, stepScope, effects: containerEffects,
+      initialState, scope: embeddedScope, graph: embeddedGraph, stepScope, effects: container.effects,
     });
+    stateOrFailure.match(
+      (state) => container.nested.completed(embeddedScope, state.nodeResults),
+      (failure) => container.nested.failed(embeddedScope, failure),
+    );
     // Der äußere Baustein bekommt die Failure des inneren; eine innere Exception wird zu `unexpected`.
     return stateOrFailure.map((state) => state.nodeResults).mapErr(nestedNodeFailureOf);
   };

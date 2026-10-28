@@ -47,6 +47,20 @@ async function checkRoutes() {
   assert.equal((await setup.json()).needsSetup, true);
   const tasks = await fetch("http://127.0.0.1:8080/v1/tasks");
   assert.equal(tasks.status, 401);
+  if (process.env.LOCAL_RUNTIME_WEB_DIRECTORY) await checkWebApplication();
+}
+
+async function checkWebApplication() {
+  const page = await fetch("http://127.0.0.1:8080/");
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /<title>novooa<\/title>/);
+  for (const asset of ["flutter_bootstrap.js", "main.dart.js"]) {
+    const response = await fetch(`http://127.0.0.1:8080/${asset}`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /javascript/);
+  }
+  const files = await readdir(process.env.LOCAL_RUNTIME_WEB_DIRECTORY, {recursive: true});
+  assert.equal(files.some((file) => file.endsWith(".map")), false);
 }
 
 async function checkKeyInitialization(environment) {

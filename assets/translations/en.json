@@ -6,7 +6,8 @@
     "greeting_day_named": "Good afternoon, {name}!",
     "greeting_evening": "Good evening!",
     "greeting_evening_named": "Good evening, {name}!",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "results": "Results"
   },
   "task_builder": {
     "primitives": {
@@ -1527,5 +1528,47 @@
     "drive_upload": "Saved to Google Drive: {label}",
     "external_action": "{plugin}: {label}",
     "round": "Round {round}"
+  },
+  "results": {
+    "title": "Results",
+    "subtitle": "What your tasks did and what they caused.",
+    "empty_title": "No results yet",
+    "empty_body": "As soon as a task runs, you will see here what came out of it.",
+    "empty_action": "Go to tasks",
+    "no_match": "No run matches this filter.",
+    "load_failed": "The results could not be loaded.",
+    "run_load_failed": "This run could not be loaded.",
+    "filter_all": "All",
+    "status_queued": "Queued",
+    "status_running": "Running",
+    "status_waiting": "Waiting for you",
+    "status_rejected": "Rejected",
+    "status_succeeded": "Succeeded",
+    "status_failed": "Failed",
+    "duration_seconds": "{seconds} s",
+    "duration_minutes": "{minutes} min {seconds} s",
+    "started_by": "by {name}",
+    "by_trigger": "by a trigger",
+    "effects_one": "1 effect",
+    "effects_many": "{count} effects",
+    "no_effects": "No effects",
+    "result_title": "Result",
+    "no_output": "This run did not produce a final result.",
+    "failure_title": "What went wrong",
+    "flow_title": "Flow",
+    "no_graph": "There is no saved graph for this run; it is older than the results view. The building blocks are listed here.",
+    "node_succeeded": "Executed",
+    "node_failed": "Failed",
+    "node_skipped": "Skipped",
+    "node_waiting": "Waiting",
+    "node_not_run": "Not executed",
+    "round_of": "Round {round} of {count}",
+    "previous_round": "Previous round",
+    "next_round": "Next round",
+    "no_values": "No values",
+    "open_result": "View result",
+    "node_details": "Details for {name}",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out"
   }
 }

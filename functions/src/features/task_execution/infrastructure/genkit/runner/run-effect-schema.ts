@@ -1,4 +1,5 @@
 import {z} from "genkit";
+import {type NestedRun} from "../../../domain/entities/nested-run.js";
 
 const effectBase = {sourceNodeId: z.string(), iteration: z.number().int().nonnegative().optional()};
 
@@ -32,3 +33,13 @@ export const runEffectsSchema = z.array(z.unknown()).transform((items) =>
     const parsed = runEffectSchema.safeParse(item);
     return parsed.success ? [parsed.data] : [];
   }));
+
+/**
+ * Innere Läufe im Journal: Die inneren Ergebnisse wurden beim Ausführen schon geprüft und dienen
+ * nur dem Protokoll; sie werden daher in ihrer Form übernommen, nicht erneut validiert.
+ */
+export const nestedRunsSchema = z.array(z.object({
+  iteration: z.number().int().nonnegative().optional(),
+  results: z.array(z.record(z.string(), z.unknown())),
+  failed: z.record(z.string(), z.unknown()).optional(),
+}).passthrough()).transform((runs) => runs as unknown as NestedRun[]);

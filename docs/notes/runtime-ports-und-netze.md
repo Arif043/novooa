@@ -7,6 +7,12 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - **`8090`** (`NOVOOA_RUNTIME_PORT`, Container-Port 8080) auf allen
   Schnittstellen: reguläre API, Web-App und Ersteinrichtung. Clients im LAN
   geben die private IPv4-Adresse des Hosts ein.
+  `NOVOOA_RUNTIME_BIND_ADDRESS=127.0.0.1` beschränkt den Zugriff auf den Host;
+  mit `NOVOOA_RUNTIME_PORT=0` wählt Docker einen freien Port.
+- Bei [Coolify](./coolify-deployment.md) aktiviert `NOVOOA_PROXY_ENABLED=true`
+  die Traefik-Labels; `COOLIFY_PROXY_NETWORK` benennt das externe Proxy-Netz.
+  Nur die Runtime der regulären Dienste verbindet sich damit; das
+  Shopware-Testsystem bleibt auf das Profil `dev` beschränkt.
 - **`novooa-ml`** hängt im internen Netz `novooa-ml` und zum Herunterladen von
   Katalogmodellen zusätzlich in `novooa-ml-egress`. Jede Runtime meldet sich
   dort mit ihrer Lizenz-ID an und erhält ein eigenes Token

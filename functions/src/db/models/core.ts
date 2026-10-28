@@ -23,6 +23,12 @@ export const activities = sqliteTable("activities", {
   /** Gespräch der Mitarbeiter einer Teamarbeit als JSON-Array; leer bei anderen Bausteinen. */
   conversation_json: text("conversation_json").notNull().default("[]"),
   effects_json: text("effects_json").notNull().default("[]"),
+  /** Umschließender Zweig oder umschließende Schleife; `null` auf oberster Ebene. */
+  parent_node_id: text("parent_node_id"),
+  /** Runde der umschließenden Schleife (ab 0). */
+  iteration: integer("iteration"),
+  /** Der Zweig, den ein Bedingter Ablauf genommen hat. */
+  selected_branch_id: text("selected_branch_id"),
 }, (table) => [
   index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);

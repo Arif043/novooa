@@ -1,20 +1,22 @@
 # Lokaler Start der Runtime
 
-> Web-Build erzeugen, Stack starten, Health prüfen, Client starten.
+> Der Docker-Build erzeugt Web-App und Runtime gemeinsam; danach Health prüfen und Client starten.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 ```bash
-flutter build web --release --no-source-maps
+docker compose -f docker-compose.server.yaml up --build --detach
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
 flutter run -d macos
 ```
 
-`flutter build web` ist optional. Ohne Build ist die Runtime reine API und
-antwortet auf App-Pfade mit 404; mit Build genügt im Browser
-`http://<adresse>:8090`, ohne installierten Client.
+Der ML-Server wird einmal je Rechner gestartet. Die Runtime-Compose baut die
+Web-App direkt ins Image; ein separater Flutter-Build und ein lokales
+`build/web`-Verzeichnis sind nicht nötig. Im Browser genügt
+`http://<adresse>:8090`, ohne installierten Client. Änderungen an der Web-App
+erfordern einen neuen Image-Build.
 
 Vor dem ersten fachlichen Zugriff folgt die
 [Ersteinrichtung](./runtime-ersteinrichtung.md).

@@ -1,3 +1,4 @@
+import {type NestedRun} from "./nested-run.js";
 import {type RunEffect} from "./run-effect.js";
 import {type ConsoleOutput, type NodeExecutionResult, type WorkflowPrimitive} from "./task.js";
 import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
@@ -16,6 +17,8 @@ export type FailedNode = {
   conversation?: TeamworkConversationEntry[];
   /** Was der Baustein vor dem Fehler schon bewirkt hat, z. B. Dateien früherer Runden. */
   effects?: RunEffect[];
+  /** Was im Teilgraph bis zum Abbruch lief (Zweig, Schleifenrunden). */
+  nested?: NestedRun[];
 };
 
 /**

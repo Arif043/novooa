@@ -1,4 +1,4 @@
-import {type RunEffect} from "../../../domain/entities/run-effect.js";
+import {type NodeRunTrace, traceFields} from "./node-result-effects.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
@@ -116,23 +116,23 @@ export function newResults(
 
 /** Ein Baustein hat eine Failure als Wert geliefert. */
 export function failedNodeExecution(
-  node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[], effects: readonly RunEffect[] = [],
+  node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[], trace?: NodeRunTrace,
 ): NodeExecutionFailure {
-  return new NodeExecutionFailure(failedNodeFor(node, failure.message, effects, failure), completed, failure);
+  return new NodeExecutionFailure(failedNodeFor(node, failure.message, trace, failure), completed, failure);
 }
 
 /** Ein Baustein oder die Infrastruktur hat geworfen: ein gescheiterter Baustein ohne Code. */
 export function nodeExecutionFailure(
-  node: WorkflowNode, error: unknown, completed: NodeExecutionResult[], effects: readonly RunEffect[] = [],
+  node: WorkflowNode, error: unknown, completed: NodeExecutionResult[], trace?: NodeRunTrace,
 ): NodeExecutionFailure {
   const message = error instanceof Error ? error.message : String(error);
-  return new NodeExecutionFailure(failedNodeFor(node, message, effects), completed, error);
+  return new NodeExecutionFailure(failedNodeFor(node, message, trace), completed, error);
 }
 
-function failedNodeFor(node: WorkflowNode, message: string, effects: readonly RunEffect[], failure?: NodeFailure): FailedNode {
+function failedNodeFor(node: WorkflowNode, message: string, trace: NodeRunTrace | undefined, failure?: NodeFailure): FailedNode {
   return {
     nodeId: node.id, primitive: node.primitive, message, console: failure?.console,
-    ...(effects.length > 0 ? {effects: [...effects]} : {}),
+    ...traceFields(trace),
     ...(failure?.conversation ? {conversation: failure.conversation} : {}),
     ...(failure ? {failureCode: failure.code} : {}),
     ...(failure && Object.keys(failure.details).length > 0 ? {failureDetails: {...failure.details}} : {}),

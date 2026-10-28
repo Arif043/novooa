@@ -1,6 +1,6 @@
 import {z} from "genkit";
 import {documentFilterOperators} from "../../../../data/domain/entities/document-filter.js";
-import {runEffectsSchema} from "./run-effect-schema.js";
+import {nestedRunsSchema, runEffectsSchema} from "./run-effect-schema.js";
 import {
   type BranchCondition,
   type NodeOutputValue,
@@ -446,6 +446,7 @@ export const nodeExecutionResultSchema = z.object({
   console: z.object({stdout: z.string(), stderr: z.string()}).optional(),
   conversation: z.array(teamworkConversationEntrySchema).optional(),
   effects: runEffectsSchema.optional(),
+  nested: nestedRunsSchema.optional(),
   interaction: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("approval"),
