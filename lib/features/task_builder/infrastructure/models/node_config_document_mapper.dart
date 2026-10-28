@@ -67,7 +67,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.stringInput => _stringInputFrom(data),
       WorkflowPrimitive.script => _scriptFrom(data),
       WorkflowPrimitive.prompt => _promptFrom(data),
-      WorkflowPrimitive.conditional => _conditionalFrom(data),
+      WorkflowPrimitive.conditionalFlow => _conditionalFrom(data),
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
@@ -831,7 +831,9 @@ class NodeConfigDocumentMapper {
 
   WorkflowPrimitive _primitiveFrom(Object? value) {
     if (PluginNodeCodecs.contains(value)) return WorkflowPrimitive.plugin;
-    final name = value == 'conditionalFlow' ? 'conditional' : value;
+    // Ältere Clients speicherten den Bedingten Ablauf als `conditional`;
+    // beim nächsten Speichern steht er wieder als `conditionalFlow` da.
+    final name = value == 'conditional' ? 'conditionalFlow' : value;
     return WorkflowPrimitive.values.firstWhere(
       (primitive) => primitive.name == name,
       orElse: () => WorkflowPrimitive.stringInput,

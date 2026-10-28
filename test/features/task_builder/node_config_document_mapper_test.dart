@@ -495,6 +495,25 @@ void main() {
     },
   );
 
+  test('speichert den Bedingten Ablauf unter dem Namen der Runtime', () {
+    final document = _mapper().toDocument(ConditionalNodeConfig.initial());
+
+    expect(document['primitive'], 'conditionalFlow');
+  });
+
+  test(
+    'liest Bedingte Abläufe, die ältere Clients als conditional speicherten',
+    () {
+      final config = _mapper().fromDocument({
+        'primitive': 'conditional',
+        'valueTemplate': '',
+        'branches': [],
+      });
+
+      expect(config, isA<ConditionalNodeConfig>());
+    },
+  );
+
   test('speichert und liest die Sprachmodell-Felder von Text vorlesen', () {
     final mapper = _mapper();
     const config = TextToSpeechNodeConfig(

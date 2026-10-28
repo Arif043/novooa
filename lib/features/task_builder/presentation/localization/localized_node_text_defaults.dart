@@ -18,7 +18,7 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_output_names_script.tr(),
       WorkflowPrimitive.prompt =>
         LocaleKeys.task_builder_output_names_prompt.tr(),
-      WorkflowPrimitive.conditional =>
+      WorkflowPrimitive.conditionalFlow =>
         LocaleKeys.task_builder_output_names_conditional.tr(),
       WorkflowPrimitive.iterativeRefinement =>
         LocaleKeys.task_builder_output_names_iterative_refinement.tr(),

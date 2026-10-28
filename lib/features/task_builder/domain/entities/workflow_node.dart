@@ -14,7 +14,7 @@ enum WorkflowPrimitive {
   stringInput,
   script,
   prompt,
-  conditional,
+  conditionalFlow,
   iterativeRefinement,
   writeFile,
   readFile,

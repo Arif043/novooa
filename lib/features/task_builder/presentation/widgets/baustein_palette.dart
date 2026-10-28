@@ -82,7 +82,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.writeFile),
   ],
   LocaleKeys.task_builder_palette_groups_logic: [
-    BausteinChoice(.conditional),
+    BausteinChoice(.conditionalFlow),
     BausteinChoice(.forEach),
     BausteinChoice(.script),
   ],
@@ -129,7 +129,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .stringInput => CupertinoIcons.textformat,
   .script => CupertinoIcons.chevron_left_slash_chevron_right,
   .prompt => CupertinoIcons.wand_stars,
-  .conditional => CupertinoIcons.arrow_branch,
+  .conditionalFlow => CupertinoIcons.arrow_branch,
   .iterativeRefinement => CupertinoIcons.paintbrush,
   .writeFile => CupertinoIcons.doc_plaintext,
   .readFile => CupertinoIcons.doc_text_search,

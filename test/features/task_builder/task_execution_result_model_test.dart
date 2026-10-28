@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/infrastructure/models/task_execution_result_model.dart';
 
 // Deckt eine zuvor gefundene Inkonsistenz ab: das Backend liefert für
@@ -45,5 +46,15 @@ void main() {
       NodeOutputType.fromName('irgendwas-unbekanntes'),
       NodeOutputType.json,
     );
+  });
+
+  test('ein Ergebnis eines Bedingten Ablaufs bleibt ein Bedingter Ablauf', () {
+    final result = NodeExecutionResultModel.fromJson({
+      'nodeId': 'bedingung',
+      'primitive': 'conditionalFlow',
+      'status': 'executed',
+    }).toDomain();
+
+    expect(result.primitive, WorkflowPrimitive.conditionalFlow);
   });
 }

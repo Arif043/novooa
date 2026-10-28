@@ -5,7 +5,7 @@ import 'workflow_node.dart';
 /// Gerichtete Verbindung zwischen zwei [WorkflowNode]-Instanzen.
 ///
 /// [conditionLabel] ist nur für verzweigende Primitives wie
-/// [WorkflowPrimitive.conditional] relevant und beschreibt die
+/// [WorkflowPrimitive.conditionalFlow] relevant und beschreibt die
 /// Bedingung, unter der dieser Pfad gewählt wird. Bei sequentiellen Kanten
 /// bleibt er `null`.
 ///

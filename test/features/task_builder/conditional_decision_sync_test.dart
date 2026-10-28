@@ -35,7 +35,7 @@ void main() {
       'Zweig mit veränderter Bedingung bleibt gelöst', () async {
     final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
     await cubit.addConnectedNode(
-      primitive: WorkflowPrimitive.conditional,
+      primitive: WorkflowPrimitive.conditionalFlow,
       afterId: const NodeId('prompt.1'),
     );
     final conditionalId = _conditionalIdOf(cubit);
@@ -91,7 +91,7 @@ void main() {
       'angelegt wird', () async {
     final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
 
-    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditionalFlow);
 
     _expectDecisionBranches(_conditionalConfigOf(cubit));
     await cubit.close();
@@ -118,7 +118,7 @@ void main() {
       '"Ja"/"Nein"', () async {
     final cubit = await _cubitFor(_taskWithSelectedStringInput());
 
-    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditionalFlow);
 
     final config = _conditionalConfigOf(cubit);
     expect(config.branches, isEmpty);
@@ -129,7 +129,7 @@ void main() {
       'ein, wenn es ein Bedingter-Ablauf-Baustein ist', () async {
     final cubit = await _cubitFor(Task.empty());
 
-    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditionalFlow);
 
     final config = _conditionalConfigOf(cubit);
     expect(config.branches, isEmpty);
@@ -143,7 +143,7 @@ void main() {
       final cubit = await _cubitFor(_taskWithSelectedStringInput());
 
       await cubit.addConnectedNode(
-        primitive: WorkflowPrimitive.conditional,
+        primitive: WorkflowPrimitive.conditionalFlow,
         afterId: const NodeId('string.1'),
       );
 
@@ -160,7 +160,7 @@ void main() {
       final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
 
       await cubit.addConnectedNode(
-        primitive: WorkflowPrimitive.conditional,
+        primitive: WorkflowPrimitive.conditionalFlow,
         afterId: const NodeId('prompt.1'),
       );
 

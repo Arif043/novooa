@@ -70,7 +70,7 @@ class ConditionalNodeConfig extends NodeConfig {
   }
 
   @override
-  WorkflowPrimitive get primitive => .conditional;
+  WorkflowPrimitive get primitive => .conditionalFlow;
 
   @override
   List<Object?> get props => [branches, valueTemplate];

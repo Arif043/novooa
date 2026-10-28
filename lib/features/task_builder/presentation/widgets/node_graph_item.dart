@@ -217,7 +217,7 @@ class NodeGraphItem extends StatelessWidget {
       .stringInput => StringInputWidget(node: node),
       .script => ScriptWidget(node: node),
       .prompt => PromptWidget(node: node),
-      .conditional => ConditionalWidget(key: ValueKey(node.id), node: node),
+      .conditionalFlow => ConditionalWidget(key: ValueKey(node.id), node: node),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
       .writeFile => WriteFileWidget(node: node),
       .readFile => ReadFileWidget(node: node),

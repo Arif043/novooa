@@ -11,7 +11,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_script_label.tr(),
       WorkflowPrimitive.prompt =>
         LocaleKeys.task_builder_primitives_prompt_label.tr(),
-      WorkflowPrimitive.conditional =>
+      WorkflowPrimitive.conditionalFlow =>
         LocaleKeys.task_builder_primitives_conditional_label.tr(),
       WorkflowPrimitive.iterativeRefinement =>
         LocaleKeys.task_builder_primitives_iterative_refinement_label.tr(),
@@ -68,7 +68,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_script_description.tr(),
       WorkflowPrimitive.prompt =>
         LocaleKeys.task_builder_primitives_prompt_description.tr(),
-      WorkflowPrimitive.conditional =>
+      WorkflowPrimitive.conditionalFlow =>
         LocaleKeys.task_builder_primitives_conditional_description.tr(),
       WorkflowPrimitive.iterativeRefinement =>
         LocaleKeys.task_builder_primitives_iterative_refinement_description

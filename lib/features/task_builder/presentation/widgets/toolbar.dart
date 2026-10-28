@@ -69,10 +69,10 @@ class Toolbar extends StatelessWidget {
         onPressed: () => cubit.addNodeToMainGraph(.prompt),
       ),
       _ToolbarAction(
-        primitive: .conditional,
+        primitive: .conditionalFlow,
         icon: Icons.call_split,
         tooltip: LocaleKeys.ui_verzweigung_hinzufuegen.tr(),
-        onPressed: () => cubit.addNodeToMainGraph(.conditional),
+        onPressed: () => cubit.addNodeToMainGraph(.conditionalFlow),
       ),
       _ToolbarAction(
         primitive: .iterativeRefinement,

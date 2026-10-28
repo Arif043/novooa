@@ -122,7 +122,7 @@ void main() {
       choiceIndex: 1,
       value: 'Nein',
     );
-    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditionalFlow);
     final conditionalId = _nodes(cubit).last.id;
     ConditionalNodeConfig conditional() =>
         _nodeById(cubit, conditionalId).config as ConditionalNodeConfig;
