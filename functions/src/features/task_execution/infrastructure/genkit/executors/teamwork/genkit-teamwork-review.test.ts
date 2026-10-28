@@ -46,7 +46,8 @@ test("a rejected result is revised in the same orchestrator conversation", async
     ["reviewRejected", 1, "Die Größe fehlt."], ["reviewPassed", 2, ""],
   ]);
   assert.deepEqual(outcome.fields, {antwort: "X ist 42 groß", groesse: 42});
-  assert.match(orchestrator.requests[1].messages, /Du leitest ein Team.*Wie groß ist X\?.*Die Größe fehlt\./);
+  assert.match(orchestrator.requests[1].messages, /You lead a team.*Wie groß ist X\?.*<context name=\\"findings\\">\\nDie Größe fehlt\./,
+    "the revision continues the same conversation");
   assert.ok(log.lines.some((line) => line.startsWith("[Teamwork] Review 1 rejected\nDie Größe fehlt.")));
   assert.ok(log.lines.includes("[Teamwork] Review 2 passed"));
 });

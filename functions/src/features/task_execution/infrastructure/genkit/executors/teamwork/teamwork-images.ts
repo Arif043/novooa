@@ -25,9 +25,9 @@ export async function writeTeamworkImages(rootDirectory: string, mediaUrls: stri
 export function teamworkImageInstructions(imagePaths: string[]): string | undefined {
   if (imagePaths.length === 0) return undefined;
   return [
-    "Die Bilder dieser Anweisung liegen auch als Dateien im Arbeitsordner:",
+    "The images of this task are also files in the working folder:",
     ...imagePaths.map((imagePath) => `- ${imagePath}`),
-    "Mitarbeiter sehen die Bilder nur über diese Dateien. Nenne ihnen im Auftrag den Pfad, damit sie das Bild mit read_file selbst ansehen.",
+    "Employees see the images only through these files. Give them the path in the assignment so they can view the image with read_file.",
   ].join("\n");
 }
 

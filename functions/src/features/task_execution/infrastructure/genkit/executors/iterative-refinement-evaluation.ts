@@ -16,11 +16,11 @@ export function parseEvaluation(text: string): Evaluation {
   return {critique: text, satisfied: false};
 }
 
-function jsonFrom(text: string) {
+function jsonFrom(text: string): unknown {
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) return {};
   try {
-    return JSON.parse(match[0]);
+    return JSON.parse(match[0]) as unknown;
   } catch {
     return {};
   }

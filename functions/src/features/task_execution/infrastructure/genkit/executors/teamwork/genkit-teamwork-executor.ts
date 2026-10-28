@@ -5,21 +5,24 @@ import {type TeamworkExecutionRequest, type TeamworkExecutionResult} from "../..
 import {type TeamworkExecutor} from "../../../../domain/executors/teamwork-executor.js";
 import {type ApplicationLogger} from "../../../../../../shared/logging/application-logger.js";
 import {type LanguageModelFailure} from "../../../../../language_models/domain/entities/language-model-failure.js";
-import {withTranslatedGenkitErrors} from "../../../../../language_models/infrastructure/errors/genkit-error-translator.js";
+import {type LlmGateway} from "../../../../../language_models/domain/prompting/llm-gateway.js";
+import {type LlmPrompt} from "../../../../../language_models/domain/prompting/llm-prompt.js";
 import {ModelOutputSchemaError} from "../../../../../language_models/infrastructure/errors/language-model-errors.js";
 import {languageModelFailureFrom} from "../../../../../language_models/infrastructure/errors/language-model-failure-mapper.js";
+import {type GenkitLlmBinding} from "../../../../../language_models/infrastructure/genkit/llm/genkit-llm-binding.js";
+import {createLlmGateway} from "../../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
 import {type NodeAttachmentWorkspace} from "../../runner/node-attachment-workspace.js";
+import {ReadableLlmCallLog} from "../../runner/readable-llm-call-log.js";
 import {type TeamWorkspace} from "../../runner/teamwork-workspace.js";
-import {loggedOrchestration} from "./teamwork-orchestration-log.js";
 import {delegationToolsFor} from "./teamwork-delegation-tools.js";
+import {writeTeamworkImages} from "./teamwork-images.js";
 import {teamworkMiddleware} from "./teamwork-middleware.js";
 import {teamMemberRuns} from "./teamwork-member-runs.js";
 import {teamworkModelFor, type TeamworkModel, type TeamworkModelSources} from "./teamwork-model.js";
-import {teamworkSchemaFor} from "./teamwork-output-schema.js";
-import {orchestratorSystemPrompt} from "./teamwork-prompts.js";
+import {teamworkResultFields} from "./teamwork-output-schema.js";
+import {orchestratorPrompt, revisionPrompt} from "./teamwork-prompts.js";
 import {reviewedResult} from "./teamwork-review.js";
 import {reviewedFields, type OrchestrationRound} from "./teamwork-review-loop.js";
-import {revisionPrompt} from "./teamwork-review-prompts.js";
 import {type TeamworkTranscript} from "./teamwork-transcript.js";
 
 /** Der Orchestrator darf je Runde so viele Schritte machen: Aufträge, Antworten lesen, Dateien prüfen, Ergebnis. */
@@ -34,35 +37,40 @@ export type GenkitTeamworkExecutorDependencies = TeamworkModelSources & {
 
 type Orchestration = {orchestrator: TeamworkModel; request: TeamworkExecutionRequest; tools: ToolAction[]};
 
-/** Der erste Turn bekommt Rolle und Aufgabe; eine Überarbeitung setzt das bisherige Gespräch fort. */
-type OrchestratorTurn =
-  | {system: string; prompt: ReturnType<typeof promptFor>}
-  | {messages: MessageData[]; prompt: string};
+/** Der erste Turn bringt Systemteil und Aufgabe; eine Überarbeitung setzt das bisherige Gespräch fort. */
+type OrchestratorTurn = {prompt: LlmPrompt; continuation?: MessageData[]; revision: number};
 
 /**
  * Ein Orchestrator mit eigenem Modell vergibt Aufträge an die Mitarbeiter (je eigenes Modell, eigene
  * Fähigkeiten, ein Gespräch je Lauf) und liefert das strukturierte Endergebnis; ist die Prüfung an, prüft ein
- * eigenes Modell es vor der Abgabe. An dieser Grenze werden Exceptions zur `LanguageModelFailure`.
+ * eigenes Modell es vor der Abgabe. Alle Modellaufrufe laufen über das LLM-Framework; an dieser Grenze
+ * werden Exceptions zur `LanguageModelFailure`.
  */
 export class GenkitTeamworkExecutor implements TeamworkExecutor {
-  constructor(private readonly dependencies: GenkitTeamworkExecutorDependencies) {}
+  private readonly gateway: LlmGateway<GenkitLlmBinding>;
+
+  constructor(private readonly dependencies: GenkitTeamworkExecutorDependencies) {
+    this.gateway = createLlmGateway(new ReadableLlmCallLog(dependencies.logger));
+  }
 
   execute(request: TeamworkExecutionRequest): ResultAsync<TeamworkExecutionResult, LanguageModelFailure> {
     return ResultAsync.fromPromise(this.run(request), languageModelFailureFrom);
   }
 
   private async run(request: TeamworkExecutionRequest): Promise<TeamworkExecutionResult> {
-    const {workspace, logger, transcript} = this.dependencies;
+    const {workspace, transcript} = this.dependencies;
     const orchestrator = await teamworkModelFor(request, this.dependencies, {label: "den Orchestrator", needsStructuredOutput: true});
     const reviewer = await this.reviewerFor(request);
     const runs = await teamMemberRuns(request, workspace, this.dependencies);
+    const imagePaths = await writeTeamworkImages(workspace.rootDirectory, request.mediaUrls);
     const orchestration = {orchestrator, request, tools: delegationToolsFor(orchestrator.ai, runs, transcript)};
-    const fields = await loggedOrchestration(logger, orchestrator, request, async () => {
-      const first = await this.orchestrate(orchestration, {
-        system: orchestratorSystemPrompt(runs, request.outputFields), prompt: promptFor(request),
-      });
-      return reviewer ? reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), transcript) : first.fields;
-    });
+    const first = await this.orchestrate(orchestration, {revision: 0, prompt: orchestratorPrompt({
+      members: runs, fields: request.outputFields, instruction: request.instruction, mediaUrls: request.mediaUrls,
+      workspace, imagePaths,
+    })});
+    const fields = reviewer
+      ? await reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), transcript)
+      : first.fields;
     transcript.result(fields);
     return {answer: JSON.stringify(fields), fields};
   }
@@ -77,32 +85,34 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
   }
 
   private review(reviewer: TeamworkModel, request: TeamworkExecutionRequest, result: Record<string, unknown>, round: number) {
-    const {workspace, logger} = this.dependencies;
-    return reviewedResult(reviewer, request, result, {rootDirectory: workspace.rootDirectory, logger, round});
+    return reviewedResult(reviewer, request, result, {rootDirectory: this.dependencies.workspace.rootDirectory, gateway: this.gateway, round});
   }
 
   /** Eine Runde des Orchestrators; eine Überarbeitung setzt sein bisheriges Gespräch fort. */
   private async orchestrate(orchestration: Orchestration, turn: OrchestratorTurn): Promise<OrchestrationRound> {
     const {orchestrator, request, tools} = orchestration;
-    const response = await withTranslatedGenkitErrors(() => orchestrator.ai.generate({
-      model: orchestrator.model, config: orchestrator.config, maxTurns: orchestratorMaxTurns,
-      ...turn,
-      tools,
-      use: teamworkMiddleware(this.dependencies.workspace.rootDirectory),
-      output: {schema: teamworkSchemaFor(request.outputFields)},
-    }));
-    const output = response.output;
-    if (!output) throw new ModelOutputSchemaError(`Das Team lieferte kein strukturiertes Ergebnis: ${response.text}`);
+    const response = await this.gateway.generate({
+      binding: {
+        ai: orchestrator.ai, model: orchestrator.model, config: orchestrator.config, logContext: orchestrator.logContext,
+        tools, maxTurns: orchestratorMaxTurns, continuation: turn.continuation,
+        use: teamworkMiddleware(this.dependencies.workspace.rootDirectory),
+      },
+      prompt: turn.prompt,
+      label: turn.revision === 0 ? "Teamwork / Orchestrator" : `Teamwork / Orchestrator (Überarbeitung ${turn.revision})`,
+      output: {kind: "structured", fields: teamworkResultFields(request.outputFields)},
+    });
+    if (!isRecord(response.data)) throw new ModelOutputSchemaError(`Das Team lieferte kein strukturiertes Ergebnis: ${response.text}`);
     return {
-      fields: definedOutputOf(output, request.outputFields),
-      revise: (findings) => this.orchestrate(orchestration, {messages: response.messages, prompt: revisionPrompt(findings)}),
+      fields: definedOutputOf(response.data, request.outputFields),
+      revise: (findings) => this.orchestrate(orchestration, {
+        prompt: revisionPrompt(findings), continuation: response.conversation as MessageData[], revision: turn.revision + 1,
+      }),
     };
   }
 }
 
-function promptFor(request: TeamworkExecutionRequest) {
-  if (request.mediaUrls.length === 0) return request.instruction;
-  return [{text: request.instruction}, ...request.mediaUrls.map((url) => ({media: {url}}))];
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function definedOutputOf(output: Record<string, unknown>, fields: TeamworkOutputField[]): Record<string, unknown> {

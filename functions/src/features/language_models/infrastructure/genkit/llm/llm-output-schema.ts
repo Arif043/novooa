@@ -19,9 +19,9 @@ export function choiceSchemaFor(choices: readonly string[]) {
  * Schema eines Felds samt Beschreibung; Typen, die das Modell als Text liefert, bekommen einen
  * Formathinweis. Beschreibungen gehen ans Modell und sind deshalb englisch.
  */
-export function fieldSchemaFor(field: Pick<LlmStructuredField, "type" | "description">): z.ZodTypeAny {
+export function fieldSchemaFor(field: Pick<LlmStructuredField, "type" | "description" | "allowEmpty">): z.ZodTypeAny {
   const description = [field.description.trim(), formatHintFor(field.type)].filter(Boolean).join(" ");
-  const base = baseSchemaFor(field.type);
+  const base = field.allowEmpty && field.type === "string" ? z.string() : baseSchemaFor(field.type);
   return description.length === 0 ? base : base.describe(description);
 }
 

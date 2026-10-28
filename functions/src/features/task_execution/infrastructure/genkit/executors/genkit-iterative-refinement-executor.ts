@@ -5,40 +5,21 @@ import {
   type IterativeRefinementRequest,
   type IterativeRefinementResult,
 } from "../../../domain/entities/iterative-refinement-execution.js";
-import {modelLogContext, reasoningModel} from "../runner/ai-models.js";
-import {
-  type NodeExecutor,
-  executedNode,
-  textOutputs,
-} from "../../../domain/executors/node-executor.js";
+import {type NodeExecutor, executedNode, textOutputs} from "../../../domain/executors/node-executor.js";
+import {createLlmGateway} from "../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
-import {
-  type Evaluation,
-  evaluationSchema,
-  parseEvaluation,
-} from "./iterative-refinement-evaluation.js";
+import {type Evaluation} from "./iterative-refinement-evaluation.js";
 import {
   formatEvaluation,
   formatImprovement,
   formatRefinementFinished,
   formatRefinementStarted,
 } from "./iterative-refinement-format.js";
-import {
-  evaluationPrompt,
-  improvementPrompt,
-} from "./iterative-refinement-prompts.js";
-import {
-  formatException,
-  formatModelCallFinished,
-  formatModelCallStarted,
-} from "../runner/structured-logger.js";
-import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
+import {improvement, type RefinementCall, structuredEvaluation, textEvaluation} from "./iterative-refinement-calls.js";
+import {formatException} from "../runner/structured-logger.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
-import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
-import {
-  errorDetails,
-  type ApplicationLogger,
-} from "../../../../../shared/logging/application-logger.js";
+import {ReadableLlmCallLog} from "../runner/readable-llm-call-log.js";
+import {errorDetails, type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
 export type IterativeRefinementNodeInput = IterativeRefinementRequest;
@@ -82,34 +63,19 @@ export async function executeIterativeRefinementNode(
   attachmentWorkspace?: NodeAttachmentWorkspace,
   logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<IterativeRefinementNodeOutput> {
+  const call: RefinementCall = {ai, workspace: attachmentWorkspace, gateway: createLlmGateway(new ReadableLlmCallLog(logger))};
   const maxIterations = boundedIterations(input.maxIterations);
   let answer = input.draft;
   let iterations = 0;
-
   logger.readableInfo(formatRefinementStarted(input, maxIterations));
   for (let nextIteration = 1; nextIteration <= maxIterations; nextIteration += 1) {
     iterations = nextIteration;
-    const evaluation = await evaluateDraft(
-      ai,
-      input,
-      answer,
-      nextIteration,
-      attachmentWorkspace,
-      logger,
-    );
+    const evaluation = await evaluateDraft(call, input, answer, nextIteration, logger);
     logger.readableInfo(formatEvaluation(nextIteration, evaluation));
     if (evaluation.satisfied) break;
-    answer = await improveDraft(
-      ai,
-      input,
-      answer,
-      evaluation.critique,
-      attachmentWorkspace,
-      logger,
-    );
+    answer = await improvement(call, input, answer, evaluation.critique);
     logger.readableInfo(formatImprovement(nextIteration, answer));
   }
-
   logger.readableInfo(formatRefinementFinished(iterations, answer));
   return {answer, iterations};
 }
@@ -122,179 +88,21 @@ export function createGenkitIterativeRefinementExecutor(
   return {execute: (input) => executeIterativeRefinementNode(ai, input, attachmentWorkspace, logger)};
 }
 
+/** Erst mit Ausgabeschema; scheitert das, bewertet das Modell als Text (JSON wird herausgelesen). */
 async function evaluateDraft(
-  ai: GenkitBeta,
-  input: IterativeRefinementNodeInput,
-  draft: string,
-  iteration: number,
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
+  call: RefinementCall, input: IterativeRefinementNodeInput, draft: string, iteration: number, logger: ApplicationLogger,
 ): Promise<Evaluation> {
   try {
-    return await structuredEvaluation(
-      ai,
-      input,
-      draft,
-      iteration,
-      attachmentWorkspace,
-      logger,
-    );
+    return await structuredEvaluation(call, input, draft, iteration);
   } catch (error) {
     logger.readableError(formatException({
       title: "Iterative Verfeinerung: strukturierte Bewertung fehlgeschlagen",
       error,
-      context: [
-        `Iteration: ${iteration}`,
-        "Fallback: Textbewertung wird versucht.",
-      ],
+      context: [`Iteration: ${iteration}`, "Fallback: Textbewertung wird versucht."],
     }));
-    logger.error("iterative_refinement.structured_evaluation_exception", {
-      iteration,
-      error: errorDetails(error),
-    });
-    return textEvaluationFallback(
-      ai,
-      input,
-      draft,
-      iteration,
-      attachmentWorkspace,
-      logger,
-    );
+    logger.error("iterative_refinement.structured_evaluation_exception", {iteration, error: errorDetails(error)});
+    return textEvaluation(call, input, draft, iteration);
   }
-}
-
-async function structuredEvaluation(
-  ai: GenkitBeta,
-  input: IterativeRefinementNodeInput,
-  draft: string,
-  iteration: number,
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): Promise<Evaluation> {
-  const prompt = evaluationPrompt(input, draft);
-  const startedAt = Date.now();
-  const label = input.employee
-    ? `Iterative Verfeinerung / Bewertung ${iteration} (Mitarbeiter: ${input.employee.name})`
-    : `Iterative Verfeinerung / Bewertung ${iteration}`;
-  logger.readableInfo(formatModelCallStarted({
-    label,
-    model: modelLogContext(),
-    prompt,
-    outputSchema: "critique: string, satisfied: boolean",
-  }));
-
-  let output: Evaluation | undefined | null;
-  let logText = "";
-  if (input.employee) {
-    const response = await runEmployeeAgentTurn(ai, {
-      employee: input.employee,
-      model: reasoningModel(),
-      prompt,
-      output: {schema: evaluationSchema},
-      use: aiTurnMiddleware(attachmentWorkspace),
-    });
-    output = response.data ?? undefined;
-    logText = response.text;
-  } else {
-    const response = await ai.generate({
-      model: reasoningModel(),
-      prompt,
-      output: {schema: evaluationSchema},
-      use: aiTurnMiddleware(attachmentWorkspace),
-    });
-    output = response.output ?? undefined;
-    logText = response.text;
-  }
-  logger.readableInfo(formatModelCallFinished({
-    label,
-    durationMs: Date.now() - startedAt,
-    text: logText,
-    output,
-  }));
-  if (!output) throw new Error("Evaluation returned no output.");
-  return output;
-}
-
-async function textEvaluationFallback(
-  ai: GenkitBeta,
-  input: IterativeRefinementNodeInput,
-  draft: string,
-  iteration: number,
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): Promise<Evaluation> {
-  const prompt = `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`;
-  const startedAt = Date.now();
-  const label = input.employee
-    ? `Iterative Verfeinerung / Bewertungs-Fallback ${iteration} (Mitarbeiter: ${input.employee.name})`
-    : `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`;
-  logger.readableInfo(formatModelCallStarted({
-    label,
-    model: modelLogContext(),
-    prompt,
-  }));
-
-  const text = input.employee
-    ? (await runEmployeeAgentTurn(ai, {
-      employee: input.employee,
-      model: reasoningModel(),
-      prompt,
-      use: aiTurnMiddleware(attachmentWorkspace),
-    })).text
-    : (await ai.generate({
-      model: reasoningModel(),
-      prompt,
-      use: aiTurnMiddleware(attachmentWorkspace),
-    })).text;
-
-  logger.readableInfo(formatModelCallFinished({
-    label,
-    durationMs: Date.now() - startedAt,
-    text,
-  }));
-  return parseEvaluation(text);
-}
-
-async function improveDraft(
-  ai: GenkitBeta,
-  input: IterativeRefinementNodeInput,
-  draft: string,
-  critique: string,
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): Promise<string> {
-  const prompt = improvementPrompt(input, draft, critique);
-  const startedAt = Date.now();
-  const label = input.employee
-    ? `Iterative Verfeinerung / Optimierung (Mitarbeiter: ${input.employee.name})`
-    : "Iterative Verfeinerung / Optimierung";
-  logger.readableInfo(formatModelCallStarted({
-    label,
-    model: modelLogContext(),
-    prompt,
-  }));
-
-  const text = input.employee
-    ? (await runEmployeeAgentTurn(ai, {
-      employee: input.employee,
-      model: reasoningModel(),
-      prompt,
-      config: {temperature: 0.4},
-      use: aiTurnMiddleware(attachmentWorkspace),
-    })).text
-    : (await ai.generate({
-      model: reasoningModel(),
-      prompt,
-      config: {temperature: 0.4},
-      use: aiTurnMiddleware(attachmentWorkspace),
-    })).text;
-
-  logger.readableInfo(formatModelCallFinished({
-    label,
-    durationMs: Date.now() - startedAt,
-    text,
-  }));
-  return text;
 }
 
 function boundedIterations(value: number): number {

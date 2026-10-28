@@ -6,6 +6,8 @@ export type LlmStructuredField = {
   readonly name: string;
   readonly description: string;
   readonly type: LlmStructuredFieldType;
+  /** Text darf leer bleiben, z. B. die Befunde einer Prüfung, die nichts beanstandet. */
+  readonly allowEmpty?: boolean;
 };
 
 /** Was der Aufruf liefern soll; das Schema dazu baut der Adapter, nicht die Aufrufstelle. */
@@ -33,6 +35,11 @@ export type LlmResponse = {
   readonly data?: unknown;
   /** Data-URL des erzeugten Bilds (`image`). */
   readonly mediaUrl?: string;
+  /**
+   * Gesprächsstand nach dem Aufruf (inklusive Werkzeugaufrufen), um ihn fortzusetzen. Für die Domain
+   * opak — nur der Adapter, der ihn geliefert hat, versteht ihn.
+   */
+  readonly conversation?: unknown;
 };
 
 /** Der eine Weg zu einem Sprachmodell; Protokoll und Fehlerübersetzung legen sich als Decorator darum. */

@@ -3,11 +3,15 @@ import {access, mkdir, mkdtemp, readdir, rm, writeFile} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test, {type TestContext} from "node:test";
-import {genkit, z} from "genkit/beta";
+import {genkit} from "genkit/beta";
 import {runtimeTestDatabase} from "../../../../../db/runtime-database-test-support.js";
 import {SQLiteEmployeeStore} from "../../../../employees/infrastructure/local/sqlite-employee-store.js";
 import {DirectorySkillStore} from "../../../../skills/infrastructure/local/directory-skill-store.js";
-import {runEmployeeAgentTurn} from "./employee-agent.js";
+import {type LlmOutputSpec} from "../../../../language_models/domain/prompting/llm-gateway.js";
+import {defaultGenerationOptions} from "../../../../language_models/domain/entities/generation-options.js";
+import {createLlmGateway} from "../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
+import {promptNodePrompt} from "../executors/prompt-node-prompt.js";
+import {type ResolvedEmployee} from "./task-definition.js";
 import {assertExclusiveDelegation} from "./employee-context.js";
 import {aiTurnMiddleware} from "./node-attachment-genkit.js";
 import {prepareNodeAttachmentWorkspace, type NodeAttachmentSources} from "./node-attachment-workspace.js";
@@ -131,7 +135,7 @@ test("a missing skill of the employee aborts with the skill message and leaves n
   assert.equal(await count(), before);
 });
 
-test("the agent runs with the constraint as system prompt, the employee's skills and the unchanged instruction", async (t) => {
+test("the employee runs with the constraint as system section, the employee's skills and the unchanged instruction", async (t) => {
   const {employees, sources} = await setup(t);
   const employee = await employees.create("team-1", {name: "Rezeption", constraint: "Sei freundlich.\nAntworte kurz.", skills: ["pdf"]});
   const workspace = await prepareNodeAttachmentWorkspace(promptNode({employeeId: employee.id}), "team-1", sources);
@@ -143,20 +147,20 @@ test("the agent runs with the constraint as system prompt, the employee's skills
     return {message: {role: "model", content: [{text: "fertig"}]}, finishReason: "stop"};
   });
 
-  const response = await runEmployeeAgentTurn(ai, {
-    employee: workspace!.employee!, model, prompt: "Fasse die Mail zusammen.", use: aiTurnMiddleware(workspace),
+  const response = await employeeTurn(ai, model, {
+    employee: workspace!.employee!, instruction: "Fasse die Mail zusammen.", use: aiTurnMiddleware(workspace),
   });
 
   assert.equal(response.text, "fertig");
   const sent = requests[0];
-  assert.match(sent.messages, /"role":"system".*Sei freundlich\.\\nAntworte kurz\./);
+  assert.match(sent.messages, /"role":"system".*<employee name=\\"Rezeption\\">\\nSei freundlich\.\\nAntworte kurz\.\\n<\/employee>/);
   assert.match(sent.messages, /Fasse die Mail zusammen\./);
   assert.ok(sent.tools.includes("use_skill"));
   assert.match(sent.messages, /pdf - Beschreibung von pdf/);
   assert.doesNotMatch(sent.messages, /mails - Beschreibung/, "only the employee's skills are offered");
 });
 
-test("an empty constraint sends no system prompt", async () => {
+test("an empty constraint adds no employee section", async () => {
   const ai = genkit({});
   let sent = "";
   const model = ai.defineModel({name: "fake-agent-model"}, async (request) => {
@@ -164,9 +168,9 @@ test("an empty constraint sends no system prompt", async () => {
     return {message: {role: "model", content: [{text: "ok"}]}, finishReason: "stop"};
   });
 
-  await runEmployeeAgentTurn(ai, {employee: {id: "e", name: "Leer", constraint: "  \n"}, model, prompt: "Hallo"});
+  await employeeTurn(ai, model, {employee: {id: "e", name: "Leer", constraint: "  \n"}, instruction: "Hallo"});
 
-  assert.doesNotMatch(sent, /"role":"system"/);
+  assert.doesNotMatch(sent, /<employee/);
 });
 
 test("an employee turn delivers structured output", async () => {
@@ -175,15 +179,15 @@ test("an employee turn delivers structured output", async () => {
     message: {role: "model", content: [{text: JSON.stringify({summe: 3})}]}, finishReason: "stop",
   }));
 
-  const response = await runEmployeeAgentTurn(ai, {
-    employee: {id: "e", name: "Buchhaltung", constraint: "Rechne genau."}, model, prompt: "1 + 2?",
-    output: {schema: z.object({summe: z.number()})},
+  const response = await employeeTurn(ai, model, {
+    employee: {id: "e", name: "Buchhaltung", constraint: "Rechne genau."}, instruction: "1 + 2?",
+    output: {kind: "structured", fields: [{name: "summe", description: "", type: "number"}]},
   });
 
   assert.deepEqual(response.data, {summe: 3});
 });
 
-test("an employee turn with an image keeps the constraint as system prompt", async () => {
+test("an employee turn with an image keeps the constraint in the system part", async () => {
   const ai = genkit({});
   let sent = "";
   const model = ai.defineModel({name: "fake-agent-model", supports: {media: true}}, async (request) => {
@@ -191,9 +195,9 @@ test("an employee turn with an image keeps the constraint as system prompt", asy
     return {message: {role: "model", content: [{text: "ok"}]}, finishReason: "stop"};
   });
 
-  await runEmployeeAgentTurn(ai, {
-    employee: {id: "e", name: "Prüfung", constraint: "Prüfe Belege."}, model,
-    prompt: [{text: "Was steht hier?"}, {media: {url: "data:image/png;base64,AAAA"}}],
+  await employeeTurn(ai, model, {
+    employee: {id: "e", name: "Prüfung", constraint: "Prüfe Belege."}, instruction: "Was steht hier?",
+    mediaUrls: ["data:image/png;base64,AAAA"],
   });
 
   assert.match(sent, /"role":"system".*Prüfe Belege\./);
@@ -211,3 +215,19 @@ test("the workspace of an employee exists as a directory that cleanup removes", 
 
   await assert.rejects(access(workspace!.rootDirectory));
 });
+
+/** Ein Turn eines Mitarbeiters über das LLM-Framework, wie ihn der Prompt-Baustein ausführt. */
+function employeeTurn(ai: ReturnType<typeof genkit>, model: unknown, options: {
+  employee: ResolvedEmployee; instruction: string; mediaUrls?: string[];
+  use?: ReturnType<typeof aiTurnMiddleware>; output?: LlmOutputSpec;
+}) {
+  const prompt = promptNodePrompt({
+    teamId: "team-1", instruction: options.instruction, outputType: "text", choices: [], structuredFields: [],
+    mediaUrls: options.mediaUrls ?? [], generationOptions: defaultGenerationOptions, employee: options.employee,
+  });
+  const silent = {started: () => undefined, finished: () => undefined};
+  return createLlmGateway(silent).generate({
+    binding: {ai, model: model as never, config: {}, logContext: {}, use: options.use},
+    prompt, label: "Test", output: options.output ?? {kind: "text"},
+  });
+}

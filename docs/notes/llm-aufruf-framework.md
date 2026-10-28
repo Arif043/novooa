@@ -8,8 +8,8 @@ Gehört zu: [Architektur](../index/architektur.md)
   (reines TypeScript), Genkit-Adapter in
   `functions/src/features/language_models/infrastructure/genkit/llm/`.
 - **Abschnitte** (`prompt-section.ts`) mit fester Reihenfolge und Zielteil:
-  - System: `role`, `rules`, `employee`, `attachments`, `output_format`,
-    `response_language`
+  - System: `role`, `rules`, `employee`, `attachments`, `reference` (benannt,
+    mehrfach), `output_format`, `response_language`
   - Nutzer: `task`, `context` (benannt, mehrfach)
 
   Die Reihenfolge folgt der Art, nicht der Aufrufreihenfolge. Leere
@@ -27,7 +27,10 @@ Gehört zu: [Architektur](../index/architektur.md)
 - **Feste Texte englisch**, die Antwort folgt der Sprache der Aufgabe
   (`response_language`, Richtlinie `sameAsTask`) oder einer festen Sprache
   (`en`/`de`/`tr`). Die Anweisung des Nutzers bleibt wörtlich.
-- **Gateway:** `LlmRequest {binding, prompt, label, output}`;
+- **Gateway:** `LlmRequest {binding, prompt, label, output}`; das Binding
+  trägt auch Werkzeuge, `maxTurns` und ein fortgesetztes Gespräch
+  (`continuation`, aus `LlmResponse.conversation`); Textfelder dürfen mit
+  `allowEmpty` leer bleiben;
   `output` ist `text`, `choice`, `structured` oder `image` — das Schema baut
   der Adapter (`llm-output-schema.ts`), der Prompt nennt das Format nur
   kurz. `GenkitLlmGateway` ist der einzige Aufruf von `ai.generate`.
@@ -40,11 +43,18 @@ Gehört zu: [Architektur](../index/architektur.md)
 
 ## Stand der Umstellung
 
-- Umgestellt: [Prompt-Baustein](./prompt-executor.md)
-  (`prompt-node-prompt.ts`).
-- Geplant: Iterative Verfeinerung, Teamarbeit (Orchestrator, Prüfung,
-  Mitglieder), Aufgabenstudio-Agent und seine Subagenten,
-  Wissensbasis-Agent.
+- Umgestellt: alle Bausteine der Aufgabenausführung —
+  [Prompt-Baustein](./prompt-executor.md) (`prompt-node-prompt.ts`),
+  [Iterative Verfeinerung](./iterative-verfeinerung.md)
+  (`iterative-refinement-prompts.ts`) und [Teamarbeit](./teamwork-ausfuehrung.md)
+  (Orchestrator, Prüfung, Systemteil und Aufträge der Mitglieder). Gemeinsame
+  Formulierungen (Anhänge, Verweis auf den Mitarbeiter) stehen in
+  `workflow-prompt-sections.ts`; die Rolle verweist nur auf `<employee>`, wenn
+  es eine Rahmenbedingung gibt.
+- Mitglieder der Teamarbeit führen ein zustandsbehaftetes Genkit-Gespräch
+  (`EmployeeConversation`); sie nutzen Builder und Renderer, aber nicht den
+  Gateway.
+- Geplant: Aufgabenstudio-Agent und seine Subagenten, Wissensbasis-Agent.
 
 ## Siehe auch
 

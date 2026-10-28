@@ -16,7 +16,7 @@ test("images of the instruction land as files in the workspace for the members",
 
   assert.deepEqual(paths, ["images/bild-1.png", "images/bild-2.jpg"]);
   assert.equal(await readFile(path.join(root, "images/bild-1.png"), "utf8"), "image");
-  assert.match(teamworkImageInstructions(paths) ?? "", /images\/bild-1\.png[\s\S]*Nenne ihnen im Auftrag den Pfad/);
+  assert.match(teamworkImageInstructions(paths) ?? "", /images\/bild-1\.png[\s\S]*Give them the path in the assignment/);
 });
 
 test("without images nothing is written and no hint is given", async () => {

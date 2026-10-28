@@ -1,4 +1,4 @@
-import {type GenerateOptions, type ModelArgument} from "genkit";
+import {type GenerateOptions, type MessageData, type ModelArgument} from "genkit";
 import {type GenkitBeta} from "genkit/beta";
 
 /**
@@ -13,4 +13,13 @@ export type GenkitLlmBinding = {
   /** Wie das Modell im Protokoll heißt (Anbieter, Name). */
   logContext: unknown;
   use?: GenerateOptions["use"];
+  /** Werkzeuge, die das Modell aufrufen darf, z. B. die Aufträge an Mitarbeiter. */
+  tools?: GenerateOptions["tools"];
+  /** Höchstzahl der Modell-Runden mit Werkzeugaufrufen. */
+  maxTurns?: number;
+  /**
+   * Bisheriges Gespräch (`LlmResponse.conversation` eines früheren Aufrufs). Es enthält den Systemteil
+   * schon; der neue Prompt bringt dann nur die Folgenachricht.
+   */
+  continuation?: MessageData[];
 };

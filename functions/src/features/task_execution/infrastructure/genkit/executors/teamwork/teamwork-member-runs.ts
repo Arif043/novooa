@@ -6,6 +6,7 @@ import {type ResolvedTeamMember, type TeamWorkspace} from "../../runner/teamwork
 import {type TeamMemberRun} from "./teamwork-delegation-tools.js";
 import {teamworkMiddleware} from "./teamwork-middleware.js";
 import {teamworkModelFor, type TeamworkModelSources} from "./teamwork-model.js";
+import {memberSystemPrompt} from "./teamwork-prompts.js";
 
 /** Bereitet jeden Mitarbeiter vor: eigenes Modell, eindeutiger Werkzeugname, eigene Fähigkeiten, ein Gespräch für den Lauf. */
 export async function teamMemberRuns(
@@ -32,7 +33,9 @@ async function memberRunFor(
     employeeId: member.employee.id,
     employeeName: member.employee.name,
     responsibility: member.responsibility,
-    conversation: new EmployeeConversation({ai: model.ai, employee: member.employee, model: model.model, use, config: model.config}),
+    conversation: new EmployeeConversation({
+      ai: model.ai, employee: member.employee, system: memberSystemPrompt(member.employee), model: model.model, use, config: model.config,
+    }),
   };
 }
 

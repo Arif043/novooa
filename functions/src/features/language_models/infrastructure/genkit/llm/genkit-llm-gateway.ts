@@ -5,7 +5,7 @@ import {type PromptRenderer} from "../../../domain/prompting/prompt-renderer.js"
 import {type GenkitLlmBinding} from "./genkit-llm-binding.js";
 import {choiceSchemaFor, structuredSchemaFor} from "./llm-output-schema.js";
 
-type GenkitResult = {text: string; output?: unknown; media?: {url?: string} | null};
+type GenkitResult = {text: string; output?: unknown; media?: {url?: string} | null; messages?: unknown};
 
 /**
  * Der einzige Ort, der für das Framework `ai.generate` aufruft: rendert den Prompt in `system`,
@@ -15,12 +15,13 @@ export class GenkitLlmGateway implements LlmGateway<GenkitLlmBinding> {
   constructor(private readonly renderer: PromptRenderer) {}
 
   async generate(request: LlmRequest<GenkitLlmBinding>): Promise<LlmResponse> {
-    const {ai, model, config, use} = request.binding;
+    const {ai, model, config, use, tools, maxTurns, continuation} = request.binding;
     const rendered = this.renderer.render(request.prompt);
     const result: GenkitResult = await ai.generate({
-      model, use,
-      system: rendered.system,
-      messages: messagesFor(request.prompt.history),
+      model, use, tools, maxTurns,
+      // Ein fortgesetztes Gespräch trägt seinen Systemteil schon in sich.
+      system: continuation ? undefined : rendered.system,
+      messages: continuation ?? messagesFor(request.prompt.history),
       prompt: userContentFor(rendered.user, request.prompt.mediaUrls),
       output: outputFor(request.output),
       config: request.output.kind === "image" ? {responseModalities: ["IMAGE"]} : config,
@@ -49,11 +50,12 @@ function outputFor(spec: LlmOutputSpec) {
 }
 
 function responseFor(spec: LlmOutputSpec, result: GenkitResult): LlmResponse {
+  const conversation = result.messages;
   switch (spec.kind) {
-    case "choice": return {text: result.text, data: answerOf(result.output)};
-    case "structured": return {text: result.text, data: result.output ?? undefined};
-    case "image": return {text: result.text ?? "", mediaUrl: result.media?.url};
-    default: return {text: result.text};
+    case "choice": return {text: result.text, data: answerOf(result.output), conversation};
+    case "structured": return {text: result.text, data: result.output ?? undefined, conversation};
+    case "image": return {text: result.text ?? "", mediaUrl: result.media?.url, conversation};
+    default: return {text: result.text, conversation};
   }
 }
 

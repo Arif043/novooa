@@ -32,8 +32,12 @@ test("tool names are ASCII and unique", () => {
 test("a task is split into what to do, the expected result and the boundaries", () => {
   const prompt = memberTaskPrompt({task: "Finde X.", expectedResult: "Eine Zahl.", boundaries: "Nicht Y."});
 
-  assert.match(prompt, /^Auftrag:\nFinde X\.\n\nErwartetes Ergebnis:\nEine Zahl\.\n\nGrenzen:\nNicht Y\./);
-  assert.doesNotMatch(memberTaskPrompt({task: "A", expectedResult: "B", boundaries: " "}), /Grenzen/);
+  assert.equal(prompt, [
+    "<task>\nFinde X.\n</task>",
+    "<context name=\"expected_result\">\nEine Zahl.\n</context>",
+    "<context name=\"boundaries\">\nNicht Y.\n</context>",
+  ].join("\n\n"));
+  assert.doesNotMatch(memberTaskPrompt({task: "A", expectedResult: "B", boundaries: " "}), /boundaries/);
 });
 
 async function shared(t: TestContext) {

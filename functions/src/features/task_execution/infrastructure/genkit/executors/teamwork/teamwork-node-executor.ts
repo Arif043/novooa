@@ -10,7 +10,6 @@ import {generationOptionsFrom} from "../../../../../language_models/domain/entit
 import {type LanguageModelDefaultsStore} from "../../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {languageModelFailureFrom} from "../../../../../language_models/infrastructure/errors/language-model-failure-mapper.js";
 import {type GenkitLanguageModelResolver} from "../../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
-import {attachmentInstructions} from "../../runner/node-attachment-genkit.js";
 import {type NodeAttachmentWorkspace} from "../../runner/node-attachment-workspace.js";
 import {type TeamWorkspace} from "../../runner/teamwork-workspace.js";
 import {type TeamworkExecutionRequest} from "../../../../domain/entities/teamwork-execution.js";
@@ -19,7 +18,6 @@ import {resolvedInstruction} from "../prompt-node-input.js";
 import {fieldOutputsFor} from "../structured-output-schema.js";
 import {GenkitTeamworkExecutor} from "./genkit-teamwork-executor.js";
 import {persistedResultFile} from "./teamwork-file-outputs.js";
-import {teamworkImageInstructions, writeTeamworkImages} from "./teamwork-images.js";
 import {TeamworkTranscript} from "./teamwork-transcript.js";
 import {namedOutputFields} from "./teamwork-output-schema.js";
 
@@ -43,7 +41,7 @@ export function createTeamworkNodeExecutor(dependencies: TeamworkNodeExecutorDep
       const workspace = teamWorkspaceOf(dependencies.workspace);
       const transcript = new TeamworkTranscript(dependencies.logger);
       const executor = new GenkitTeamworkExecutor({...dependencies, workspace, transcript});
-      const request = await requestFor({...config, outputFields: fields}, node, runContext, workspace);
+      const request = await requestFor({...config, outputFields: fields}, node, runContext);
       const outputsOrFailure = await executor.execute(request).andThen(({fields: values}) => ResultAsync.fromPromise(
         outputsFor(fields, values, workspace.team.sharedDirectory, runContext), languageModelFailureFrom,
       ));
@@ -55,15 +53,14 @@ export function createTeamworkNodeExecutor(dependencies: TeamworkNodeExecutorDep
 }
 
 async function requestFor(
-  config: TeamworkNodeConfig, node: WorkflowNode, runContext: TaskRunContext, workspace: NodeAttachmentWorkspace,
+  config: TeamworkNodeConfig, node: WorkflowNode, runContext: TaskRunContext,
 ): Promise<TeamworkExecutionRequest> {
+  // Anhänge und Bilder beschreibt der Systemteil des Orchestrators; die Anweisung bleibt wörtlich.
   const instruction = await resolvedInstruction(config.instruction.trim() || node.title, runContext);
-  const imagePaths = await writeTeamworkImages(workspace.rootDirectory, instruction.mediaUrls);
   return {
     teamId: runContext.teamId,
     languageModelId: config.languageModelId,
-    instruction: [instruction.text, attachmentInstructions(workspace), teamworkImageInstructions(imagePaths)]
-      .filter(Boolean).join("\n\n"),
+    instruction: instruction.text,
     generationOptions: generationOptionsFrom(config.generationOptions),
     outputFields: config.outputFields,
     review: config.review,

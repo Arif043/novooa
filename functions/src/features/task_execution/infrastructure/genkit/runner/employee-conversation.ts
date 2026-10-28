@@ -9,6 +9,8 @@ import type {ResolvedEmployee} from "./task-definition.js";
 export type EmployeeConversationOptions = {
   ai: GenkitBeta;
   employee: ResolvedEmployee;
+  /** Gerenderter Systemteil (Rolle, Rahmenbedingung, Arbeitsordner) für das ganze Gespräch. */
+  system?: string;
   model: ModelArgument;
   use?: GenerateOptions["use"];
   config?: Record<string, unknown>;
@@ -42,12 +44,11 @@ export class EmployeeConversation {
 
   private chatOf(): AgentChat {
     if (this.chat) return this.chat;
-    const {ai, employee, model, use, config} = this.options;
-    const constraint = employee.constraint.trim();
+    const {ai, employee, system, model, use, config} = this.options;
     const agent = defineAgent(Registry.withParent(ai.registry), {
       name: `employee-${randomUUID().slice(0, 8)}`,
       description: `Mitarbeiter ${employee.name}`,
-      system: constraint.length > 0 ? constraint : undefined,
+      system,
       model,
       use,
       config,

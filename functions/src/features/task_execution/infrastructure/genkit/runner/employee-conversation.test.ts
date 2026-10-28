@@ -21,14 +21,14 @@ function fakeEmployeeAi() {
 
 const employee = {id: "e", name: "Recherche", constraint: "Arbeite gründlich."};
 
-test("a follow-up task sees the earlier task and answer", async () => {
+test("a follow-up task sees the earlier task and answer, under the given system part", async () => {
   const {ai, model, requests} = fakeEmployeeAi();
-  const conversation = new EmployeeConversation({ai, employee, model});
+  const conversation = new EmployeeConversation({ai, employee, model, system: "<employee name=\"Recherche\">\nArbeite gründlich.\n</employee>"});
 
   assert.equal(await conversation.send("Finde A."), "Antwort 1");
   assert.equal(await conversation.send("Vertiefe A."), "Antwort 2");
 
-  assert.match(requests[0], /"role":"system".*Arbeite gründlich\./);
+  assert.match(requests[0], /"role":"system".*<employee name=\\"Recherche\\">\\nArbeite gründlich\./);
   assert.match(requests[1], /Finde A\..*Antwort 1.*Vertiefe A\./);
 });
 
@@ -41,6 +41,14 @@ test("parallel tasks run one after another in the same conversation", async () =
   assert.deepEqual(answers, ["Antwort 1", "Antwort 2"]);
   assert.equal(overlapped(), false);
   assert.match(requests[1], /Erstens\..*Zweitens\./);
+});
+
+test("without a system part the conversation sends none", async () => {
+  const {ai, model, requests} = fakeEmployeeAi();
+
+  await new EmployeeConversation({ai, employee, model}).send("Hallo.");
+
+  assert.doesNotMatch(requests[0], /"role":"system"/);
 });
 
 test("a failed task does not block the next one", async () => {

@@ -3,7 +3,7 @@
  * im Prompt — nicht die Reihenfolge, in der eine Aufrufstelle den Builder bedient.
  */
 export const promptSectionKinds = [
-  "role", "rules", "employee", "attachments", "output_format", "response_language",
+  "role", "rules", "employee", "attachments", "reference", "output_format", "response_language",
   "task", "context",
 ] as const;
 
@@ -15,7 +15,7 @@ export type PromptSectionTarget = "system" | "user";
 const userKinds: ReadonlySet<PromptSectionKind> = new Set(["task", "context"]);
 
 /** Abschnitte, die mehrfach vorkommen dürfen; alle anderen ersetzt ein erneuter Aufruf. */
-export const repeatableKinds: ReadonlySet<PromptSectionKind> = new Set(["context"]);
+export const repeatableKinds: ReadonlySet<PromptSectionKind> = new Set(["reference", "context"]);
 
 export type PromptSection = {
   readonly kind: PromptSectionKind;

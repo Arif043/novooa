@@ -43,6 +43,11 @@ export class PromptBuilder {
     return this.with("attachments", content ?? "");
   }
 
+  /** Benanntes Nachschlagematerial für den Systemteil, z. B. das Team oder der Arbeitsordner; mehrfach möglich. */
+  reference(name: string, content: string | undefined): PromptBuilder {
+    return this.with("reference", content ?? "", name);
+  }
+
   /** Kurzer Hinweis zur Form der Antwort; das Schema selbst geht über `LlmOutputSpec`. */
   outputFormat(content: string | undefined): PromptBuilder {
     return this.with("output_format", content ?? "");

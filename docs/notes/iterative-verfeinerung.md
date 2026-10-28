@@ -9,6 +9,12 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - Mitarbeiter oder Fähigkeiten wie beim Prompt.
 - OpenAI-kompatible Provider: Text-JSON-Fallback für die strukturierte
   Bewertung.
+- Prompts über das [LLM-Framework](./llm-aufruf-framework.md)
+  (`iterative-refinement-prompts.ts`, Aufrufe in
+  `iterative-refinement-calls.ts`): Bei der Bewertung sind die Kriterien
+  `<task>`, Ziel und Entwurf `<context>`; bei der Überarbeitung ist der
+  Optimierer-Prompt `<task>`, dazu Ziel, aktueller Entwurf und Feedback als
+  `<context>`. Die Antwort folgt der Sprache der Kriterien bzw. Anweisung.
 - Port `IterativeRefinementExecutor`, Adapter
   `createGenkitIterativeRefinementExecutor`.
 

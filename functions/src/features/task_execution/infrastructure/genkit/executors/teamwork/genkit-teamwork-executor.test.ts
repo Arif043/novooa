@@ -24,7 +24,8 @@ test("the orchestrator delegates to a member on its own model and returns the st
   assert.ok(orchestrator.requests[0].tools.includes("delegate_to_recherche"));
   assert.match(orchestrator.requests[0].messages, /Findet Fakten/);
   assert.match(worker.requests[0].messages, /"role":"system".*Du recherchierst gründlich/);
-  assert.match(worker.requests[0].messages, /Auftrag:\\nFinde die Größe von X\..*Erwartetes Ergebnis:\\nEine Zahl\..*shared\//);
+  assert.match(worker.requests[0].messages, /"role":"system".*shared\//, "the working folder is part of the member's system part");
+  assert.match(worker.requests[0].messages, /<task>\\nFinde die Größe von X\.\\n<\/task>.*<context name=\\"expected_result\\">\\nEine Zahl\./);
   assert.ok(worker.requests[0].tools.includes("write_file"), "members may write to the shared folder");
   assert.match(orchestrator.requests[1].messages, /X ist 42\./);
   assert.ok(log.lines.some((line) => line.startsWith("[Teamwork] Task for Recherche\nTask: Finde die Größe von X.\nExpected result: Eine Zahl.")));

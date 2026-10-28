@@ -3,7 +3,8 @@ import {type GenerateOptions} from "genkit";
 import {languageModelRetry} from "../../../../language_models/infrastructure/genkit/language-model-retry.js";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 
-export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
+/** Retry immer; mit Arbeitsordner Dateisystem-Werkzeuge, mit Fähigkeiten zusätzlich `use_skill`. */
+export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace): NonNullable<GenerateOptions["use"]> {
   const middleware: NonNullable<GenerateOptions["use"]> = [languageModelRetry()];
   if (workspace) {
     middleware.push(filesystem({rootDirectory: workspace.rootDirectory}));
@@ -12,37 +13,4 @@ export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
     }
   }
   return middleware;
-}
-
-export function attachmentInstructions(
-  workspace?: NodeAttachmentWorkspace,
-): string | undefined {
-  if (!workspace) return undefined;
-  const files = workspace.files
-    .map((file) => `- ${file.filename} (${file.displayName})`)
-    .join("\n");
-  const notes = workspace.knowledgeFiles
-    .filter((note) => note.isDirectAttachment)
-    .map((note) => `- ${note.filename} (${note.title})`)
-    .join("\n");
-  const parts = [
-    "Angehängte Dateien und Wissensnotizen sind über die Dateisystem-Werkzeuge verfügbar.",
-    "Nutze bei Bedarf list_files und read_file, um Inhalte zu prüfen.",
-  ];
-  if (files) parts.push(`Verfügbare Dateien:\n${files}`);
-  if (notes) {
-    parts.push([
-      "Direkt angehängte Wissensnotizen:",
-      notes,
-      "Nutze exakt diese Dateipfade beim Lesen von Wissensnotizen.",
-      "Verlinkte Notizen liegen ebenfalls im Workspace. Folge ihren Links aus der angehängten Notiz; eine Übersicht liegt unter knowledge/manifest.json.",
-    ].join("\n"));
-  }
-  if (workspace.skillCount > 0) {
-    parts.push([
-      "Zusätzlich stehen Fähigkeiten (Skills) über das Werkzeug use_skill bereit.",
-      "Nutze eine passende Fähigkeit, bevor du eine Antwort formulierst.",
-    ].join("\n"));
-  }
-  return parts.join("\n");
 }
