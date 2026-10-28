@@ -17,6 +17,11 @@ export type ShopwareAction = {
   /** `false`: die Aktion arbeitet nur mit dem Ereignis des Laufs und braucht keine Verbindung (Standard: `true`). */
   usesConnection?: boolean;
   execute(context: ShopwareActionContext): Promise<Record<string, NodeOutputValue>>;
+  /**
+   * Nur ändernde Aktionen: ein neutrales Kennzeichen der Folge (z. B. die Bestellnummer) aus den
+   * Ausgaben; `undefined`, wenn sich nichts geändert hat. Den Satz bildet der Client.
+   */
+  effectLabel?(outputs: Record<string, NodeOutputValue>): string | undefined;
 };
 
 export class ShopwareActionRegistry {

@@ -22,6 +22,7 @@ export const activities = sqliteTable("activities", {
   failure_details_json: text("failure_details_json"),
   /** Gespräch der Mitarbeiter einer Teamarbeit als JSON-Array; leer bei anderen Bausteinen. */
   conversation_json: text("conversation_json").notNull().default("[]"),
+  effects_json: text("effects_json").notNull().default("[]"),
 }, (table) => [
   index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);
@@ -73,6 +74,8 @@ export const taskRuns = sqliteTable("task_runs", {
   reviewed_at: text("reviewed_at"),
   response_outputs_json: text("response_outputs_json"),
   interaction_json: text("interaction_json"),
+  /** Titel, Knoten und Kanten der Aufgabe beim Start; fehlt bei Läufen von vor 0030. */
+  graph_snapshot_json: text("graph_snapshot_json"),
 }, (table) => [
   index("idx_task_runs_task_status").on(table.team_id, table.task_id, table.status),
   index("idx_task_runs_team_status").on(table.team_id, table.status),

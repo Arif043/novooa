@@ -1502,5 +1502,30 @@
     "no_preview_for": "No preview available for {name}",
     "content_load_failed": "The content of this version could not be loaded.",
     "actions_for": "Actions for {name}"
+  },
+  "run_effects": {
+    "title": "Effects",
+    "file_created": "File created: {name}",
+    "file_version": "New version of {name}",
+    "file_missing": "This file no longer exists.",
+    "open_file": "Open file",
+    "email_sent": "Email to {recipient}",
+    "email_sent_subject": "Email to {recipient}: “{subject}”",
+    "whatsapp_sent": "WhatsApp to {recipient}",
+    "sms_sent": "SMS to {recipient}",
+    "notification_sent": "Notification sent: {title}",
+    "record_created": "Record created",
+    "records_created": "{count} records created",
+    "record_updated": "Record updated",
+    "records_updated": "{count} records updated",
+    "record_deleted": "Record deleted",
+    "records_deleted": "{count} records deleted",
+    "http_requested": "{method} request to {host} ({status})",
+    "http_connection": "a connection",
+    "shopware_order_status": "Shopware: order status changed ({label})",
+    "shopware_product": "Shopware: product updated ({label})",
+    "drive_upload": "Saved to Google Drive: {label}",
+    "external_action": "{plugin}: {label}",
+    "round": "Round {round}"
   }
 }

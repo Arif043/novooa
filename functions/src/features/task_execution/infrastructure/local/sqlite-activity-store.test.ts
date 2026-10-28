@@ -3,6 +3,8 @@ import test, {type TestContext} from "node:test";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
 import {activities, taskRuns} from "../../../../db/schema.js";
 import {type NodeExecutionResult} from "../../domain/entities/task.js";
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {taskActivityRoutes} from "./local-task-activity-routes.js";
 import {SQLiteActivityStore} from "./sqlite-activity-store.js";
 
 const run = {runId: "run-1", taskId: "task-1", taskTitle: "Aufgabe", context: ""};
@@ -77,4 +79,19 @@ test("speichert das Gespräch einer Teamarbeit an ihrer Aktivität, auch wenn si
 
   const rows = await database.select().from(activities).orderBy(activities.created_at);
   assert.deepEqual(rows.map((row) => JSON.parse(row.conversation_json) as unknown), [conversation, conversation]);
+});
+
+test("speichert die Folgen eines Bausteins, auch wenn er scheitert, und liefert sie mit der Aktivität aus", async (t) => {
+  const {database, store} = await storeOverActivities(t);
+  const effects = [{kind: "notificationSent" as const, title: "Fertig", sourceNodeId: "melder", iteration: 1}];
+
+  await store.writeNodeActivities("team-1", run, [result({nodeId: "eins", effects})]);
+  await store.writeFailedNodeActivity("team-1", run, {nodeId: "zwei", primitive: "forEach", message: "Abbruch", effects});
+  await store.writeNodeActivities("team-1", run, [result({nodeId: "drei"})]);
+
+  const rows = await database.select().from(activities).orderBy(activities.created_at);
+  assert.deepEqual(rows.map((row) => JSON.parse(row.effects_json) as unknown), [effects, effects, []]);
+  const listed = await testingRoutes(taskActivityRoutes, {database}).handle({method: "GET", url: "/v1/activities", body: {}});
+  const byNode = new Map((listed?.body as {items: Array<{nodeId: string; effects: unknown[]}>}).items.map((item) => [item.nodeId, item.effects]));
+  assert.deepEqual(byNode.get("eins"), effects);
 });

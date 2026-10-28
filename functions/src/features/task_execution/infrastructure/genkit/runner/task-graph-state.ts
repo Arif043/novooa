@@ -1,3 +1,4 @@
+import {type RunEffect} from "../../../domain/entities/run-effect.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
@@ -114,19 +115,24 @@ export function newResults(
 }
 
 /** Ein Baustein hat eine Failure als Wert geliefert. */
-export function failedNodeExecution(node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure), completed, failure);
+export function failedNodeExecution(
+  node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[], effects: readonly RunEffect[] = [],
+): NodeExecutionFailure {
+  return new NodeExecutionFailure(failedNodeFor(node, failure.message, effects, failure), completed, failure);
 }
 
 /** Ein Baustein oder die Infrastruktur hat geworfen: ein gescheiterter Baustein ohne Code. */
-export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
+export function nodeExecutionFailure(
+  node: WorkflowNode, error: unknown, completed: NodeExecutionResult[], effects: readonly RunEffect[] = [],
+): NodeExecutionFailure {
   const message = error instanceof Error ? error.message : String(error);
-  return new NodeExecutionFailure(failedNodeFor(node, message), completed, error);
+  return new NodeExecutionFailure(failedNodeFor(node, message, effects), completed, error);
 }
 
-function failedNodeFor(node: WorkflowNode, message: string, failure?: NodeFailure): FailedNode {
+function failedNodeFor(node: WorkflowNode, message: string, effects: readonly RunEffect[], failure?: NodeFailure): FailedNode {
   return {
     nodeId: node.id, primitive: node.primitive, message, console: failure?.console,
+    ...(effects.length > 0 ? {effects: [...effects]} : {}),
     ...(failure?.conversation ? {conversation: failure.conversation} : {}),
     ...(failure ? {failureCode: failure.code} : {}),
     ...(failure && Object.keys(failure.details).length > 0 ? {failureDetails: {...failure.details}} : {}),

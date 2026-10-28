@@ -1502,5 +1502,30 @@
     "no_preview_for": "{name} için önizleme yok",
     "content_load_failed": "Bu sürümün içeriği yüklenemedi.",
     "actions_for": "{name} için işlemler"
+  },
+  "run_effects": {
+    "title": "Sonuçlar",
+    "file_created": "Dosya oluşturuldu: {name}",
+    "file_version": "{name} için yeni sürüm",
+    "file_missing": "Bu dosya artık yok.",
+    "open_file": "Dosyayı aç",
+    "email_sent": "{recipient} adresine e-posta",
+    "email_sent_subject": "{recipient} adresine e-posta: “{subject}”",
+    "whatsapp_sent": "{recipient} numarasına WhatsApp",
+    "sms_sent": "{recipient} numarasına SMS",
+    "notification_sent": "Bildirim gönderildi: {title}",
+    "record_created": "Kayıt oluşturuldu",
+    "records_created": "{count} kayıt oluşturuldu",
+    "record_updated": "Kayıt güncellendi",
+    "records_updated": "{count} kayıt güncellendi",
+    "record_deleted": "Kayıt silindi",
+    "records_deleted": "{count} kayıt silindi",
+    "http_requested": "{host} adresine {method} isteği ({status})",
+    "http_connection": "bir bağlantı",
+    "shopware_order_status": "Shopware: sipariş durumu değişti ({label})",
+    "shopware_product": "Shopware: ürün güncellendi ({label})",
+    "drive_upload": "Google Drive'a kaydedildi: {label}",
+    "external_action": "{plugin}: {label}",
+    "round": "Tur {round}"
   }
 }

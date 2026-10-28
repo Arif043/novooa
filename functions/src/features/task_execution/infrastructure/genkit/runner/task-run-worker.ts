@@ -41,7 +41,7 @@ export async function executeQueuedTaskRun(
 ): Promise<Result<void, NodeExecutionFailure>> {
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
-  const taskDefinition = await stores.taskStore.loadTask(teamId, run.taskId);
+  const taskDefinition = await definitionFor(stores, teamId, run);
   return executeTaskGraph(ai, {
     taskDefinition,
     context: run.context,
@@ -65,7 +65,7 @@ export async function continueApprovedTaskRun(
 ): Promise<Result<void, NodeExecutionFailure>> {
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
-  const taskDefinition = await stores.taskStore.loadTask(teamId, run.taskId);
+  const taskDefinition = await definitionFor(stores, teamId, run);
   return resumeTaskGraph(
     ai,
     {taskDefinition, context: run.context, teamId, input: run.input, runId: run.runId},
@@ -74,6 +74,11 @@ export async function continueApprovedTaskRun(
     runtimeFrom(stores, logger),
   )
     .map((output) => recordOutput(stores, teamId, run, output));
+}
+
+/** Der Graph, mit dem der Lauf begonnen hat; ältere Läufe ohne Schnappschuss laden die Aufgabe. */
+async function definitionFor(stores: TaskRunWorkerStores, teamId: string, run: TaskRunDocument) {
+  return run.graphSnapshot ?? stores.taskStore.loadTask(teamId, run.taskId);
 }
 
 async function recordOutput(

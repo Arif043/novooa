@@ -3,6 +3,7 @@ import {executedNode, type NodeExecutor} from "../../../task_execution/domain/ex
 import {type ShopwareActionRegistry} from "../domain/shopware-action.js";
 import {ShopwareError} from "../domain/shopware-error.js";
 import {ShopwareClient} from "./shopware-client.js";
+import {recordExternalAction} from "../../external-action-effect.js";
 
 /** Für Aktionen ohne Verbindung: jeder Zugriff wäre ein Programmierfehler. */
 const unusableClient = new ShopwareClient(
@@ -32,6 +33,7 @@ export function createShopwareNodeExecutor(actions: ShopwareActionRegistry): Nod
       const outputs = await action.execute({
         client: new ShopwareClient(http, runContext.teamId, config.connectionId), params: config.params, resolveText, event,
       });
+      recordExternalAction(runContext.effects, "shopware", action, outputs);
       return ok(executedNode(node, outputs));
     },
   };

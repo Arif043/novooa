@@ -28,6 +28,8 @@ const Activity = Type.Object({
   failureDetails: Type.Union([Type.Record(Type.String(), Type.String()), Type.Null()]),
   console: Type.Object({stdout: Type.String(), stderr: Type.String()}),
   conversation: Type.Array(Type.Unknown()),
+  /** Folgen des Bausteins (`RunEffect`), wie gespeichert. */
+  effects: Type.Array(Type.Unknown()),
 });
 const NewActivity = Type.Object({
   id: NonEmptyString(), runId: NonEmptyString(), taskId: NonEmptyString(), taskTitle: NonEmptyString(),
@@ -52,7 +54,7 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
       node_id: activities.node_id, target: activities.target, primitive: activities.primitive, title: activities.title,
       status: activities.status, input: activities.input, output: activities.output, outputs_json: activities.outputs_json,
       message: activities.message, failure_code: activities.failure_code, failure_details_json: activities.failure_details_json,
-      console_json: activities.console_json, conversation_json: activities.conversation_json,
+      console_json: activities.console_json, conversation_json: activities.conversation_json, effects_json: activities.effects_json,
       created_at: activities.created_at, trigger_type: taskRuns.trigger_type,
       started_by_uid: taskRuns.started_by_uid, started_by_name: starter.display_name,
       reviewed_by_uid: taskRuns.reviewed_by_uid, reviewed_by_name: reviewer.display_name}).from(activities)
@@ -66,7 +68,7 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
   app.post("/v1/activities", {schema: {body: NewActivity, response: {201: Activity, 400: ErrorResponse}}}, async (request, reply) => {
     const activity = {...request.body, nodeId: request.body.nodeId ?? null, primitive: request.body.primitive ?? null,
       input: request.body.input ?? "", output: request.body.output ?? "", outputs: request.body.outputs ?? {},
-      message: request.body.message ?? "", failureCode: null, failureDetails: null, console: {stdout: "", stderr: ""}, conversation: [],
+      message: request.body.message ?? "", failureCode: null, failureDetails: null, console: {stdout: "", stderr: ""}, conversation: [], effects: [],
       origin: {startedBy: null, reviewedBy: null, triggerType: null}};
     try {
       await writeActivity(database, request.workspace.teamId, activity.taskId, {

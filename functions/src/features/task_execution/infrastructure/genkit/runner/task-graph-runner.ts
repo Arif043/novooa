@@ -39,6 +39,9 @@ import {
 } from "./task-node-runner.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {createTaskRunContext, type ExecuteWorkflowGraph} from "./workflow-graph-run-context.js";
+import {RunEffectRecorder} from "../../../domain/services/run-effect-recorder.js";
+import {adoptReplayedEffects, withEffects} from "./node-result-effects.js";
+import {recordsHttpEffects} from "../../../domain/services/effect-recording-services.js";
 export function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
@@ -87,6 +90,8 @@ type GraphRunOptions = {
   graph?: WorkflowGraph;
   /** Wo die Schritte dieses Graphen im Journal stehen; fehlt, wenn nicht journalisiert wird. */
   stepScope?: TaskRunStepScope;
+  /** Recorder des umschließenden Bausteins; fehlt auf oberster Ebene. */
+  effects?: RunEffectRecorder;
 };
 
 async function runNodes(
@@ -117,9 +122,10 @@ async function runNodes(
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, skipNode, results);
     const step = journaledStep(runtime.stepJournal, options.stepScope, node.id);
+    const effects = (options.effects ?? RunEffectRecorder.root()).child(node.id, scope.iteration?.index);
     // Bausteine liefern Failures als Wert; was dennoch geworfen wird (Infrastruktur, noch nicht
     // umgestellte Executoren), wird hier, an der Grenze, ebenfalls zur Failure.
-    const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, () => runNodeWithTrail(ai, {
+    const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, async () => withEffects(await runNodeWithTrail(ai, {
       node,
       runContext: createTaskRunContext({
         input,
@@ -127,7 +133,9 @@ async function runNodes(
         currentGraph: graph,
         results,
         scope,
-        executeGraph: embeddedGraphRunner(ai, input, runtime, step),
+        executeGraph: embeddedGraphRunner(ai, input, runtime, step, effects),
+        effects,
+        recordHttp: recordsHttpEffects(node.primitive),
       }),
       skipNode,
       startedAt,
@@ -140,12 +148,13 @@ async function runNodes(
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       executorRegistry: runtime.executorRegistry,
       logger: runtime.logger,
-    }), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)))
+    }), effects), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState), effects.effects))
       .andThen((nodeResultOrFailure) => nodeResultOrFailure.mapErr(
-        (failure) => failedNodeExecution(node, failure, newResults(graph, results, initialState)),
+        (failure) => failedNodeExecution(node, failure, newResults(graph, results, initialState), effects.effects),
       ));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
+    adoptReplayedEffects(result, effects);
     results.set(node.id, result);
     skipInactiveBranches(node, graph, result, skippedNodeIds);
     logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
@@ -172,12 +181,15 @@ function embeddedGraphRunner(
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
   containerStep: JournaledStep | undefined,
+  containerEffects: RunEffectRecorder,
 ): ExecuteWorkflowGraph {
   let callIndex = 0;
   return async (embeddedGraph, embeddedScope) => {
     const stepScope = containerStep?.key.nested(callIndex++);
     const initialState = {nodeResults: [], remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
-    const stateOrFailure = await runNodes(ai, input, runtime, {initialState, scope: embeddedScope, graph: embeddedGraph, stepScope});
+    const stateOrFailure = await runNodes(ai, input, runtime, {
+      initialState, scope: embeddedScope, graph: embeddedGraph, stepScope, effects: containerEffects,
+    });
     // Der äußere Baustein bekommt die Failure des inneren; eine innere Exception wird zu `unexpected`.
     return stateOrFailure.map((state) => state.nodeResults).mapErr(nestedNodeFailureOf);
   };

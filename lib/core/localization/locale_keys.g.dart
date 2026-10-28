@@ -1394,5 +1394,29 @@ abstract class  LocaleKeys {
   static const files_content_load_failed = 'files.content_load_failed';
   static const files_actions_for = 'files.actions_for';
   static const files = 'files';
+  static const run_effects_title = 'run_effects.title';
+  static const run_effects_file_created = 'run_effects.file_created';
+  static const run_effects_file_version = 'run_effects.file_version';
+  static const run_effects_file_missing = 'run_effects.file_missing';
+  static const run_effects_open_file = 'run_effects.open_file';
+  static const run_effects_email_sent = 'run_effects.email_sent';
+  static const run_effects_email_sent_subject = 'run_effects.email_sent_subject';
+  static const run_effects_whatsapp_sent = 'run_effects.whatsapp_sent';
+  static const run_effects_sms_sent = 'run_effects.sms_sent';
+  static const run_effects_notification_sent = 'run_effects.notification_sent';
+  static const run_effects_record_created = 'run_effects.record_created';
+  static const run_effects_records_created = 'run_effects.records_created';
+  static const run_effects_record_updated = 'run_effects.record_updated';
+  static const run_effects_records_updated = 'run_effects.records_updated';
+  static const run_effects_record_deleted = 'run_effects.record_deleted';
+  static const run_effects_records_deleted = 'run_effects.records_deleted';
+  static const run_effects_http_requested = 'run_effects.http_requested';
+  static const run_effects_http_connection = 'run_effects.http_connection';
+  static const run_effects_shopware_order_status = 'run_effects.shopware_order_status';
+  static const run_effects_shopware_product = 'run_effects.shopware_product';
+  static const run_effects_drive_upload = 'run_effects.drive_upload';
+  static const run_effects_external_action = 'run_effects.external_action';
+  static const run_effects_round = 'run_effects.round';
+  static const run_effects = 'run_effects';
 
 }

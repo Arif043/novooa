@@ -18,6 +18,8 @@ import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {triggerChainFrom} from "../../../../scheduling/domain/entities/trigger-chain.js";
 import {TriggerChainTeamFileStore} from "../../../domain/services/trigger-chain-file-store.js";
 import {validateGraph} from "../../../domain/services/task-graph-utils.js";
+import {effectRecordingPorts} from "../../../domain/services/effect-recording-services.js";
+import {type RunEffectRecorder} from "../../../domain/services/run-effect-recorder.js";
 
 export type ExecuteWorkflowGraph = (
   graph: WorkflowGraph,
@@ -31,25 +33,32 @@ type TaskRunContextOptions = {
   results: Map<string, NodeExecutionResult>;
   scope: WorkflowExecutionScope;
   executeGraph: ExecuteWorkflowGraph;
+  /** Recorder dieses Bausteins; seine Ports zeichnen darüber Effekte auf. */
+  effects: RunEffectRecorder;
+  /** Ob HTTP-Anfragen dieses Bausteins Folgen sind (`recordsHttpEffects`). */
+  recordHttp: boolean;
 };
 
 export function createTaskRunContext(
   options: TaskRunContextOptions,
 ): TaskRunContext {
   const templateResolver = new TemplateExpressionResolver(() => templateContextFor(options));
-  const {teamFileStore, ...services} = passedThroughServices(options.runtime);
+  const {teamFileStore, ...ports} = passedThroughServices(options.runtime);
+  const recorded = effectRecordingPorts(
+    ports,
+    new TriggerChainTeamFileStore(teamFileStore, triggerChainFrom(options.input.input)),
+    options.effects,
+    {recordHttp: options.recordHttp},
+  );
   return {
-    ...services,
+    ...recorded,
     rootTask: options.input.taskDefinition,
     currentGraph: options.currentGraph,
     teamId: options.input.teamId,
     input: options.input.input ?? {},
     scope: options.scope,
     results: options.results,
-    teamFileStore: new TriggerChainTeamFileStore(
-      teamFileStore,
-      triggerChainFrom(options.input.input),
-    ),
+    effects: options.effects,
     runGraph: graphRunnerFor(options),
     templateExpressionResolver: templateResolver,
   };

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
 import 'node_activity_values.dart';
+import 'run_effects/open_effect_file.dart';
+import 'run_effects/run_effect_list.dart';
 import 'run_origin_label.dart';
 import 'teamwork_conversation/teamwork_conversation_button.dart';
 
@@ -63,6 +65,13 @@ class _ActivityText extends StatelessWidget {
         else if (_detail != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(_detail!, style: textTheme.bodySmall),
+        ],
+        if (activity.effects.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          RunEffectList(
+            effects: activity.effects,
+            onOpenFile: (effect) => openEffectFile(context, effect),
+          ),
         ],
         if (activity.hasConversation) ...[
           const SizedBox(height: AppSpacing.sm),

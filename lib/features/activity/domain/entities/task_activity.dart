@@ -1,9 +1,11 @@
 import '../../../../core/entities/unique_id.dart';
 import 'activity_failure_code.dart';
+import 'run_effect.dart';
 import 'run_origin.dart';
 import 'teamwork_conversation_entry.dart';
 
 export 'activity_failure_code.dart';
+export 'run_effect.dart';
 export 'run_origin.dart';
 export 'teamwork_conversation_entry.dart';
 
@@ -31,6 +33,7 @@ class TaskActivity {
     this.stdout = '',
     this.stderr = '',
     this.conversation = const [],
+    this.effects = const [],
     this.origin = RunOrigin.unknown,
   });
 
@@ -65,6 +68,9 @@ class TaskActivity {
   final List<TeamworkConversationEntry> conversation;
 
   bool get hasConversation => conversation.isNotEmpty;
+
+  /// Folgen des Bausteins, auch aus seinem Teilgraphen (Zweig, Schleife).
+  final List<RunEffect> effects;
 
   /// Woher der Lauf kommt; nur die Standalone-Runtime liefert sie.
   final RunOrigin origin;

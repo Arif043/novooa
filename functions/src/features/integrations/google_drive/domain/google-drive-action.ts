@@ -18,6 +18,8 @@ export type GoogleDriveActionContext = {
 export type GoogleDriveAction = {
   id: string;
   execute(context: GoogleDriveActionContext): Promise<Record<string, NodeOutputValue>>;
+  /** Nur Aktionen, die in Google Drive etwas anlegen: ein Kennzeichen der Folge, z. B. der Dateiname. */
+  effectLabel?(outputs: Record<string, NodeOutputValue>): string | undefined;
 };
 
 export class GoogleDriveActionRegistry {

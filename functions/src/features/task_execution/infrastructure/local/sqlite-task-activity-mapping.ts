@@ -3,7 +3,7 @@ import {type Activities, type TaskRuns} from "../../../../db/schema.js";
 export type TaskRunRow = Pick<TaskRuns, "created_at" | "error_json" | "final_output" | "id" | "interaction_json" |
   "review_output" | "status" | "task_id" | "task_title" | "updated_at" | "waiting_node_id">;
 export type ActivityRow = Pick<Activities, "created_at" | "id" | "input" | "message" | "node_id" | "output" |
-  "outputs_json" | "console_json" | "conversation_json" | "failure_code" | "failure_details_json" | "primitive" | "run_id" | "status" | "target" | "title"> & {
+  "outputs_json" | "console_json" | "conversation_json" | "effects_json" | "failure_code" | "failure_details_json" | "primitive" | "run_id" | "status" | "target" | "title"> & {
   task_id: string; trigger_type: string | null;
   started_by_uid: string | null; started_by_name: string | null; reviewed_by_uid: string | null; reviewed_by_name: string | null;
 };
@@ -24,6 +24,8 @@ export type ActivityDto = {
   failureDetails: Record<string, string> | null; console: {stdout: string; stderr: string};
   /** Gespräch der Mitarbeiter einer Teamarbeit, wie gespeichert. */
   conversation: unknown[];
+  /** Folgen des Bausteins (`RunEffect`), wie gespeichert. */
+  effects: unknown[];
   origin: {startedBy: RunPersonDto; reviewedBy: RunPersonDto; triggerType: string | null};
 };
 
@@ -44,6 +46,7 @@ export function activityFromRow(row: ActivityRow): ActivityDto {
     outputs: jsonRecord(row.outputs_json), message: row.message, failureCode: row.failure_code,
     failureDetails: failureDetailsFrom(row.failure_details_json), console: consoleFrom(row.console_json),
     conversation: jsonArray(row.conversation_json),
+    effects: jsonArray(row.effects_json),
     origin: {
       startedBy: personFrom(row.started_by_uid, row.started_by_name),
       reviewedBy: personFrom(row.reviewed_by_uid, row.reviewed_by_name),

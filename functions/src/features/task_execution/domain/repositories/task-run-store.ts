@@ -19,6 +19,9 @@ export type TaskRunDocument = {
   triggerType?: string;
   /** Wer den Lauf von Hand gestartet hat; automatische Läufe tragen nur ihren Auslöser. */
   startedByUid?: string;
+  /** Die Aufgabe beim Start. Start und Fortsetzen laufen damit, auch wenn die Aufgabe inzwischen
+   * geändert wurde; fehlt bei älteren Läufen. */
+  graphSnapshot?: TaskDefinition;
 };
 
 export type ReviewableTaskRun = {
@@ -94,6 +97,7 @@ export function newTaskRunDocument(
       triggerType: input.trigger.type,
     } : {}),
     ...(input.startedByUid === undefined ? {} : {startedByUid: input.startedByUid}),
+    graphSnapshot: input.task,
   };
 }
 

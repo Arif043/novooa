@@ -8,7 +8,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 - Je Baustein eine Node-Aktivität: `succeeded`, `skipped` oder `waiting`
   (bei Fehlern siehe [Fehlgeschlagene Bausteine](./baustein-fehler-aktivitaeten.md)).
   Eine Teamarbeit trägt zusätzlich ihr Gespräch (`conversation`, siehe
-  [Ausführung der Teamarbeit](./teamwork-ausfuehrung.md)).
+  [Ausführung der Teamarbeit](./teamwork-ausfuehrung.md)). Jede Node-Aktivität
+  trägt ihre [Folgen](./lauf-effekte.md) (`effects`), auch bei Fehlern.
 - Abschluss `succeeded` oder `failed`, außer der Run wartet auf Freigabe.
 
 Domain-Modell: `TaskActivity`; gespeichert in SQLite, siehe

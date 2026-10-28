@@ -7,6 +7,9 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - Der Zwischenstand liegt in `resumeState` am Run.
 - Freigabe ersetzt den Output des wartenden Knotens und setzt fort; Ablehnung
   markiert den Run als `rejected`.
+- Fortgesetzt wird mit dem Graphen vom Start des Laufs
+  ([Graph-Schnappschuss](./lauf-graph-schnappschuss.md)), nicht mit einer
+  inzwischen geänderten Aufgabe.
 
 ```ts
 POST /v1/task-runs/review

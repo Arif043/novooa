@@ -40,7 +40,7 @@ export class SQLiteActivityStore implements ActivityStore {
   }
 
   async writeFailedNodeActivity(teamId: string, run: TaskRunDocument, failedNode: FailedNode) {
-    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: failedNode.nodeId, target: "node", primitive: failedNode.primitive, title: failedNode.nodeId, status: "failed", input: "", output: "", outputs_json: "{}", message: failedNode.message, failure_code: failedNode.failureCode ?? null, failure_details_json: failedNode.failureDetails ? JSON.stringify(failedNode.failureDetails) : null, console_json: JSON.stringify(failedNode.console ?? {}), conversation_json: JSON.stringify(failedNode.conversation ?? []), duration_ms: null, created_at: this.nextTimestamp()});
+    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: failedNode.nodeId, target: "node", primitive: failedNode.primitive, title: failedNode.nodeId, status: "failed", input: "", output: "", outputs_json: "{}", message: failedNode.message, failure_code: failedNode.failureCode ?? null, failure_details_json: failedNode.failureDetails ? JSON.stringify(failedNode.failureDetails) : null, console_json: JSON.stringify(failedNode.console ?? {}), conversation_json: JSON.stringify(failedNode.conversation ?? []), effects_json: JSON.stringify(failedNode.effects ?? []), duration_ms: null, created_at: this.nextTimestamp()});
   }
 
   private async writeNodeActivity(
@@ -48,7 +48,7 @@ export class SQLiteActivityStore implements ActivityStore {
     run: TaskRunDocument,
     result: NodeExecutionResult,
   ) {
-    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: result.nodeId, target: "node", primitive: result.primitive, title: result.nodeId, status: nodeStatus(result.status), input: "", output: "", outputs_json: JSON.stringify(result.outputs), message: result.message ?? "", console_json: JSON.stringify(result.console ?? {}), conversation_json: JSON.stringify(result.conversation ?? []), duration_ms: null, created_at: this.nextTimestamp()});
+    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: result.nodeId, target: "node", primitive: result.primitive, title: result.nodeId, status: nodeStatus(result.status), input: "", output: "", outputs_json: JSON.stringify(result.outputs), message: result.message ?? "", console_json: JSON.stringify(result.console ?? {}), conversation_json: JSON.stringify(result.conversation ?? []), effects_json: JSON.stringify(result.effects ?? []), duration_ms: null, created_at: this.nextTimestamp()});
   }
 }
 

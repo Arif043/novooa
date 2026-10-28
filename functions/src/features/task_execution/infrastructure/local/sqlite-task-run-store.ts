@@ -23,13 +23,14 @@ import {
   taskResumeStateSchema,
 } from "../genkit/runner/task-definition.js";
 import {reviewFieldsFrom} from "../genkit/runner/task-run-review-fields.js";
+import {graphSnapshotFrom, graphSnapshotJson} from "./run-graph-snapshot.js";
 import {
   invalidResumeState,
   invalidReviewState,
   runNotFound,
 } from "../genkit/runner/task-run-store-errors.js";
 
-type TaskRunRow = Pick<TaskRuns, "id" | "task_id" | "task_title" | "context" | "input_json" | "resume_state_json" | "response_outputs_json" | "status">;
+type TaskRunRow = Pick<TaskRuns, "id" | "task_id" | "task_title" | "context" | "input_json" | "resume_state_json" | "response_outputs_json" | "status" | "graph_snapshot_json">;
 
 export class SQLiteTaskRunStore implements TaskRunStore {
   constructor(
@@ -132,7 +133,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   }
 
   private async insertRun(teamId: string, run: TaskRunDocument) {
-    await this.database.insert(taskRuns).values({id: run.runId, team_id: teamId, task_id: run.taskId, task_title: run.taskTitle, status: "queued", context: run.context, input_json: json(run.input ?? {}), source: run.source ?? null, trigger_id: run.triggerId ?? null, trigger_type: run.triggerType ?? null, started_by_uid: run.startedByUid ?? null});
+    await this.database.insert(taskRuns).values({id: run.runId, team_id: teamId, task_id: run.taskId, task_title: run.taskTitle, status: "queued", context: run.context, input_json: json(run.input ?? {}), source: run.source ?? null, trigger_id: run.triggerId ?? null, trigger_type: run.triggerType ?? null, started_by_uid: run.startedByUid ?? null, graph_snapshot_json: graphSnapshotJson(run.graphSnapshot)});
   }
 
   private async updateStatus(teamId: string, runId: string, status: string) {
@@ -141,7 +142,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   }
 
   private async loadRunRow(teamId: string, runId: string): Promise<TaskRunRow> {
-    const row = (await this.database.select({id: taskRuns.id, task_id: taskRuns.task_id, task_title: taskRuns.task_title, context: taskRuns.context, input_json: taskRuns.input_json, resume_state_json: taskRuns.resume_state_json, response_outputs_json: taskRuns.response_outputs_json, status: taskRuns.status}).from(taskRuns).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId))).get()) ?? null;
+    const row = (await this.database.select({id: taskRuns.id, task_id: taskRuns.task_id, task_title: taskRuns.task_title, context: taskRuns.context, input_json: taskRuns.input_json, resume_state_json: taskRuns.resume_state_json, response_outputs_json: taskRuns.response_outputs_json, status: taskRuns.status, graph_snapshot_json: taskRuns.graph_snapshot_json}).from(taskRuns).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId))).get()) ?? null;
     if (row === null) throw runNotFound();
     return row;
   }
@@ -154,7 +155,12 @@ function runFromRow(row: TaskRunRow): TaskRunDocument {
     taskTitle: row.task_title,
     context: row.context,
     input: jsonRecord(row.input_json),
+    ...optionalSnapshot(graphSnapshotFrom(row.graph_snapshot_json)),
   };
+}
+
+function optionalSnapshot(graphSnapshot: TaskRunDocument["graphSnapshot"]) {
+  return graphSnapshot === undefined ? {} : {graphSnapshot};
 }
 
 function resumeStateFromRow(row: TaskRunRow) {

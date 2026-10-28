@@ -1,3 +1,4 @@
+import {changed, jsonField} from "../../external-action-effect.js";
 import {type NodeOutputValue} from "../../../task_execution/domain/entities/task.js";
 import {type ShopwareAction} from "../domain/shopware-action.js";
 import {ShopwareError} from "../domain/shopware-error.js";
@@ -53,6 +54,11 @@ export const changeOrderStatusAction: ShopwareAction = {
       newStatus: {type: "string", value: newStatus},
       changed: {type: "boolean", value: previousStatus !== newStatus},
     } satisfies Record<string, NodeOutputValue>;
+  },
+  effectLabel: (outputs) => {
+    if (!changed(outputs)) return undefined;
+    const status = outputs.newStatus?.type === "string" ? outputs.newStatus.value : "";
+    return [jsonField(outputs.value, "orderNumber"), status].filter(Boolean).join(": ") || undefined;
   },
 };
 

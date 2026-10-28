@@ -1,3 +1,4 @@
+import {changed, jsonField} from "../../external-action-effect.js";
 import {type ShopwareAction} from "../domain/shopware-action.js";
 import {ShopwareError} from "../domain/shopware-error.js";
 import {ShopwareParams} from "../domain/shopware-params.js";
@@ -43,6 +44,7 @@ export const updateProductAction: ShopwareAction = {
       changed: {type: "boolean", value: differs(before, after)},
     };
   },
+  effectLabel: (outputs) => changed(outputs) ? jsonField(outputs.value, "productNumber") : undefined,
 };
 
 function differs(before: ShopwareProduct, after: ShopwareProduct): boolean {

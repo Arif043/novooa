@@ -11,9 +11,14 @@
 - [Aktivitäten über den Run (0014)](../notes/sqlite-aktivitaeten-normalisiert.md)
 - [Freigaben und Pausen](../notes/freigaben-und-pausen.md)
 - [Herkunft eines Laufs](../notes/lauf-herkunft.md)
+- [Folgen eines Laufs (Effekte)](../notes/lauf-effekte.md)
+- [Graph-Schnappschuss eines Laufs](../notes/lauf-graph-schnappschuss.md)
 
 ## Offene Punkte
 
+- Geplant: Seite „Ergebnisse“ im Menü — Liste der Läufe; je Lauf eine
+  Zusammenfassung mit Folgen und der Graph aus dem Schnappschuss mit den
+  echten Werten (Zweige, Schleifenrunden, Dateien, Tabellen).
 - Geplant: Tokens und Kosten je Run, Trace-Ansicht mit Modell-Aufruf je
   Knoten, Filter (Aufgabe, Status, Zeitraum, Auslöser), Re-Run mit gleichem
   Input.

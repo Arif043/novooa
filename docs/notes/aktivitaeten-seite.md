@@ -7,7 +7,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 - **Historie:** nur Task-Aktivitäten; ein Klick öffnet den Durchlauf mit
   seinen Node-Aktivitäten chronologisch samt benannten Werten, formatiert nach
   Output-Typ (inklusive Script-Ausgabe, siehe
-  [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)).
+  [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)). Darunter die
+  [Folgen](./lauf-effekte.md) des Bausteins; eine Datei-Folge öffnet die Datei.
 - **Gespräch der Mitarbeiter:** Hat eine Node-Aktivität ein Gespräch (Teamarbeit,
   auch bei Fehlern), zeigt sie den TextButton „Gespräch der Mitarbeiter
   anzeigen“. Er öffnet per `Navigator.push` die `TeamworkConversationPage`. Dort

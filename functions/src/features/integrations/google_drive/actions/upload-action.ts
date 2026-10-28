@@ -29,4 +29,5 @@ export const uploadAction: GoogleDriveAction = {
       sizeBytes: {type: "number", value: file.sizeBytes},
     } satisfies Record<string, NodeOutputValue>;
   },
+  effectLabel: (outputs) => outputs.name?.type === "string" ? outputs.name.value : undefined,
 };

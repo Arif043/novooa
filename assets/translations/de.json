@@ -1502,5 +1502,30 @@
     "no_preview_for": "Keine Vorschau verfügbar für {name}",
     "content_load_failed": "Der Inhalt dieser Version konnte nicht geladen werden.",
     "actions_for": "Aktionen für {name}"
+  },
+  "run_effects": {
+    "title": "Folgen",
+    "file_created": "Datei angelegt: {name}",
+    "file_version": "Neue Version von {name}",
+    "file_missing": "Diese Datei gibt es nicht mehr.",
+    "open_file": "Datei öffnen",
+    "email_sent": "E-Mail an {recipient}",
+    "email_sent_subject": "E-Mail an {recipient}: „{subject}“",
+    "whatsapp_sent": "WhatsApp an {recipient}",
+    "sms_sent": "SMS an {recipient}",
+    "notification_sent": "Benachrichtigung gesendet: {title}",
+    "record_created": "Datensatz angelegt",
+    "records_created": "{count} Datensätze angelegt",
+    "record_updated": "Datensatz geändert",
+    "records_updated": "{count} Datensätze geändert",
+    "record_deleted": "Datensatz gelöscht",
+    "records_deleted": "{count} Datensätze gelöscht",
+    "http_requested": "{method}-Anfrage an {host} ({status})",
+    "http_connection": "eine Verbindung",
+    "shopware_order_status": "Shopware: Bestellstatus geändert ({label})",
+    "shopware_product": "Shopware: Produkt geändert ({label})",
+    "drive_upload": "In Google Drive gespeichert: {label}",
+    "external_action": "{plugin}: {label}",
+    "round": "Runde {round}"
   }
 }

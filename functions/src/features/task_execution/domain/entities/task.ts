@@ -1,3 +1,4 @@
+import {type RunEffect} from "./run-effect.js";
 import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
 import {
   type KnowledgeAttachment,
@@ -380,6 +381,8 @@ export type NodeExecutionResult = {
   console?: ConsoleOutput;
   /** Das Gespräch der Mitarbeiter (Teamarbeit); fehlt bei anderen Bausteinen. */
   conversation?: TeamworkConversationEntry[];
+  /** Folgen des Bausteins, auch aus seinem Teilgraphen; fehlt, wenn er nichts bewirkt hat. */
+  effects?: RunEffect[];
   interaction?: TaskRunInteraction;
   dialogInput?: DialogInputDefinition;
 };

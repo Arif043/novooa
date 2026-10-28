@@ -1,3 +1,4 @@
+import {type RunEffectRecorder} from "../services/run-effect-recorder.js";
 import {type Result} from "neverthrow";
 import {type NodeFailure} from "../entities/node-failure.js";
 import {type SpeechTranscriber} from "../../../speech_transcription/domain/repositories/speech-transcriber.js";
@@ -73,6 +74,9 @@ export type TaskRunContext = TaskRunServices & {
   runGraph: WorkflowGraphRunner;
   templateExpressionResolver: TemplateExpressionResolver;
   teamFileStore: TeamFileStore;
+  /** Folgen dieses Bausteins. Ports zeichnen selbst auf; melden muss nur, wer an ihnen vorbei
+   * nach außen wirkt (Plugins). */
+  effects: RunEffectRecorder;
 };
 
 /** Ergebnis eines Bausteins oder, als Wert, warum er gescheitert ist. */

@@ -7,6 +7,7 @@ import '../../features/files/domain/repositories/team_file_repository.dart';
 import '../../features/files/domain/usecases/copy_team_file.dart';
 import '../../features/files/domain/usecases/create_file_version.dart';
 import '../../features/files/domain/usecases/delete_team_file.dart';
+import '../../features/files/domain/usecases/find_team_file.dart';
 import '../../features/files/domain/usecases/download_file_version.dart';
 import '../../features/files/domain/usecases/move_team_file.dart';
 import '../../features/files/domain/usecases/rename_team_file.dart';
@@ -29,6 +30,7 @@ void configureStandaloneFileDetailDependencies(GetIt locator) {
       () => const FilePickerFileSaveGateway(),
     )
     ..registerLazySingleton(() => WatchTeamFile(locator<TeamFileRepository>()))
+    ..registerLazySingleton(() => FindTeamFile(locator<TeamFileRepository>()))
     ..registerLazySingleton(() => RenameTeamFile(locator<TeamFileRepository>()))
     ..registerLazySingleton(() => MoveTeamFile(locator<TeamFileRepository>()))
     ..registerLazySingleton(() => CopyTeamFile(locator<TeamFileRepository>()))

@@ -5,6 +5,7 @@ import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
 import '../models/failure_details_mapper.dart';
 import '../models/run_origin_mapper.dart';
+import '../models/run_effect_mapper.dart';
 import '../models/teamwork_conversation_mapper.dart';
 
 class LocalTaskActivityRepository implements TaskActivityRepository {
@@ -71,6 +72,7 @@ class LocalTaskActivityRepository implements TaskActivityRepository {
       stdout: _consoleText(data['console'], 'stdout'),
       stderr: _consoleText(data['console'], 'stderr'),
       conversation: teamworkConversationFrom(data['conversation']),
+      effects: runEffectsFrom(data['effects']),
       origin: runOriginFrom(data['origin']),
     );
   }

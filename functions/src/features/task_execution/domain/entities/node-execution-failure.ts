@@ -1,3 +1,4 @@
+import {type RunEffect} from "./run-effect.js";
 import {type ConsoleOutput, type NodeExecutionResult, type WorkflowPrimitive} from "./task.js";
 import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
 
@@ -13,6 +14,8 @@ export type FailedNode = {
   console?: ConsoleOutput;
   /** Das Gespräch einer Teamarbeit bis zum Fehler. */
   conversation?: TeamworkConversationEntry[];
+  /** Was der Baustein vor dem Fehler schon bewirkt hat, z. B. Dateien früherer Runden. */
+  effects?: RunEffect[];
 };
 
 /**

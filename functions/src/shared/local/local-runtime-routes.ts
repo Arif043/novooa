@@ -21,6 +21,7 @@ import {type RuntimeLicenseService} from "../../features/licensing/infrastructur
 import {modelCatalogRoutes} from "../../features/machine_learning/infrastructure/local/local-model-catalog-routes.js";
 import {pushDeviceRoutes} from "../../features/notifications/infrastructure/local/local-push-device-routes.js";
 import {taskTriggerRoutes} from "../../features/scheduling/infrastructure/local/local-task-trigger-routes.js";
+import {taskRunGraphRoutes} from "../../features/task_execution/infrastructure/local/local-task-run-graph-routes.js";
 import {taskActivityRoutes} from "../../features/task_execution/infrastructure/local/local-task-activity-routes.js";
 import {taskDefinitionRoutes} from "../../features/task_execution/infrastructure/local/local-task-definition-routes.js";
 import {taskRunRoutes} from "../../features/task_execution/infrastructure/local/local-task-run-routes.js";
@@ -100,6 +101,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(taskRunRoutes, {notifier});
   await api.register(taskDefinitionRoutes, {store: services.taskDefinitions, notifier, cycleGuard: services.cycleGuard});
   await api.register(taskActivityRoutes, {database});
+  await api.register(taskRunGraphRoutes, {database});
   await api.register(taskTriggerRoutes, {database, notifier, cycleGuard: services.cycleGuard, webhookSecrets: services.languageModelSecrets});
   await api.register(pushDeviceRoutes, {signedLicense, relay: pushRelayFromEnvironment()});
   await api.register(mailRelayRoutes, {

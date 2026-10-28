@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/features/activity/domain/entities/run_effect.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/activity/domain/entities/activity_failure_code.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
@@ -39,6 +40,7 @@ void main() {
     expect(activity.failureDetails, {'received': 'abc'});
     expect(activity.conversation.single.memberName, 'Elektriker');
     expect(activity.conversation.single.duration, const Duration(seconds: 5));
+    expect(activity.effects.single, isA<NotificationSentEffect>());
     expect(client.reviewedRunId, 'run-1');
   });
 
@@ -141,4 +143,7 @@ Map<String, Object?> activityJson() => {
   ],
   'failureCode': 'responseTruncated',
   'failureDetails': {'received': 'abc', 'ignored': 3},
+  'effects': [
+    {'kind': 'notificationSent', 'sourceNodeId': 'melder', 'title': 'Fertig'},
+  ],
 };

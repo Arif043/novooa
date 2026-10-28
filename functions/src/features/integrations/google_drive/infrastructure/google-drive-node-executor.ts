@@ -4,6 +4,7 @@ import {type GoogleAccessTokens} from "../../../google_accounts/domain/repositor
 import {type GoogleDriveActionRegistry} from "../domain/google-drive-action.js";
 import {GoogleDriveError} from "../domain/google-drive-error.js";
 import {GoogleDriveClient} from "./google-drive-client.js";
+import {recordExternalAction} from "../../external-action-effect.js";
 
 /** Führt die Aktion des Bausteins aus (`config.action`); jede Aktion ist für Nutzer:innen ein eigener Baustein. */
 export function createGoogleDriveNodeExecutor(
@@ -26,6 +27,7 @@ export function createGoogleDriveNodeExecutor(
         resolveValue: (template) => resolver.resolveValue(template),
         files: {reader: runContext.fileContentReader, store: runContext.teamFileStore},
       });
+      recordExternalAction(runContext.effects, "googleDrive", action, outputs);
       return ok(executedNode(node, outputs));
     },
   };
