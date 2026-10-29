@@ -25,6 +25,10 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
   - Jeder Mitarbeiter hat eine feste Farbe aus einer Palette von acht. Sie wird per FNV-1a aus seiner ID abgeleitet (nicht `String.hashCode`, der je nach Plattform abweicht) und ist überall gleich.
   - Der Orchestrator nimmt die Primärfarbe, die Prüfung `tertiary` aus dem Theme.
   - Ein Mitarbeiter erscheint als `EmployeeAvatar` (`features/employees/presentation/widgets/`).
+- **Name im Gespräch:** Aufgabenstudio- und Wissensbasis-Agent stellen sich als
+  „noovi“ vor (`nooviIdentity` in `assistant/infrastructure/genkit/noovi-identity.ts`,
+  Rolle beider Prompts) und nennen das Sprachmodell darunter nur auf Nachfrage.
+  Subagenten sprechen nie direkt mit Nutzer:innen und bleiben Fachrollen.
 - **Beim KI-Agenten:**
   - Der Öffnen-Knopf in Kopfleiste, Aufgabenstudio und Wissensbasis zeigt `wave`.
   - Im Panel zeigt der Kopf `wave`, der leere Zustand begrüßt groß mit `wave`, und jede Agent-Antwort trägt `present` als Avatar.

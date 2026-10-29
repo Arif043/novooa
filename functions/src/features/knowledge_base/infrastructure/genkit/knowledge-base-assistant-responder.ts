@@ -14,6 +14,7 @@ import {
   type KnowledgeBaseAssistantToolDependencies,
 } from "./knowledge-base-assistant-tools.js";
 import {zettelkastenRules} from "./knowledge-base-zettelkasten-rules.js";
+import {nooviIdentity} from "../../../assistant/infrastructure/genkit/noovi-identity.js";
 
 export type KnowledgeBaseAssistantResponderDependencies = {
   ai: Genkit;
@@ -53,7 +54,8 @@ knowledgeCommands. The change runs only after confirmation in the interface.
 /** Feste Anweisungen des Wissensbasis-Agenten; Frage, Verlauf und Sprache ergänzt der Responder. */
 export const knowledgeBaseAssistantInstructions = PromptBuilder.create()
   .role([
-    "You are novooa's knowledge base agent. Answer briefly and concretely.",
+    nooviIdentity("for the knowledge base (Wissensbasis)"),
+    "Answer briefly and concretely.",
     "You can evaluate public web pages listed in <context name=\"public_urls\"> and search and read notes of the current team.",
     "The user's current question is in <task>; earlier messages are the conversation so far.",
   ].join(" "))

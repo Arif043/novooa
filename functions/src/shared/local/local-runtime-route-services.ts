@@ -80,7 +80,10 @@ export function createLocalRuntimeRouteServices(options: {
     plugins: createPluginRoutesOptions(database, integrationPluginIds, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
-    assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),
+    assistants: {
+      ...assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),
+      logger: workspaceLogger(options.workspaceContext),
+    },
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier, options.mlService),
     scriptPackages: scriptPackageJobsFromEnvironment(database, options.notifier, workspaceLogger(options.workspaceContext)),
   };
@@ -106,7 +109,7 @@ function assistantFactories(
   database: RuntimeDatabase,
   secrets: EncryptedSQLiteLanguageModelSecretStore,
   signedLicense: () => SignedRuntimeLicense | null,
-): AssistantRoutesOptions {
+): Omit<AssistantRoutesOptions, "logger"> {
   const resolver = new CatalogGenkitLanguageModelResolver(new SQLiteLanguageModelCatalog(database, secrets));
   const defaults = new SQLiteLanguageModelDefaultsStore(database);
   const taskBuilder = createLocalTaskBuilderAssistant(signedLicense, taskBuilderRelayFromEnvironment());

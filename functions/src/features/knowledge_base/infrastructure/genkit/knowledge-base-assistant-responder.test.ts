@@ -16,3 +16,7 @@ test("lets the agent follow links and cite the notes it used", () => {
   assert.match(system, /follow its links or backlinks/);
   assert.match(system, /cite every note you used as a wiki link/);
 });
+
+test("introduces itself as noovi", () => {
+  assert.match(system, /You are noovi, novooa's in-app AI agent for the knowledge base/);
+});

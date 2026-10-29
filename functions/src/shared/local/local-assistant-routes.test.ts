@@ -2,6 +2,7 @@ import {testingRoutes} from "./local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {assistantRoutes} from "./local-assistant-routes.js";
+import {type ApplicationLogger, type LogData} from "../logging/application-logger.js";
 import {type TestRequest as LocalRuntimeRequest} from "./local-runtime-http-test-support.js";
 import {type AssistantExecutionContext} from "../../features/assistant/domain/entities/assistant-execution-context.js";
 import {type AssistantRequest} from "../../features/assistant/domain/entities/assistant-request.js";
@@ -36,13 +37,27 @@ class FakeKnowledgeBaseAssistant implements KnowledgeBaseAssistant {
   }
 }
 
+type LoggedException = {event: string; error: unknown; data?: LogData};
+
+function recordingLogger(exceptions: LoggedException[]): ApplicationLogger {
+  return {
+    info: () => undefined,
+    error: () => undefined,
+    exception: (event, error, data) => { exceptions.push({event, error, data}); },
+    readableInfo: () => undefined,
+    readableError: () => undefined,
+  };
+}
+
 function handlerFor(
   taskBuilderAssistant: TaskBuilderAssistant,
   knowledgeBaseAssistant: KnowledgeBaseAssistant,
+  exceptions: LoggedException[] = [],
 ) {
   return testingRoutes(assistantRoutes, {
     taskBuilderAssistant: async () => taskBuilderAssistant,
     knowledgeBaseAssistant: async () => knowledgeBaseAssistant,
+    logger: recordingLogger(exceptions),
   }, {}, {uid: "local-user", role: "member"});
 }
 
@@ -143,4 +158,20 @@ test("lässt unbeteiligte Pfade für andere Handler übrig", async () => {
   );
 
   assert.equal(response, null);
+});
+
+test("meldet einen Fehler des Agenten der App und schreibt ihn ins Protokoll", async () => {
+  const exceptions: LoggedException[] = [];
+  const failing: KnowledgeBaseAssistant = {ask: async () => { throw new Error("Kein Sprachmodell eingerichtet."); }};
+  const handler = handlerFor(new FakeTaskBuilderAssistant(), failing, exceptions);
+
+  const response = await handler.handle(
+    postRequest("/v1/assistant/knowledge-base", {question: "Wer bist du?", history: []}),
+  );
+
+  assert.equal(response?.statusCode, 400);
+  assert.deepEqual(response?.body, {error: "Kein Sprachmodell eingerichtet."});
+  assert.equal(exceptions.length, 1);
+  assert.equal(exceptions[0].event, "assistant.knowledge_base_failed");
+  assert.deepEqual(exceptions[0].data, {questionLength: 12, questionPreview: "Wer bist du?", historyMessages: 0});
 });

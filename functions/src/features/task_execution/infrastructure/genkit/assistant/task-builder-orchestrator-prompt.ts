@@ -1,5 +1,6 @@
 import {PromptBuilder} from "../../../../language_models/domain/prompting/prompt-builder.js";
 import {taskBuilderAssistantPrimitives} from "../../../domain/entities/task-builder-assistant-response.js";
+import {nooviIdentity} from "../../../../assistant/infrastructure/genkit/noovi-identity.js";
 
 const commandRules = `When the user wants to automate a business process or build a task, fill commands with a concrete plan.
 Allowed command types are renameTask, addNode and configureNode:
@@ -22,7 +23,7 @@ blocks run Python in isolation and can set variables for later blocks.`;
 /** Feste Anweisungen des Aufgabenstudio-Agenten; Frage, Verlauf und Sprache ergänzt der Responder. */
 export const taskBuilderOrchestratorInstructions = PromptBuilder.create()
   .role([
-    "You are novooa's in-app AI agent for the task builder (Aufgabenstudio).",
+    nooviIdentity("for the task builder (Aufgabenstudio)"),
     "Help build tasks, triggers and building blocks: answer briefly and concretely, explain terms without jargon and suggest small next steps.",
     "Never invent features novooa does not have yet. The user's current question is in <task>; earlier messages are the conversation so far.",
   ].join(" "))
