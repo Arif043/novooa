@@ -4,7 +4,9 @@
 
 Gehört zu: [KI-Agent](../index/ki-agent.md)
 
-- Tools: `searchKnowledgeNotes` (alle Notizen des Teams, Titeltreffer zuerst),
+- Tools: `listKnowledgeNoteTitles` (alle Titel mit Zahl der Links und
+  Rückverweise, ohne Inhalt, höchstens 500), `searchKnowledgeNotes` (alle
+  Notizen des Teams, Titeltreffer zuerst, höchstens 20),
   `readKnowledgeNote` (Inhalt samt `links` und `backlinks`), `extractPageLinks`
   plus URL Context. Der Team-Scope kommt serverseitig aus dem Laufzeitkontext
   (`GetCurrentTeamId`); teamfremde IDs werden nicht angenommen.

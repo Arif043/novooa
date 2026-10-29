@@ -21,6 +21,11 @@ auf die Wissensbasis (Prompt-Referenz `zettelkasten` in
 
 - Links nur auf Notizen, die es laut Tool-Ergebnis gibt oder die im selben
   Plan entstehen.
+- **Überblick:** `listKnowledgeNoteTitles` zeigt den ganzen Zettelkasten ohne
+  Inhalte: je Notiz Titel, Zahl der Links und der Rückverweise
+  (`knowledgeNoteOverview`). Null Rückverweise markiert eine Waise. Der Agent
+  ruft es für Fragen zur ganzen Wissensbasis und vor neuen Notizen auf, um
+  Dubletten zu vermeiden und Übersichtsnotizen zu finden.
 - **Lesen:** `readKnowledgeNote` liefert `links` und `backlinks`
   (berechnet mit `knowledgeLinksFrom`); der Agent folgt ihnen bei Bedarf,
   höchstens vier Notizen je Frage.

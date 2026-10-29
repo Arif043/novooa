@@ -4,6 +4,7 @@ import {
   type ExtractPageLinksToolDependencies,
 } from "./extract-page-links-tool.js";
 import {type KnowledgeNoteToolDependencies} from "./knowledge-note-tool-support.js";
+import {defineListKnowledgeNoteTitlesTool} from "./list-knowledge-note-titles-tool.js";
 import {defineReadKnowledgeNoteTool} from "./read-knowledge-note-tool.js";
 import {defineSearchKnowledgeNotesTool} from "./search-knowledge-notes-tool.js";
 
@@ -15,6 +16,7 @@ export function defineKnowledgeBaseAssistantTools(
   dependencies: KnowledgeBaseAssistantToolDependencies,
 ) {
   return {
+    listKnowledgeNoteTitles: defineListKnowledgeNoteTitlesTool(ai, dependencies),
     searchKnowledgeNotes: defineSearchKnowledgeNotesTool(ai, dependencies),
     readKnowledgeNote: defineReadKnowledgeNoteTool(ai, dependencies),
     extractPageLinks: defineExtractPageLinksTool(ai, dependencies),

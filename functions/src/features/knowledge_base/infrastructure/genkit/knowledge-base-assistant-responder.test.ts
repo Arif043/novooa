@@ -20,3 +20,9 @@ test("lets the agent follow links and cite the notes it used", () => {
 test("introduces itself as noovi", () => {
   assert.match(system, /You are noovi, novooa's in-app AI agent for the knowledge base/);
 });
+
+test("uses the title overview for questions about the whole knowledge base", () => {
+  assert.match(system, /call listKnowledgeNoteTitles once/);
+  assert.match(system, /check the titles from listKnowledgeNoteTitles and search before creating/);
+});
+
