@@ -1569,6 +1569,11 @@
     "open_result": "Sonucu görüntüle",
     "node_details": "{name} ayrıntıları",
     "zoom_in": "Yakınlaştır",
-    "zoom_out": "Uzaklaştır"
+    "zoom_out": "Uzaklaştır",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "select_run": "Ne çıktığını görmek için soldan bir çalıştırma seç.",
+    "none": "Yok",
+    "filter_label": "Durum"
   }
 }

@@ -9,6 +9,7 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
   Output-Typ (inklusive Script-Ausgabe, siehe
   [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)). Darunter die
   [Folgen](./lauf-effekte.md) des Bausteins; eine Datei-Folge öffnet die Datei.
+  „Ergebnis ansehen“ führt zur [Ergebnisansicht](./ergebnisse-seite.md).
 - **Gespräch der Mitarbeiter:** Hat eine Node-Aktivität ein Gespräch (Teamarbeit,
   auch bei Fehlern), zeigt sie den TextButton „Gespräch der Mitarbeiter
   anzeigen“. Er öffnet per `Navigator.push` die `TeamworkConversationPage`. Dort

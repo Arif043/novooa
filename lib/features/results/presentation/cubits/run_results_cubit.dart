@@ -12,6 +12,7 @@ class RunResultsCubit extends Cubit<RunResultsState> {
   final WatchTaskRuns _watchTaskRuns;
   StreamSubscription<List<TaskRun>>? _subscription;
   TaskRunStatus? _statusFilter;
+  String? _selectedRunId;
 
   void load() {
     unawaited(_subscription?.cancel());
@@ -31,9 +32,21 @@ class RunResultsCubit extends Cubit<RunResultsState> {
     if (current is RunResultsReady) _emitReady(current.runs);
   }
 
+  void select(TaskRun run) {
+    _selectedRunId = run.id.value;
+    final current = state;
+    if (current is RunResultsReady) _emitReady(current.runs);
+  }
+
   void _emitReady(List<TaskRun> runs) {
     if (isClosed) return;
-    emit(RunResultsReady(runs: runs, statusFilter: _statusFilter));
+    emit(
+      RunResultsReady(
+        runs: runs,
+        statusFilter: _statusFilter,
+        selectedRunId: _selectedRunId,
+      ),
+    );
   }
 
   @override

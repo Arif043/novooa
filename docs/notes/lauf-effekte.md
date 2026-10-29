@@ -1,6 +1,6 @@
 # Folgen eines Laufs (Effekte)
 
-> Bausteine melden neben ihren Werten typisierte Effekte — was sie nach außen bewirkt haben; sie stehen an der Node-Aktivität und sind die Grundlage der geplanten Seite „Ergebnisse“.
+> Bausteine melden neben ihren Werten typisierte Effekte — was sie nach außen bewirkt haben; sie stehen an der Node-Aktivität und erscheinen in der [Seite „Ergebnisse“](./ergebnisse-seite.md).
 
 Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 

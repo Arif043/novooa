@@ -13,12 +13,13 @@
 - [Herkunft eines Laufs](../notes/lauf-herkunft.md)
 - [Folgen eines Laufs (Effekte)](../notes/lauf-effekte.md)
 - [Graph-Schnappschuss eines Laufs](../notes/lauf-graph-schnappschuss.md)
+- [Innere Ergebnisse eines Laufs](../notes/lauf-innere-ergebnisse.md)
+- [Seite „Ergebnisse“](../notes/ergebnisse-seite.md)
 
 ## Offene Punkte
 
-- Geplant: Seite „Ergebnisse“ im Menü — Liste der Läufe; je Lauf eine
-  Zusammenfassung mit Folgen und der Graph aus dem Schnappschuss mit den
-  echten Werten (Zweige, Schleifenrunden, Dateien, Tabellen).
+- Geplant: Vergleich zweier Läufe in der Ergebnisansicht und live
+  mitlaufende Läufe im Ergebnisgraph.
 - Geplant: Tokens und Kosten je Run, Trace-Ansicht mit Modell-Aufruf je
   Knoten, Filter (Aufgabe, Status, Zeitraum, Auslöser), Re-Run mit gleichem
   Input.

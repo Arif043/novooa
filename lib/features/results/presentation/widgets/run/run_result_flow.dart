@@ -1,16 +1,14 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../../core/widgets/luminous_card.dart';
-import '../../../../activity/presentation/widgets/activity_tile.dart';
 import '../../cubits/run_result_cubit.dart';
 import '../../cubits/run_result_state.dart';
 import '../graph/run_result_graph.dart';
 import 'run_result_node_details.dart';
+import 'run_step_list.dart';
 
 /// Der Ablauf des Laufs: als Graph mit Details daneben (Desktop) bzw. im
 /// Sheet (Handy); alte Läufe ohne Graph als Liste der Bausteine.
@@ -23,7 +21,14 @@ class RunResultFlow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final graph = state.result.graph;
-    if (graph == null) return _NodeList(state: state);
+    if (graph == null) {
+      return LuminousCard(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: RunStepList(result: state.result),
+        ),
+      );
+    }
     final cubit = context.read<RunResultCubit>();
     final selected = state.selectedNodeId;
     final canvas = LuminousCard(
@@ -80,34 +85,5 @@ class RunResultFlow extends StatelessWidget {
         ),
       ),
     ).whenComplete(cubit.clearSelection);
-  }
-}
-
-class _NodeList extends StatelessWidget {
-  const _NodeList({required this.state});
-
-  final RunResultReady state;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          LocaleKeys.results_no_graph.tr(),
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        for (final node in state.result.topLevel) ...[
-          LuminousCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: ActivityTile(activity: node),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-      ],
-    );
   }
 }

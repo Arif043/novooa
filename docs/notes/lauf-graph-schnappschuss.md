@@ -13,8 +13,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 - Läufe von vor `0030` (oder mit einem Schnappschuss, den das heutige Schema
   nicht mehr liest) laden weiter die gespeicherte Aufgabe.
 - `GET /v1/task-runs/:runId/graph` liefert den Schnappschuss (`404` ohne
-  ihn) — Grundlage der geplanten Seite „Ergebnisse“, die den Lauf als Graph
-  mit echten Werten und [Folgen](./lauf-effekte.md) zeigt.
+  ihn) — Grundlage der [Seite „Ergebnisse“](./ergebnisse-seite.md), die den
+  Lauf als Graph mit echten Werten und [Folgen](./lauf-effekte.md) zeigt.
 
 ## Siehe auch
 

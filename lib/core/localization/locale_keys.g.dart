@@ -2018,5 +2018,10 @@ abstract class LocaleKeys {
   static const results_node_details = 'results.node_details';
   static const results_zoom_in = 'results.zoom_in';
   static const results_zoom_out = 'results.zoom_out';
+  static const results_today = 'results.today';
+  static const results_yesterday = 'results.yesterday';
+  static const results_select_run = 'results.select_run';
+  static const results_none = 'results.none';
+  static const results_filter_label = 'results.filter_label';
   static const results = 'results';
 }

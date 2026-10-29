@@ -66,7 +66,9 @@ class TaskRun {
     final start = startedAt;
     final end = completedAt;
     if (start == null || end == null || end.isBefore(start)) return null;
-    return end.difference(start);
+    final elapsed = end.difference(start);
+    // Unter einer Sekunde sagt die Dauer nichts; „0 s“ wäre nur Rauschen.
+    return elapsed.inSeconds < 1 ? null : elapsed;
   }
 
   String? get reviewInstruction => interaction?.instruction;

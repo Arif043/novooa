@@ -13,13 +13,27 @@ final class RunResultsFailure extends RunResultsState {
 }
 
 final class RunResultsReady extends RunResultsState {
-  const RunResultsReady({required this.runs, this.statusFilter});
+  const RunResultsReady({
+    required this.runs,
+    this.statusFilter,
+    this.selectedRunId,
+  });
 
   /// Neueste zuerst.
   final List<TaskRun> runs;
 
   /// `null` zeigt alle Läufe.
   final TaskRunStatus? statusFilter;
+
+  /// Der Lauf, der in der Detailspalte steht (breite Ansicht).
+  final String? selectedRunId;
+
+  /// Der gewählte Lauf, sonst der neueste sichtbare.
+  TaskRun? get selectedRun {
+    final visible = visibleRuns;
+    return visible.where((run) => run.id.value == selectedRunId).firstOrNull ??
+        visible.firstOrNull;
+  }
 
   List<TaskRun> get visibleRuns {
     final filter = statusFilter;

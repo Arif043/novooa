@@ -43,7 +43,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Ergebnis'), findsOneWidget);
     expect(find.text('Fertig'), findsOneWidget);
-    expect(find.text('Für jedes Element'), findsOneWidget);
+    expect(find.text('Für jedes Element'), findsWidgets);
     expect(find.text('Runde 1 von 2'), findsOneWidget);
     expect(find.text('R-1'), findsOneWidget);
 

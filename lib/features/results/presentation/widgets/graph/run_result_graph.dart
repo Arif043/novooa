@@ -34,6 +34,9 @@ class _RunResultGraphState extends State<RunResultGraph> {
   static const _minimumScale = 0.35;
   static const _maximumScale = 1.8;
 
+  /// Darunter sind Karten nicht mehr lesbar.
+  static const _readableScale = 0.7;
+
   final _transform = TransformationController();
   CanvasFrame? _frame;
   double? _textScale;
@@ -109,19 +112,14 @@ class _RunResultGraphState extends State<RunResultGraph> {
     });
   }
 
+  /// An die Breite angepasst, oben beginnend: Ein langer Ablauf bleibt
+  /// lesbar und wird gescrollt, statt auf Briefmarkengröße zu schrumpfen.
   void _fit(Size viewport, Size content) {
-    final padded = Size(
-      content.width + AppSpacing.xxl,
-      content.height + AppSpacing.xxl,
-    );
-    final scale = math
-        .min(viewport.width / padded.width, viewport.height / padded.height)
-        .clamp(_minimumScale, 1.0);
-    _transform.value = Matrix4.translationValues(
-      (viewport.width - padded.width * scale) / 2,
-      0,
-      0,
-    )..scaleByDouble(scale, scale, scale, 1);
+    final paddedWidth = content.width + AppSpacing.xxl;
+    final scale = (viewport.width / paddedWidth).clamp(_readableScale, 1.0);
+    final left = math.max(0.0, (viewport.width - paddedWidth * scale) / 2);
+    _transform.value = Matrix4.translationValues(left, 0, 0)
+      ..scaleByDouble(scale, scale, scale, 1);
   }
 
   void _zoom(double factor) {

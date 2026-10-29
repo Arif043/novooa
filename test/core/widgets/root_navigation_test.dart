@@ -10,7 +10,14 @@ void main() {
         if (tab.hasPageHeader) tab.path,
     ];
 
-    expect(withHeader, ['/schedule', '/database', '/files', '/skills', '/employees']);
+    expect(withHeader, [
+      '/schedule',
+      '/database',
+      '/files',
+      '/skills',
+      '/employees',
+      '/results',
+    ]);
   });
 
   testWidgets('zeigt ohne Titel nur Menü und Aktionen', (tester) async {

@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../core/widgets/luminous_card.dart';
 import '../../../../activity/domain/entities/task_run.dart';
 import '../../localization/run_result_texts.dart';
 import '../list/run_status_chip.dart';
 
 /// Zurück, Status, Aufgabe und die Kennzahlen des Laufs.
 class RunResultHeader extends StatelessWidget {
-  const RunResultHeader({
-    super.key,
-    required this.run,
-    required this.effectsLabel,
-  });
+  const RunResultHeader({super.key, required this.run, this.showBack = true});
 
   final TaskRun run;
-  final String effectsLabel;
+
+  /// In der Detailspalte gibt es kein Zurück.
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        BackButton(onPressed: () => Navigator.of(context).maybePop()),
-        const SizedBox(width: AppSpacing.xs),
-        LuminousIconBadge(icon: RunResultTexts.statusIcon(run.status)),
-        const SizedBox(width: AppSpacing.md),
+        if (showBack) ...[
+          BackButton(onPressed: () => Navigator.of(context).maybePop()),
+          const SizedBox(width: AppSpacing.xs),
+        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +38,7 @@ class RunResultHeader extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '${RunResultTexts.meta(context, run)} · $effectsLabel',
+                RunResultTexts.meta(context, run),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

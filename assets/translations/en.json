@@ -1569,6 +1569,11 @@
     "open_result": "View result",
     "node_details": "Details for {name}",
     "zoom_in": "Zoom in",
-    "zoom_out": "Zoom out"
+    "zoom_out": "Zoom out",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "select_run": "Choose a run on the left to see what came out of it.",
+    "none": "None",
+    "filter_label": "Status"
   }
 }

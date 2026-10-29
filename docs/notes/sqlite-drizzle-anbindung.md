@@ -18,7 +18,17 @@ Modellkataloge.
   frameworkfrei.
 - Repositories nutzen `select`, `insert`, `update`, `delete`, Joins und
   Upserts; `sql` nur für SQLite-Ausdrücke und komplexe Abfragen.
-- Transaktionen explizit über `tx`; verschachtelte über Savepoints.
+- Transaktionen explizit über `tx`; verschachtelte über Savepoints. Code in
+  einer Transaktion nutzt nur `tx`, nie die äußere Datenbank.
+- **Eine Verbindung, Zugriffe in einer Schlange** (`serializedLibsqlClient`):
+  `@libsql/client` hält sonst einen Pool mehrerer Verbindungen. In einem
+  Prozess blockieren die sich gegenseitig — libSQL wartet bei einer Sperre
+  synchron, die wartende Verbindung legt den ganzen Prozess lahm, und
+  PRAGMAs wie `busy_timeout` gälten nur für die erste Verbindung. Die Folge
+  waren `SQLITE_BUSY`-Fehler bei gleichzeitigen Zugriffen (Formular-Antwort,
+  Worker, Protokoll). Jetzt wartet ein Zugriff asynchron, bis die laufende
+  Transaktion fertig ist; nach 30 s ohne Platz in der Schlange endet er mit
+  einem klaren Fehler statt zu hängen.
 - Job-Leases werden atomar mit `UPDATE … RETURNING` beansprucht.
 - `openLocalRuntimeDatabase` aktiviert Fremdschlüssel, WAL und Busy-Timeout.
 

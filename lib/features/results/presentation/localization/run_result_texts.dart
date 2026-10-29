@@ -65,6 +65,20 @@ abstract final class RunResultTexts {
     ),
   };
 
+  /// Das Ergebnis eines Laufs in einer Zeile: Fehler, Endausgabe oder Status.
+  static String outcomeLine(TaskRun run) {
+    if (run.status == TaskRunStatus.failed && (run.message ?? '').isNotEmpty) {
+      return run.message!;
+    }
+    final output = run.finalOutput?.trim() ?? '';
+    final text = output.isNotEmpty ? output : status(run.status);
+    final duration = run.duration;
+    final line = text.replaceAll('\n', ' ');
+    return duration == null
+        ? line
+        : '$line · ${RunResultTexts.duration(duration)}';
+  }
+
   /// „vor 5 Min. · 4 s · von Arif“.
   static String meta(BuildContext context, TaskRun run) {
     final duration = run.duration;

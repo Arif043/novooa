@@ -171,6 +171,7 @@ class _TabBody extends StatelessWidget {
       ),
       TaskActivityFilter.history => TaskActivityHistory(
         activities: state.activities,
+        runs: state.runs,
         onRefresh: context.read<ActivityCubit>().load,
       ),
       TaskActivityFilter.protocol => const RuntimeApplicationLogsView(),

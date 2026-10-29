@@ -2,6 +2,7 @@ import {createClient, type Client} from "@libsql/client";
 import {drizzle, type LibSQLDatabase} from "drizzle-orm/libsql";
 import {pathToFileURL} from "node:url";
 import * as schema from "./schema.js";
+import {serializedLibsqlClient} from "./serialized-libsql-client.js";
 
 /**
  * Die SQLite-Datenbank der Runtime über Drizzle, typisiert mit unserem Schema. `$client` ist der
@@ -22,8 +23,15 @@ export type RuntimeTransaction = Parameters<Parameters<RuntimeDatabase["transact
  */
 export type RuntimeExecutor = RuntimeDatabase | RuntimeTransaction;
 
-/** Öffnet die Datenbankdatei; `":memory:"` ergibt eine flüchtige Datenbank für Tests. */
+/**
+ * Öffnet die Datenbankdatei; `":memory:"` ergibt eine flüchtige Datenbank für Tests. Genau eine
+ * Verbindung, deren Zugriffe sich anstellen (`serializedLibsqlClient`) — mehrere Verbindungen auf
+ * dieselbe Datei blockieren sich in einem Prozess gegenseitig.
+ */
 export function connectRuntimeDatabase(databasePath: string): RuntimeDatabase {
-  const client = createClient({url: databasePath === ":memory:" ? "file::memory:" : pathToFileURL(databasePath).href});
+  const client = serializedLibsqlClient(createClient({
+    url: databasePath === ":memory:" ? "file::memory:" : pathToFileURL(databasePath).href,
+    concurrency: 1,
+  }));
   return drizzle({client, schema});
 }
