@@ -7,8 +7,6 @@ import '../../../../activity/presentation/widgets/node_activity_values.dart';
 import '../../../../activity/presentation/widgets/run_effects/open_effect_file.dart';
 import '../../../../activity/presentation/widgets/run_effects/run_effect_list.dart';
 import '../../../../activity/presentation/widgets/teamwork_conversation/teamwork_conversation_button.dart';
-import '../../../../task_builder/domain/entities/node_config.dart';
-import '../../../../task_builder/domain/entities/workflow_graph.dart';
 import '../../cubits/run_result_state.dart';
 import '../../localization/run_result_texts.dart';
 
@@ -27,7 +25,7 @@ class RunResultNodeDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final result = state.result.resultFor(nodeId, state.rounds);
-    final title = _titleOf(nodeId);
+    final title = state.result.titleOf(nodeId);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
@@ -56,29 +54,5 @@ class RunResultNodeDetails extends StatelessWidget {
         ],
       ],
     );
-  }
-
-  String _titleOf(String id) {
-    final graph = state.result.graph;
-    return graph == null ? id : _titleIn(graph, id) ?? id;
-  }
-
-  /// Sucht den Baustein auch in Zweigen und Schleifen.
-  String? _titleIn(WorkflowGraph graph, String id) {
-    for (final node in graph.nodes) {
-      if (node.id.value == id) return node.title;
-      final inner = switch (node.config) {
-        ForEachNodeConfig(:final graph) => [graph],
-        ConditionalNodeConfig(:final branches) => [
-          for (final b in branches) b.graph,
-        ],
-        _ => const <WorkflowGraph>[],
-      };
-      for (final child in inner) {
-        final title = _titleIn(child, id);
-        if (title != null) return title;
-      }
-    }
-    return null;
   }
 }

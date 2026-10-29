@@ -29,6 +29,9 @@ class RunResult {
 
   String? loopOf(String nodeId) => _placement?.loopOf(nodeId);
 
+  /// Titel aus dem Graphen; ohne Graph oder unbekannt die ID.
+  String titleOf(String nodeId) => _placement?.titleOf(nodeId) ?? nodeId;
+
   /// Das Ergebnis eines Bausteins in der Runde, die für seine Schleife
   /// gewählt ist (Standard: erste Runde).
   TaskActivity? resultFor(String nodeId, Map<String, int> rounds) {

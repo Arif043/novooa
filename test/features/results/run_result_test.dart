@@ -35,4 +35,10 @@ void main() {
     expect(result.loopOf('schritt'), 'schleife');
     expect(result.loopOf('ja-text'), isNull);
   });
+
+  test('Titel kommen aus dem Graphen, auch für Bausteine in Zweigen und Schleifen', () {
+    expect(result.titleOf('schritt'), 'Titel schritt');
+    expect(result.titleOf('nein-text'), 'Titel nein-text');
+    expect(result.titleOf('unbekannt'), 'unbekannt');
+  });
 }

@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/console_output_block.dart';
@@ -31,12 +33,12 @@ class NodeActivityValues extends StatelessWidget {
             ),
           if (activity.stdout.isNotEmpty)
             _ConsoleValue(
-              label: 'Script-Ausgabe (stdout)',
+              label: LocaleKeys.output_labels_stdout.tr(),
               text: activity.stdout,
             ),
           if (activity.stderr.isNotEmpty)
             _ConsoleValue(
-              label: 'Fehlerausgabe (stderr)',
+              label: LocaleKeys.output_labels_stderr.tr(),
               text: activity.stderr,
               isError: true,
             ),
@@ -50,11 +52,23 @@ class NodeActivityValues extends StatelessWidget {
       for (final entry in activity.outputs.entries)
         NodeOutput.fromStored(entry.key, entry.value),
       if (_hasText(activity.output))
-        NodeOutput(name: 'output', label: 'Ausgabe', value: activity.output),
+        NodeOutput(
+          name: 'output',
+          label: LocaleKeys.output_labels_output.tr(),
+          value: activity.output,
+        ),
       if (_hasText(activity.input))
-        NodeOutput(name: 'input', label: 'Eingabe', value: activity.input),
+        NodeOutput(
+          name: 'input',
+          label: LocaleKeys.output_labels_input.tr(),
+          value: activity.input,
+        ),
       if (_hasText(activity.message) && !_isFailure)
-        NodeOutput(name: 'message', label: 'Hinweis', value: activity.message),
+        NodeOutput(
+          name: 'message',
+          label: LocaleKeys.output_labels_hint.tr(),
+          value: activity.message,
+        ),
     ];
   }
 
