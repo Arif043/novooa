@@ -4,6 +4,7 @@ import {type FastifyReply} from "fastify";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {knowledgeNotes, type KnowledgeNotes} from "../../../../db/schema.js";
+import {knowledgeNoteWithTitle} from "../../domain/services/knowledge-note-title.js";
 import {knowledgeNotesWithLinks} from "./sqlite-knowledge-link-projection.js";
 import {ErrorResponse, IdParams, ItemsOf} from "../../../../shared/local/local-runtime-http-schemas.js";
 
@@ -25,7 +26,7 @@ const NoteInput = Type.Object({
   content: Type.Optional(Type.String()),
 });
 const NoteParams = IdParams("noteId");
-const noteResponses = {200: KnowledgeNote, 201: KnowledgeNote, 404: ErrorResponse};
+const noteResponses = {200: KnowledgeNote, 201: KnowledgeNote, 404: ErrorResponse, 409: ErrorResponse};
 export const knowledgeNoteRoutes: FastifyPluginAsyncTypebox<KnowledgeNoteRoutesOptions> = async (app, {database, notifier}) => {
   app.get("/v1/knowledge-notes", {schema: {response: {200: ItemsOf(KnowledgeNote)}}}, async (request) => {
     const rows = await knowledgeNotesWithLinks(database, request.workspace.teamId);
@@ -35,6 +36,7 @@ export const knowledgeNoteRoutes: FastifyPluginAsyncTypebox<KnowledgeNoteRoutesO
   app.post("/v1/knowledge-notes", {schema: {body: NoteInput, response: noteResponses}}, async (request, reply) => {
     const {teamId} = request.workspace;
     const note = noteFromBody(request.body);
+    if (await titleTaken(database, teamId, note)) return duplicateTitle(reply, note.title);
     const id = randomUUID();
     await database.insert(knowledgeNotes).values({id, team_id: teamId, knowledge_base_id: note.knowledgeBaseId,
       title: note.title, path: note.path, content: note.content});
@@ -46,6 +48,7 @@ export const knowledgeNoteRoutes: FastifyPluginAsyncTypebox<KnowledgeNoteRoutesO
     async (request, reply) => {
       const {teamId} = request.workspace;
       const note = noteFromBody(request.body);
+      if (await titleTaken(database, teamId, note, request.params.noteId)) return duplicateTitle(reply, note.title);
       await database.update(knowledgeNotes).set({title: note.title, path: note.path, content: note.content,
         updated_at: sql`CURRENT_TIMESTAMP`})
         .where(and(eq(knowledgeNotes.team_id, teamId), eq(knowledgeNotes.id, request.params.noteId)));
@@ -66,6 +69,21 @@ function noteFromBody(body: Static<typeof NoteInput>) {
     knowledgeBaseId: body.knowledgeBaseId || "default", title: body.title.trim(),
     path: body.path ?? "", content: body.content ?? "",
   };
+}
+
+async function titleTaken(
+  database: RuntimeExecutor,
+  teamId: string,
+  note: {knowledgeBaseId: string; title: string},
+  exceptNoteId?: string,
+): Promise<boolean> {
+  const notes = await database.select({id: knowledgeNotes.id, title: knowledgeNotes.title}).from(knowledgeNotes)
+    .where(and(eq(knowledgeNotes.team_id, teamId), eq(knowledgeNotes.knowledge_base_id, note.knowledgeBaseId)));
+  return knowledgeNoteWithTitle(notes, note.title, exceptNoteId) !== undefined;
+}
+
+function duplicateTitle(reply: FastifyReply, title: string): FastifyReply {
+  return reply.code(409).send({error: `Eine Notiz mit dem Titel „${title}“ gibt es schon.`, code: "duplicate_title"});
 }
 
 async function noteById(

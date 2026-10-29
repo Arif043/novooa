@@ -34,14 +34,15 @@ test("decision and structured prompts get a short output hint, text prompts none
   assert.match(structured.system ?? "", /<output_format>\nFill in every field of the structured output\./);
 });
 
-test("attachments name files, directly attached notes and skills", () => {
+test("attachments name files, every knowledge note with its links and skills", () => {
   const rendered = render(input(), workspace());
 
   const system = rendered.system ?? "";
   assert.match(system, /<attachments>\nAttached files and knowledge notes are available/);
   assert.match(system, /- files\/rechnung\.pdf \(Rechnung\.pdf\)/);
-  assert.match(system, /- knowledge\/leitfaden\.md \(Leitfaden\)/);
-  assert.doesNotMatch(system, /verlinkt\.md/, "linked notes are reached through links, not listed");
+  assert.match(system, /a wiki link \[\[Title\]\] refers to knowledge\/Title\.md/);
+  assert.match(system, /- knowledge\/Leitfaden\.md \(attached; links to: Verlinkt\)/);
+  assert.match(system, /- knowledge\/Verlinkt\.md \(linked, level 1\)/);
   assert.match(system, /use_skill tool/);
 });
 
@@ -57,8 +58,8 @@ function workspace(): NodeAttachmentWorkspace {
     rootDirectory: "/tmp/ws", skillCount: 1, skillsDirectory: "/tmp/ws/skills",
     files: [{filename: "files/rechnung.pdf", displayName: "Rechnung.pdf"}],
     knowledgeFiles: [
-      {filename: "knowledge/leitfaden.md", title: "Leitfaden", isDirectAttachment: true},
-      {filename: "knowledge/verlinkt.md", title: "Verlinkt", isDirectAttachment: false},
+      {filename: "knowledge/Leitfaden.md", title: "Leitfaden", isDirectAttachment: true, depth: 0, linkedTitles: ["Verlinkt"]},
+      {filename: "knowledge/Verlinkt.md", title: "Verlinkt", isDirectAttachment: false, depth: 1, linkedTitles: []},
     ],
     cleanup: () => Promise.resolve(),
   } as never;

@@ -9,7 +9,7 @@ Gespeichert in SQLite (`knowledge_notes`).
 | Feld | Typ | Bedeutung |
 | --- | --- | --- |
 | `knowledgeBaseId` | `string` | aktuell `default` |
-| `title` | `string` | Anzeigename |
+| `title` | `string` | Anzeigename, pro Wissensbasis eindeutig (ohne Groß/Klein) |
 | `path` | `string` | importierter Markdown-Pfad |
 | `content` | `string` | Markdown-Inhalt |
 | `outgoingLinks` | `list<string>` | verlinkte Notiz-IDs (in SQLite berechnet) |

@@ -10,6 +10,7 @@ import '../../domain/entities/knowledge_note.dart';
 import '../../domain/entities/knowledge_note_draft.dart';
 import '../../domain/services/markdown_link_extractor.dart';
 import '../../domain/services/knowledge_note_draft_factory.dart';
+import '../../domain/services/knowledge_note_titles.dart';
 import '../../domain/usecases/create_knowledge_note.dart';
 import '../../domain/usecases/delete_knowledge_note.dart';
 import '../../domain/usecases/restore_knowledge_note.dart';
@@ -18,6 +19,8 @@ import '../../domain/usecases/watch_knowledge_notes.dart';
 import 'knowledge_base_state.dart';
 
 part 'knowledge_base_assistant_mutations.dart';
+part 'knowledge_base_cubit_queries.dart';
+part 'knowledge_base_title_guard.dart';
 
 class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   KnowledgeBaseCubit(
@@ -62,7 +65,7 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     if (user == null) return _emitFailure(KnowledgeFailureKind.unauthenticated);
     final teamId = await _teamIdOrNull();
     if (teamId == null) return;
-    final title = _draftFactory.newTitle(state.notes.length);
+    final title = _draftFactory.newTitle(state.notes);
     final noteOrFailure = await _createKnowledgeNote(
       teamId: teamId,
       ownerUid: user.id.value,
@@ -85,9 +88,15 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   void updateTitle(String value) {
     final note = state.selectedNote;
     if (note == null) return;
-    _updateSelected(
-      note.copyWith(title: value, path: _draftFactory.pathFor(value)),
+    final renamed = note.copyWith(
+      title: value,
+      path: _draftFactory.pathFor(value),
     );
+    if (isKnowledgeNoteTitleTaken(state.notes, value, exceptNoteId: note.id)) {
+      _saveDebounce?.cancel();
+      return emit(_titleTakenState(renamed));
+    }
+    _updateSelected(renamed);
   }
 
   void updateContent(String value) {
@@ -158,23 +167,6 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
       ),
       (failure) => _emitFailure(failure.kind),
     );
-  }
-
-  String? _selectedIdFor(List<KnowledgeNote> notes) {
-    if (notes.any((note) => note.id == state.selectedNoteId)) {
-      return state.selectedNoteId;
-    }
-    return notes.isEmpty ? null : notes.first.id;
-  }
-
-  Future<TeamId?> _teamIdOrNull() async {
-    final user = _authRepository.currentUser();
-    if (user == null) return null;
-    try {
-      return await _getCurrentTeamId();
-    } catch (_) {
-      return null;
-    }
   }
 
   void _emitFailure(KnowledgeFailureKind kind) {

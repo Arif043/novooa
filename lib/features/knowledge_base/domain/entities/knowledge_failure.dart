@@ -4,6 +4,7 @@ enum KnowledgeFailureKind {
   saveFailed,
   deleteFailed,
   invalidTitle,
+  duplicateTitle,
 }
 
 class KnowledgeFailure {
@@ -22,6 +23,8 @@ class KnowledgeFailure {
       KnowledgeFailureKind.deleteFailed =>
         'Notiz konnte nicht gelöscht werden.',
       KnowledgeFailureKind.invalidTitle => 'Gib einen Namen für die Notiz ein.',
+      KnowledgeFailureKind.duplicateTitle =>
+        'Eine Notiz mit diesem Titel gibt es schon. Wähle einen anderen Titel.',
     };
   }
 }

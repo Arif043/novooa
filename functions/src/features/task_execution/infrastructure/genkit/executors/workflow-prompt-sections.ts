@@ -1,3 +1,4 @@
+import {type PreparedKnowledgeAttachment} from "../runner/knowledge-note-workspace.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {type ResolvedEmployee} from "../runner/task-definition.js";
 
@@ -16,21 +17,30 @@ export function roleWithEmployee(role: string, employee: ResolvedEmployee | unde
 export function attachmentsSectionFor(workspace?: NodeAttachmentWorkspace): string | undefined {
   if (!workspace) return undefined;
   const files = workspace.files.map((file) => `- ${file.filename} (${file.displayName})`);
-  const notes = workspace.knowledgeFiles
-    .filter((note) => note.isDirectAttachment)
-    .map((note) => `- ${note.filename} (${note.title})`);
   return [
     "Attached files and knowledge notes are available through the file system tools. Use list_files and read_file to inspect them when needed.",
     files.length > 0 ? `Available files:\n${files.join("\n")}` : "",
-    notes.length > 0 ? knowledgeNotesHint(notes) : "",
+    knowledgeNotesOverview(workspace.knowledgeFiles),
     workspace.skillCount > 0 ? "Skills are available through the use_skill tool. Use a suitable skill before you answer." : "",
   ].filter(Boolean).join("\n\n");
 }
 
-function knowledgeNotesHint(notes: string[]): string {
+/**
+ * Alle Notizen im Workspace samt ihren Links, damit das Modell den Zusammenhang kennt, ohne erst
+ * `knowledge/manifest.json` zu lesen. Die Dateinamen tragen den Titel, `[[Titel]]` führt direkt zur Datei.
+ */
+function knowledgeNotesOverview(notes: readonly PreparedKnowledgeAttachment[]): string {
+  if (notes.length === 0) return "";
   return [
-    "Directly attached knowledge notes:",
-    ...notes,
-    "Use exactly these paths when reading knowledge notes. Linked notes are in the workspace as well: follow the links from the attached note; knowledge/manifest.json lists them all.",
+    "Knowledge notes in the workspace: the attached notes and the notes they link to, directly or indirectly. "
+      + "Each file is named after the note's title, so a wiki link [[Title]] refers to knowledge/Title.md. "
+      + "Read the attached notes first and follow their links when they matter for the task.",
+    ...notes.map(overviewLine),
   ].join("\n");
+}
+
+function overviewLine(note: PreparedKnowledgeAttachment): string {
+  const role = note.isDirectAttachment ? "attached" : `linked, level ${note.depth}`;
+  const links = note.linkedTitles.length > 0 ? `; links to: ${note.linkedTitles.join(", ")}` : "";
+  return `- ${note.filename} (${role}${links})`;
 }

@@ -6,6 +6,7 @@ export const zettelkastenRules = `The knowledge base is a Zettelkasten. Every no
 - Atomic: one idea per note, understandable on its own, usually 20-80 lines and never more than 200.
   Split longer material into several notes in the same plan.
 - The title names the idea precisely (e.g. "Rechnungen werden nach 14 Tagen gemahnt", not "Notizen" or "Neu").
+- Titles are unique, regardless of case: never propose a title that already exists; extend that note instead.
 - Knowledge lives in one place: check the titles from listKnowledgeNoteTitles and search before creating. If a note on the idea exists, extend it with
   updateKnowledgeNote instead of creating a duplicate, and link to it instead of repeating it.
 - Links are wiki links with the exact title from a tool result: [[Title]] or [[Title|label]]. Link only to notes that

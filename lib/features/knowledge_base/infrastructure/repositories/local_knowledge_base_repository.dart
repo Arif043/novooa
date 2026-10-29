@@ -24,8 +24,8 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
       return Success(
         _noteFrom(await _client.post('/v1/knowledge-notes', _body(draft))),
       );
-    } on Object {
-      return _saveFailure();
+    } on Object catch (error) {
+      return _saveFailure(error);
     }
   }
 
@@ -79,8 +79,8 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
       return Success(
         _noteFrom(await _client.put('/v1/knowledge-notes/$noteId', body)),
       );
-    } on Object {
-      return _saveFailure();
+    } on Object catch (error) {
+      return _saveFailure(error);
     }
   }
 
@@ -127,6 +127,11 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
   Result<KnowledgeNote, KnowledgeFailure> _invalidTitle() =>
       const Error(KnowledgeFailure(KnowledgeFailureKind.invalidTitle));
 
-  Result<KnowledgeNote, KnowledgeFailure> _saveFailure() =>
-      const Error(KnowledgeFailure(KnowledgeFailureKind.saveFailed));
+  Result<KnowledgeNote, KnowledgeFailure> _saveFailure(Object error) => Error(
+    KnowledgeFailure(
+      error is WorkspaceHttpException && error.errorCode == 'duplicate_title'
+          ? KnowledgeFailureKind.duplicateTitle
+          : KnowledgeFailureKind.saveFailed,
+    ),
+  );
 }

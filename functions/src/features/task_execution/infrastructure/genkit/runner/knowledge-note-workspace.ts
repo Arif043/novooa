@@ -6,6 +6,7 @@ import {
   type KnowledgeBaseStore,
   type KnowledgeNoteDocument,
 } from "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
+import {knowledgeNoteFilenames} from "./knowledge-note-filenames.js";
 
 const maxNotes = 50;
 const maxDepth = 5;
@@ -13,10 +14,15 @@ const maxDepth = 5;
 export type PreparedKnowledgeAttachment = KnowledgeAttachment & {
   filename: string;
   isDirectAttachment: boolean;
+  /** Abstand zum Anhang: 0 für angehängte Notizen, 1 für deren Links usw. */
+  depth: number;
+  /** Titel der Notizen im Workspace, auf die diese Notiz verlinkt. */
+  linkedTitles: string[];
 };
 
 type ResolvedKnowledgeNote = KnowledgeNoteDocument & {
   isDirectAttachment: boolean;
+  depth: number;
 };
 
 export async function prepareKnowledgeFiles(
@@ -30,7 +36,7 @@ export async function prepareKnowledgeFiles(
   await mkdir(directory, {recursive: true});
   const resolver = new KnowledgeNoteResolver(teamId, store);
   const notes = await resolver.resolveAll(attachments);
-  const preparedNotes = notes.map(preparedNote);
+  const preparedNotes = preparedNotesFrom(notes);
   await writeKnowledgeManifest(directory, preparedNotes);
   await Promise.all(preparedNotes.map((note) => writeNote(directory, note)));
   return preparedNotes;
@@ -65,7 +71,7 @@ class KnowledgeNoteResolver {
     }
     for (let next = queue.shift(); next !== undefined && notes.length < maxNotes; next = queue.shift()) {
       const note = await this.store.loadNote(this.teamId, next.attachment);
-      notes.push({...note, isDirectAttachment: next.isDirectAttachment});
+      notes.push({...note, isDirectAttachment: next.isDirectAttachment, depth: next.depth});
       this.enqueueLinks(queue, queued, note, next.depth + 1);
     }
     return notes;
@@ -121,19 +127,12 @@ async function writeKnowledgeManifest(
   );
 }
 
-function preparedNote(
-  note: ResolvedKnowledgeNote,
-  index: number,
-): PreparedKnowledgeAttachment & {content: string} {
-  return {
+function preparedNotesFrom(notes: ResolvedKnowledgeNote[]): (PreparedKnowledgeAttachment & {content: string})[] {
+  const filenames = knowledgeNoteFilenames(notes);
+  const titles = new Map(notes.map((note) => [note.noteId, note.title]));
+  return notes.map(({outgoingLinks, ...note}) => ({
     ...note,
-    filename: `knowledge/${safeFilename(note.path || note.title, index)}`,
-  };
-}
-
-function safeFilename(displayName: string, index: number): string {
-  const fallback = `notiz-${index + 1}.md`;
-  const normalized = displayName.trim() || fallback;
-  const safeName = normalized.replace(/[^a-zA-Z0-9._-]+/g, "_");
-  return `${index + 1}-${safeName.slice(0, 120)}`;
+    filename: filenames.get(note.noteId)!,
+    linkedTitles: outgoingLinks.flatMap((noteId) => titles.get(noteId) ?? []),
+  }));
 }

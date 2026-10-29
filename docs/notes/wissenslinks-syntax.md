@@ -12,8 +12,11 @@ Gehört zu: [Wissensbasis](../index/wissensbasis.md)
   Backlinks.
 - ID-Links überstehen Umbenennungen; Titel- und Pfadlinks lösen gegen die
   aktuellen Aliase auf. Unbekannte Ziele ergeben keine ID, Mehrfachlinks
-  werden zusammengefasst. Gleiche Titel sind erlaubt und können mehrere
-  Notizen adressieren.
+  werden zusammengefasst.
+- Titel sind pro Wissensbasis eindeutig, ohne Unterschied von Groß/Klein;
+  `[[Titel]]` trifft deshalb genau eine Notiz. Die Runtime lehnt einen
+  vergebenen Titel mit 409 `duplicate_title` ab, der Client speichert ihn gar
+  nicht erst; Migration 0032 sichert das mit einem eindeutigen Index ab.
 - `outgoingLinks` entstehen in der Bearbeitungsvorschau des Clients und in
   SQLite beim Lesen (`knowledgeLinksFrom`, für API und Runs).
 

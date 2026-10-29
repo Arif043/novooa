@@ -97,6 +97,8 @@ export const knowledgeNotes = sqliteTable("knowledge_notes", {
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index("idx_notes_team_base").on(table.team_id, table.knowledge_base_id),
+  // Titel sind eindeutig, weil [[Titel]]-Links und Workspace-Dateinamen sie als Schlüssel nutzen.
+  uniqueIndex("idx_notes_unique_title").on(table.team_id, table.knowledge_base_id, sql`${table.title} COLLATE NOCASE`),
 ]);
 
 /** Mitarbeiter (Subagenten): Rahmenbedingung (= System-Prompt) plus Skill-Namen. */

@@ -38,3 +38,18 @@ test("knowledge exports contain only authoritative fields and derive links after
   assert.deepEqual((await new SQLiteKnowledgeBaseStore(target).loadNote("team-2", attachment)).outgoingLinks, ["target"]);
   await assert.rejects(new SQLiteKnowledgeBaseStore(target).loadNote("team-1", attachment), /Wissensnotiz fehlt/);
 });
+
+test("an import that would give a title twice is rejected and writes nothing", async (t) => {
+  const reader = await exportedKnowledge(t);
+  const target = await runtimeTestDatabase(t);
+  await target.insert(teams).values({id: "team-2", name: "Ziel", owner_uid: "u"});
+  await target.insert(knowledgeNotes).values({id: "eigene", team_id: "team-2", title: "ziel"});
+  const store = new SQLiteTransferImportStore(target, [new SQLiteKnowledgeTransferSection(target)]);
+
+  await assert.rejects(
+    new ImportWorkspace(new InspectWorkspaceImport(), store).execute({teamId: "team-2",
+      selection: TransferCategorySelection.from(["knowledge"]), reader}),
+    /schon eine Notiz „Ziel“/,
+  );
+  assert.deepEqual((await target.select({id: knowledgeNotes.id}).from(knowledgeNotes)).map((row) => row.id), ["eigene"]);
+});

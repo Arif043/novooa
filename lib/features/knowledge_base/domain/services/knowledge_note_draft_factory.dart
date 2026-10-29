@@ -1,11 +1,17 @@
 import '../entities/knowledge_note_draft.dart';
 import '../entities/knowledge_note.dart';
+import 'knowledge_note_titles.dart';
 
 class KnowledgeNoteDraftFactory {
   const KnowledgeNoteDraftFactory();
 
-  String newTitle(int existingNoteCount) {
-    return 'Neue Notiz ${existingNoteCount + 1}';
+  /// Der erste freie Name „Neue Notiz n“ — nach Löschungen kann `Anzahl + 1`
+  /// schon vergeben sein.
+  String newTitle(List<KnowledgeNote> existingNotes) {
+    for (var number = 1; ; number++) {
+      final title = 'Neue Notiz $number';
+      if (!isKnowledgeNoteTitleTaken(existingNotes, title)) return title;
+    }
   }
 
   KnowledgeNoteDraft create({

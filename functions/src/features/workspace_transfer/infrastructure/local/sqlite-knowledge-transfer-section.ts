@@ -2,6 +2,8 @@ import {eq} from "drizzle-orm";
 import {z} from "zod";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {knowledgeNotes} from "../../../../db/schema.js";
+import {knowledgeNoteWithTitle} from "../../../knowledge_base/domain/services/knowledge-note-title.js";
+import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferDataEntry, type TransferArchiveReader, type TransferArchiveWriter} from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
@@ -45,11 +47,31 @@ async function commitNotes(
   executor: RuntimeExecutor, payload: KnowledgeTransferPayload, mapping: TransferTeamMapping,
 ): Promise<void> {
   const teamId = mapping.targetTeamId;
+  const titles = await existingTitles(executor, teamId);
   for (const note of payload.notes) {
+    assertUniqueTitle(titles, note);
     const values = {knowledge_base_id: note.knowledgeBaseId, title: note.title, path: note.path, type: note.type,
       content: mapping.references(note.content),
       updated_at: note.updatedAt};
     await executor.insert(knowledgeNotes).values({id: note.id, team_id: teamId, created_at: note.createdAt, ...values})
       .onConflictDoUpdate({target: knowledgeNotes.id, set: values, setWhere: eq(knowledgeNotes.team_id, teamId)});
   }
+}
+
+type NoteTitle = {id: string; knowledgeBaseId: string; title: string};
+
+async function existingTitles(executor: RuntimeExecutor, teamId: string): Promise<NoteTitle[]> {
+  return executor.select({id: knowledgeNotes.id, knowledgeBaseId: knowledgeNotes.knowledge_base_id, title: knowledgeNotes.title})
+    .from(knowledgeNotes).where(eq(knowledgeNotes.team_id, teamId));
+}
+
+/** Titel sind eindeutig; eine importierte Notiz darf nur ihren eigenen Titel (gleiche ID) überschreiben. */
+function assertUniqueTitle(titles: NoteTitle[], note: KnowledgeTransferPayload["notes"][number]): void {
+  const sameBase = titles.filter((existing) => existing.knowledgeBaseId === note.knowledgeBaseId);
+  if (knowledgeNoteWithTitle(sameBase, note.title, note.id) !== undefined) {
+    throw new InvalidTransferArchiveError(`Die Wissensbasis hat schon eine Notiz „${note.title}“; der Import würde den Titel doppelt vergeben.`);
+  }
+  const index = titles.findIndex((existing) => existing.id === note.id);
+  const entry = {id: note.id, knowledgeBaseId: note.knowledgeBaseId, title: note.title};
+  if (index === -1) titles.push(entry); else titles[index] = entry;
 }

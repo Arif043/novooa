@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {mkdtemp, rm} from "node:fs/promises";
+import {mkdtemp, readFile, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import test from "node:test";
@@ -56,3 +56,19 @@ test("stops following links after five levels", async () => {
 
   assert.deepEqual(notes.map((note) => note.id), ["n0", "n1", "n2", "n3", "n4", "n5"]);
 });
+
+test("names files after the note title and lists the links between collected notes", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "novooa-knowledge-"));
+  try {
+    const notes = await prepareKnowledgeFiles(directory, "team-1", [attach("a")], storeWith({a: ["b"], b: []}));
+
+    assert.deepEqual(notes.map((note) => [note.filename, note.depth, note.linkedTitles]), [
+      ["knowledge/a.md", 0, ["b"]],
+      ["knowledge/b.md", 1, []],
+    ]);
+    assert.equal(await readFile(join(directory, "knowledge", "b.md"), "utf8"), "# b");
+  } finally {
+    await rm(directory, {force: true, recursive: true});
+  }
+});
+

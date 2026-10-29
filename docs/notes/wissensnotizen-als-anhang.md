@@ -18,8 +18,12 @@ Unterstützte Node-Configs speichern `knowledgeAttachments` neben
   Der Client bildet dieselben Regeln in `KnowledgeNoteReach` nach, um im
   [Wissensgraph](./wissensgraph.md) den Prompt-Kontext einer Notiz zu zeigen;
   Grenzen bitte an beiden Stellen ändern.
-- Der Prompt nennt nur die direkt angehängte Notiz; verlinkte entdeckt das
-  Modell über die Links im Markdown und `knowledge/manifest.json`.
+- Jede Notiz liegt als `knowledge/<Titel>.md` im Workspace; weil Titel
+  eindeutig sind, führt `[[Titel]]` direkt zur Datei. Verbotene Zeichen im
+  Dateinamen werden ersetzt (`knowledge-note-filenames.ts`).
+- Der Prompt listet alle eingesammelten Notizen mit Rolle (angehängt bzw.
+  verlinkt, Ebene) und den Titeln, auf die sie verlinken
+  (`attachmentsSectionFor`); `knowledge/manifest.json` gibt es zusätzlich.
 - Prompt-Bausteine sind angebunden, Script-Bausteine bewusst noch nicht.
 
 ## Siehe auch
