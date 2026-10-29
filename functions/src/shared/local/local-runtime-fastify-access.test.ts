@@ -154,7 +154,7 @@ function accessFixture({hasPassword = true}: {hasPassword?: boolean} = {}) {
     signedActiveLicense: () => null, activeActivation: () => null,
     matchesActivationToken: (token) => active && token === "valid",
     verifyActivation: async () => active ? "active" : "notActivated",
-    requiresActivationTokenForSetup: () => true,
+   
   };
   const verifiedTokens: string[] = [];
   const http = accessHttp(licenses, verifiedTokens, async () => { activatedWorkspaces += 1; }, hasPassword);

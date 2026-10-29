@@ -46,7 +46,6 @@ final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
   const RuntimeConnectionNeedsPasswordSetup(
     this.endpoint, {
     this.activationToken,
-    this.requiresLicenseToken = true,
     this.failure,
   });
 
@@ -57,17 +56,13 @@ final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
   /// (z.B. nach einem App-Neustart), fragt das Formular ihn erneut ab.
   final String? activationToken;
 
-  /// `false` nur bei einer Runtime im Entwicklungsmodus ohne echte Lizenz.
-  final bool requiresLicenseToken;
-
-  bool get needsTokenInput => requiresLicenseToken && activationToken == null;
+  bool get needsTokenInput => activationToken == null;
 
   RuntimeConnectionNeedsPasswordSetup withFailure(
     RuntimeAccessFailure failure,
   ) => RuntimeConnectionNeedsPasswordSetup(
     endpoint,
     activationToken: activationToken,
-    requiresLicenseToken: requiresLicenseToken,
     failure: failure,
   );
 }

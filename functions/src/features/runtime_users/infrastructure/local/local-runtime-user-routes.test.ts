@@ -16,7 +16,7 @@ function routesFor(database: RuntimeDatabase, maxUsers: number | null = null) {
   const module = createRuntimeUsersModule({
     database, fieldCipher: testRuntimeFieldCipher(), sessions, connections: {closeInactive: async () => undefined},
     workspace: () => ({teamId: testRuntimeWorkspace.teamId, ownerUid: testRuntimeWorkspace.userId}),
-    proof: {requiresActivationTokenForSetup: () => true, matchesActivationToken: (token) => token === "LIZENZ"},
+    proof: {matchesActivationToken: (token) => token === "LIZENZ"},
     limit: {maxUsers: () => maxUsers}, notifier: {publish: (topic) => topics.push(topic)},
   });
   return {
@@ -28,7 +28,7 @@ function routesFor(database: RuntimeDatabase, maxUsers: number | null = null) {
 
 test("setup, sign-in and me run through one account", () => withRuntimeTestDatabase(async (database) => {
   const {account, sessions} = routesFor(database);
-  assert.deepEqual((await account.handle({url: "/v1/setup", body: undefined}))?.body, {needsSetup: true, requiresLicenseToken: true});
+  assert.deepEqual((await account.handle({url: "/v1/setup", body: undefined}))?.body, {needsSetup: true});
 
   const setup = await account.handle({method: "POST", url: "/v1/setup",
     body: {activationToken: "LIZENZ", loginName: "Anna", displayName: "Anna", password: "geheim-passwort1"}});

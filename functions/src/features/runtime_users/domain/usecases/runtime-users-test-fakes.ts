@@ -109,6 +109,6 @@ export class MemorySessions implements RuntimeSessionAccess {
 }
 
 export const licenseProof = {
-  requiresActivationTokenForSetup: () => true,
+ 
   matchesActivationToken: (token: unknown) => token === "LIZENZ",
 };

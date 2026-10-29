@@ -41,12 +41,13 @@ async function withRuntime(environment, check) {
   }
 }
 
+/** Ohne Lizenz gibt es keinen Weg in die API — auch nicht in die Einrichtung. */
 async function checkRoutes() {
-  const setup = await fetch("http://127.0.0.1:8080/v1/setup");
-  assert.equal(setup.status, 200);
-  assert.equal((await setup.json()).needsSetup, true);
-  const tasks = await fetch("http://127.0.0.1:8080/v1/tasks");
-  assert.equal(tasks.status, 401);
+  for (const path of ["/v1/setup", "/v1/tasks"]) {
+    const response = await fetch(`http://127.0.0.1:8080${path}`);
+    assert.equal(response.status, 423, `${path} muss ohne Lizenz gesperrt sein.`);
+    assert.equal((await response.json()).licenseStatus, "notActivated");
+  }
   if (process.env.LOCAL_RUNTIME_WEB_DIRECTORY) await checkWebApplication();
 }
 
@@ -88,12 +89,14 @@ async function checkRuntime(environment) {
 test("gehärtete Runtime startet, migriert, schützt Routen und übersteht Schlüsselrotation", {timeout: 60000}, async () => {
   assert.equal(process.getuid(), 0, "Container mit --user 0 starten.");
   assert.equal((await readdir(entryDirectory)).length, 3, "Nur drei Bündel dürfen ausgeliefert werden.");
+  await assert.rejects(stat("/app/functions/keys"), "Der Lizenzschlüssel steckt im Bündel, nicht als Datei.");
   const root = await mkdtemp("/tmp/novooa-protected-check-");
   await chown(root, 1000, 1000);
   try {
     await checkRuntime({
       ...process.env, LOCAL_RUNTIME_ROOT: root, LOCAL_RUNTIME_MASTER_KEY_FILE: join(root, "keys/keyring.json"),
-      NOVOOA_LOCAL_DEVELOPMENT: "true", HOST: "127.0.0.1", PORT: "8080",
+      // Ohne Lizenz startet die Runtime unaktiviert; das Gateway wird dafür nicht gebraucht.
+      LOCAL_RUNTIME_LICENSE_GATEWAY_URL: "https://127.0.0.1:9/unerreichbar", HOST: "127.0.0.1", PORT: "8080",
     });
   } finally {
     await rm(root, {recursive: true, force: true});

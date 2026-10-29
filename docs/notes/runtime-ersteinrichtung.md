@@ -41,4 +41,3 @@ kann ohne Token kein Konto anlegen; ein Code aus dem Start-Log ist unnötig.
 
 - [Lizenz-Token und Aktivierung](./lizenz-aktivierung.md)
 - [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)
-- [Entwicklungsmodus ohne Lizenz](./runtime-entwicklungsmodus.md)

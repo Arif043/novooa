@@ -13,7 +13,12 @@ die Lizenzprüfung; sie ersetzen weder Signaturen noch Zugriffskontrollen.
 `local-runtime-keyring-init-cli.js` und `local-runtime-key-rotation-cli.js`.
 Die ursprünglichen Pfade unter `lib/shared/local/` bleiben erhalten, damit
 Migrationen und der öffentliche Lizenzschlüssel weiterhin gefunden werden.
-`node_modules`, `drizzle/` und `keys/` bleiben externe Laufzeit-Abhängigkeiten.
+`node_modules` und `drizzle/` bleiben externe Laufzeit-Abhängigkeiten. Der
+öffentliche Lizenzschlüssel ist eine Konstante im Code
+(`runtime-license-public-key.ts`) und liegt damit verschleiert im Bündel; eine
+Schlüsseldatei, die sich austauschen oder per Mount überdecken ließe, gibt es
+nicht. Eine Lizenz ohne Prüfung (früher `NOVOOA_LOCAL_DEVELOPMENT`) gibt es
+nicht mehr, auch nicht für Entwicklung oder Tests.
 Das entfernte Node-ML-Gateway wird nicht wieder eingeführt.
 
 `javascript-obfuscator` verschleiert die Bündel mit Kontrollflussumbau,

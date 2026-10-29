@@ -24,7 +24,7 @@ Gehört zu: [Betrieb und Deployment](../index/betrieb-und-deployment.md)
 
 4. **Git und Flutter SDK** (`git --version`, `flutter --version`).
 5. **Schlüssel:** nichts tun — den Master-Key erzeugt der Stack beim ersten
-   Start, den öffentlichen Lizenzschlüssel bringt das Image mit.
+   Start, den öffentlichen Lizenzschlüssel enthält das Image im Code.
 
 **SSH ohne Passwort** (empfohlen):
 

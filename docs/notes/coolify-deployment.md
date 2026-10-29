@@ -45,7 +45,6 @@ NOVOOA_PROXY_ENABLED=true
 COOLIFY_PROXY_NETWORK=coolify
 NOVOOA_RUNTIME_BIND_ADDRESS=127.0.0.1
 NOVOOA_RUNTIME_PORT=0
-NOVOOA_LOCAL_DEVELOPMENT=false
 ```
 
 `NOVOOA_INSTANCE` muss je Kunde eindeutig sein und stabil bleiben: Daraus
@@ -70,8 +69,7 @@ bleibt für Schlüssel-Kommandos und Builds ohne Web-App verfügbar.
 Der Init-Dienst erzeugt den Master-Key im Volume, läuft ohne Netz und endet
 erfolgreich. In Coolify diesen Einmaldienst von der aggregierten
 Statusprüfung ausschließen, falls er sonst als beendet angezeigt wird.
-Die Runtime startet erst danach. `NOVOOA_LOCAL_DEVELOPMENT` bleibt in
-Produktion ausgeschaltet (Standard `false`).
+Die Runtime startet erst danach.
 
 - `novooa-data`: SQLite, Dateien und Arbeitsbereichsdaten.
 - `novooa-keys`: Schlüsselbund; zusammen mit den Daten sichern.

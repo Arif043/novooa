@@ -300,7 +300,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
         RuntimeConnectionNeedsPasswordSetup(
           endpoint,
           activationToken: activationToken,
-          requiresLicenseToken: status.requiresLicenseToken,
         ),
       );
       return;

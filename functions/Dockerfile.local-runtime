@@ -26,7 +26,6 @@ RUN npm ci --omit=dev
 # die key-init/key-rotation-Kommandos bleiben unverändert, __dirname stimmt).
 COPY --from=build /app/functions/dist-protected ./lib
 COPY functions/drizzle /app/functions/drizzle
-COPY functions/keys /app/functions/keys
 
 RUN mkdir -p /var/lib/novooa && chown -R node:node /var/lib/novooa
 

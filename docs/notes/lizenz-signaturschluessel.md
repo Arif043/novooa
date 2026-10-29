@@ -1,10 +1,11 @@
 # Lizenz-Signaturschlüssel
 
-> Der öffentliche Verifikationsschlüssel liegt im Repository und im Image; der private Ed25519-Schlüssel existiert nur als Firebase-Secret im Lizenz-Gateway.
+> Der öffentliche Verifikationsschlüssel steht als Konstante im Code und damit verschleiert im Image; der private Ed25519-Schlüssel existiert nur als Firebase-Secret im Lizenz-Gateway.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
-- Öffentlich: `functions/keys/runtime-license-public-key.pem`, für alle
+- Öffentlich: `runtimeLicensePublicKeyPem` in
+  `features/licensing/infrastructure/local/runtime-license-public-key.ts`, für alle
   Runtimes gleich, kein Kundengeheimnis; dient nur der Offline-Prüfung. Ein
   Server braucht keine Schlüsseldatei.
 - Privat: `LOCAL_RUNTIME_LICENSE_SIGNING_KEY`, ausschließlich im Gateway.

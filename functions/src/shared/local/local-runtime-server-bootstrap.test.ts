@@ -139,7 +139,7 @@ function inactiveLicenses(): RuntimeLicenseService {
     release: async () => {}, activeContext: () => null,
     signedActiveLicense: () => null, activeActivation: () => null,
     status: () => ({state: "notActivated"}),
-    matchesActivationToken: () => false, requiresActivationTokenForSetup: () => true,
+    matchesActivationToken: () => false,
     verifyActivation: async () => "notActivated",
   };
 }

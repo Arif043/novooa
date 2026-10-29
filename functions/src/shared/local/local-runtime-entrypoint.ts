@@ -1,14 +1,13 @@
 import {type LocalRuntimeHost} from "./local-runtime-host.js";
-import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
 import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {
-  DevelopmentRuntimeLicenseService,
   GatewayRuntimeLicenseService,
   type RuntimeLicenseService,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {runtimeLicensePublicKeyPem} from "../../features/licensing/infrastructure/local/runtime-license-public-key.js";
 import {UpgradeRuntimeSecretFormat} from "../../features/runtime_security/infrastructure/upgrade-runtime-secret-format.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
@@ -103,9 +102,6 @@ function requiredEnvironment(name: string): string {
 }
 
 function licenseServiceFor(runtimeRoot: string, security: LocalRuntimeSecurity): RuntimeLicenseService {
-  if (process.env.NOVOOA_LOCAL_DEVELOPMENT === "true") {
-    return developmentLicenseService();
-  }
   return new GatewayRuntimeLicenseService(
     new FileRuntimeLicenseStore(
       runtimeRoot,
@@ -114,26 +110,8 @@ function licenseServiceFor(runtimeRoot: string, security: LocalRuntimeSecurity):
     new HttpRuntimeLicenseGatewayClient(
       requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
     ),
-    licensePublicKey(),
+    runtimeLicensePublicKeyPem,
   );
-}
-
-function developmentLicenseService(): RuntimeLicenseService {
-  return new DevelopmentRuntimeLicenseService({
-    licenseId: "development-license", licenseName: "Entwicklungsumgebung",
-    workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
-    expiresAt: "2099-01-01T00:00:00.000Z", maxUsers: null,
-  });
-}
-
-/** Öffentlich und für alle Runtimes gleich, deshalb Teil des Builds (`functions/keys`) statt Konfiguration. */
-function licensePublicKey(): string {
-  return readFileSync(resolve(__dirname, "../../../keys/runtime-license-public-key.pem"), "utf8").trim();
-}
-
-function optionalEnvironment(name: string): string | undefined {
-  const value = process.env[name]?.trim();
-  return value && value.length > 0 ? value : undefined;
 }
 
 function registerShutdown(

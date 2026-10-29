@@ -22,8 +22,6 @@ export interface RuntimeLicenseService {
   status(): RuntimeLicenseStatus;
   /** Gehört `token` zur aktiven Lizenz? Nachweis für Ersteinrichtung und erneute Aktivierung. */
   matchesActivationToken(token: unknown): boolean;
-  /** `false` nur im Entwicklungsmodus ohne echte Lizenz. */
-  requiresActivationTokenForSetup(): boolean;
   /**
    * Fragt das Gateway, ob die Aktivierung noch gilt, und sperrt die Runtime bei
    * `revoked`. Wirft, wenn das Gateway kein eindeutiges Urteil liefert.
@@ -55,10 +53,6 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
   matchesActivationToken(token: unknown): boolean {
     const activation = this.activeActivation();
     return activation !== null && matchesActivationTokenProof(activation.activationTokenHash, token);
-  }
-
-  requiresActivationTokenForSetup(): boolean {
-    return true;
   }
 
   async release(): Promise<void> {
@@ -113,18 +107,4 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
     return verifiesRuntimeLicense(state.license, this.publicKeyPem) &&
       isActiveRuntimeLicense(state.license.payload, this.now());
   }
-}
-
-export class DevelopmentRuntimeLicenseService implements RuntimeLicenseService {
-  constructor(private readonly context: RuntimeLicenseContext) {}
-  async restore(): Promise<RuntimeLicenseContext> { return this.context; }
-  async activate(): Promise<RuntimeLicenseContext> { return this.context; }
-  async release(): Promise<void> {}
-  activeContext(): RuntimeLicenseContext { return this.context; }
-  signedActiveLicense(): SignedRuntimeLicense | null { return null; }
-  activeActivation(): RuntimeLicenseActivation | null { return null; }
-  status(): RuntimeLicenseStatus { return {state: "active", name: this.context.licenseName, expiresAt: this.context.expiresAt}; }
-  matchesActivationToken(): boolean { return true; }
-  requiresActivationTokenForSetup(): boolean { return false; }
-  async verifyActivation(): Promise<RuntimeLicenseCheck> { return "active"; }
 }

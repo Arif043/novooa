@@ -44,7 +44,6 @@ export function createRuntimeUsersModule(dependencies: RuntimeUsersDependencies)
   return {
     account: {
       setupState: new LoadSetupState(passwords),
-      requiresLicenseToken: () => proof.requiresActivationTokenForSetup(),
       setUp: new SetUpFirstAdmin(users, passwords, proof),
       signIn: new SignIn(users, passwords, sessions),
       redeem: new RedeemInvitation(invitations, passwords, sessions),

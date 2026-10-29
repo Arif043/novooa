@@ -14,7 +14,6 @@
 - [Quellcode-Schutz der ausgelieferten Images](../notes/runtime-quellcode-schutz.md)
 - [Deployment mit Coolify](../notes/coolify-deployment.md)
 - [Lokaler Start der Runtime](../notes/runtime-lokaler-start.md)
-- [Entwicklungsmodus ohne Lizenz](../notes/runtime-entwicklungsmodus.md)
 
 ## Web-App und Clients
 

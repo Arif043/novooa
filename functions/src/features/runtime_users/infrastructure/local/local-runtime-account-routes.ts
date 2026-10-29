@@ -24,7 +24,6 @@ import {
 
 export type AccountRoutesOptions = {
   setupState: LoadSetupState;
-  requiresLicenseToken: () => boolean;
   setUp: SetUpFirstAdmin;
   signIn: SignIn;
   redeem: RedeemInvitation;
@@ -43,8 +42,8 @@ const failures = {400: RuntimeUserFailure, 401: RuntimeUserFailure, 403: Runtime
  * liegen hinter der Session-Prüfung.
  */
 export const accountRoutes: FastifyPluginAsyncTypebox<AccountRoutesOptions> = async (app, options) => {
-  app.get("/v1/setup", {schema: {response: {200: Type.Object({needsSetup: Type.Boolean(), requiresLicenseToken: Type.Boolean()})}}},
-    async () => ({needsSetup: await options.setupState.needsSetup(), requiresLicenseToken: options.requiresLicenseToken()}));
+  app.get("/v1/setup", {schema: {response: {200: Type.Object({needsSetup: Type.Boolean()})}}},
+    async () => ({needsSetup: await options.setupState.needsSetup()}));
 
   app.post("/v1/setup", {schema: {body: Type.Object({
     activationToken: LicenseTokenField, loginName: LoginNameField, displayName: DisplayNameField, password: PasswordField,

@@ -29,5 +29,4 @@ Nur für die UI ohne Runtime: [UI-Vorschau](./ui-vorschau.md).
 ## Siehe auch
 
 - [Docker-Stack der Runtime](./runtime-docker-stack.md)
-- [Entwicklungsmodus ohne Lizenz](./runtime-entwicklungsmodus.md)
 - [Quellcode-Schutz der Images](./runtime-quellcode-schutz.md)

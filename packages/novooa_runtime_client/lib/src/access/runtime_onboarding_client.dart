@@ -6,15 +6,9 @@ import 'runtime_access_failure.dart';
 
 /// Der Einrichtungsstand einer Runtime, gelesen über `GET /v1/setup`.
 class RuntimeSetupStatus {
-  const RuntimeSetupStatus({
-    required this.needsSetup,
-    this.requiresLicenseToken = true,
-  });
+  const RuntimeSetupStatus({required this.needsSetup});
 
   final bool needsSetup;
-
-  /// Ob `/v1/setup` den Lizenz-Token als Nachweis verlangt.
-  final bool requiresLicenseToken;
 }
 
 /// Das erste Konto einer Runtime; es wird Admin.
@@ -93,10 +87,7 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
     try {
       final response = await _clientFor(endpoint.apiUri).get('/v1/setup');
-      return RuntimeSetupStatus(
-        needsSetup: response['needsSetup'] == true,
-        requiresLicenseToken: response['requiresLicenseToken'] != false,
-      );
+      return RuntimeSetupStatus(needsSetup: response['needsSetup'] == true);
     } on WorkspaceConnectionException {
       throw _unreachable;
     }

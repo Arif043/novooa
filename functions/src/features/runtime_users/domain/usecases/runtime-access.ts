@@ -114,7 +114,7 @@ export class ChangeOwnPassword {
 }
 
 function ensureOwnership(proof: RuntimeOwnershipProof, activationToken: string | undefined): void {
-  if (proof.requiresActivationTokenForSetup() && !proof.matchesActivationToken(activationToken)) {
+  if (!proof.matchesActivationToken(activationToken)) {
     throw new RuntimeUserError("license_token_mismatch", "Der Lizenz-Token passt nicht zu dieser Runtime.");
   }
 }
