@@ -37,6 +37,7 @@ export async function withTranslatedGenkitErrors<T>(call: () => Promise<T>): Pro
 export function translateGenkitError(error: unknown): unknown {
   if (error instanceof LanguageModelError) return error;
   if (error instanceof GenkitError) return fromGenkitError(error);
+  if (isJsonSyntaxError(error)) return new ModelOutputSchemaError("Die Antwort des Modells war kein gültiges JSON.", error);
   if (isTimeout(error)) return new ModelTimeoutError("Das Sprachmodell hat nicht rechtzeitig geantwortet.", error);
   if (isNetworkFailure(error)) return new ModelProviderUnavailableError("Der Modellanbieter ist nicht erreichbar.", error);
   const status = httpStatusOf(error);
@@ -62,6 +63,11 @@ function fromHttpStatus(status: number, error: unknown): unknown {
   if (status >= 500) return new ModelProviderUnavailableError(message, error);
   if (status >= 400) return new ModelRequestRejectedError(message, error);
   return error;
+}
+
+/** Genkit parst strukturierte Ausgaben mit JSON5; Text statt JSON endet dort als `SyntaxError`. */
+function isJsonSyntaxError(error: unknown): boolean {
+  return error instanceof SyntaxError && /JSON/i.test(error.message);
 }
 
 function isTimeout(error: unknown): boolean {
