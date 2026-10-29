@@ -24,7 +24,9 @@ Das entfernte Node-ML-Gateway wird nicht wieder eingeführt.
 `javascript-obfuscator` verschleiert die Bündel mit Kontrollflussumbau,
 Täuschungscode und RC4-kodierten String-Arrays. Die Optionen stehen in
 `functions/scripts/node-protection-options.mjs`. Konsolenausgaben bleiben an;
-`selfDefending` und `debugProtection` sind für den Serverbetrieb aus.
+`selfDefending` (umformatierter Code läuft nicht mehr) und `debugProtection`
+(erschwert das Anhängen eines Debuggers, ohne Dauer-Timer) sind an; sie
+gelten nur für die ausgelieferten Images.
 RC4 ist hier eine Verschleierung, kein Schutz geheimer Daten.
 
 Nur `dist-protected/` wird in die finale Image-Schicht als `lib/` kopiert.

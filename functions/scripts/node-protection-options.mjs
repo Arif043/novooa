@@ -17,8 +17,10 @@ export const obfuscatorOptions = {
   stringArrayThreshold: 0.8,
   transformObjectKeys: true,
   identifierNamesGenerator: "mangled-shuffled",
-  // Server müssen für Betrieb und Fehlersuche debuggbar bleiben.
-  selfDefending: false,
-  debugProtection: false,
+  // Nur ausgelieferte Images werden gehärtet; Entwicklung und Firebase nutzen das unveränderte lib/.
+  // selfDefending lässt umformatierten Code nicht mehr laufen, debugProtection erschwert einen Debugger.
+  // Ohne debugProtectionInterval, damit kein Dauer-Timer den Event-Loop belastet.
+  selfDefending: true,
+  debugProtection: true,
   disableConsoleOutput: false,
 };
