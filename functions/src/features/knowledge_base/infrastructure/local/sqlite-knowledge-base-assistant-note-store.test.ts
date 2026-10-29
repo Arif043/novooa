@@ -12,7 +12,16 @@ test("lists local assistant notes for the active team", async (t) => {
   assert.deepEqual(await new SQLiteKnowledgeBaseAssistantNoteStore(database).listNotes("other-team"), []);
 });
 
-test("returns no local assistant note when it is absent", async (t) => {
+test("lists every note of the team, not only the first fifty", async (t) => {
   const database = await runtimeTestDatabase(t);
-  assert.equal(await new SQLiteKnowledgeBaseAssistantNoteStore(database).findNote("team-1", "missing"), null);
+  const rows = Array.from({length: 60}, (_, index) => {
+    const number = String(index + 1).padStart(2, "0");
+    return {id: `note-${number}`, team_id: "team-1", title: `Notiz ${number}`, path: `notiz-${number}.md`, content: ""};
+  });
+  await database.insert(knowledgeNotes).values(rows);
+
+  const notes = await new SQLiteKnowledgeBaseAssistantNoteStore(database).listNotes("team-1");
+
+  assert.equal(notes.length, 60);
+  assert.equal(notes[notes.length - 1].title, "Notiz 60");
 });

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
-import '../../../../activity/domain/entities/run_effect.dart';
 import '../../../../activity/domain/entities/task_activity.dart';
 import '../../../../activity/presentation/widgets/run_effects/open_effect_file.dart';
 import '../../../../activity/presentation/widgets/run_effects/run_effect_texts.dart';

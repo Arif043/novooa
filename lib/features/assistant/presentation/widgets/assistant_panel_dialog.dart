@@ -13,6 +13,7 @@ import '../agent/assistant_plan_action_resolver.dart';
 import '../cubits/assistant_cubit.dart';
 import '../cubits/assistant_state.dart';
 import 'assistant_action_plan.dart';
+import 'assistant_message_body_builder.dart';
 import 'assistant_message_sources.dart';
 
 part 'assistant_panel_dialog_parts.dart';
@@ -44,10 +45,14 @@ class AssistantPanel extends StatefulWidget {
     super.key,
     required this.onClose,
     this.planActionResolver,
+    this.messageBodyBuilder,
   });
 
   final VoidCallback onClose;
   final AssistantPlanActionResolver? planActionResolver;
+
+  /// Ohne Angabe erscheinen Agenten-Antworten als reiner Text.
+  final AssistantMessageBodyBuilder? messageBodyBuilder;
 
   @override
   State<AssistantPanel> createState() => _AssistantPanelState();
@@ -75,6 +80,7 @@ class _AssistantPanelState extends State<AssistantPanel> {
             child: _AssistantMessages(
               theme: theme,
               planActionResolver: widget.planActionResolver,
+              messageBodyBuilder: widget.messageBodyBuilder,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -117,10 +123,12 @@ class _AssistantMessages extends StatelessWidget {
   const _AssistantMessages({
     required this.theme,
     required this.planActionResolver,
+    required this.messageBodyBuilder,
   });
 
   final ThemeData theme;
   final AssistantPlanActionResolver? planActionResolver;
+  final AssistantMessageBodyBuilder? messageBodyBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +151,7 @@ class _AssistantMessages extends StatelessWidget {
     return _AssistantMessageBubble(
       message: state.messages[index],
       planActionResolver: planActionResolver,
+      messageBodyBuilder: messageBodyBuilder,
     );
   }
 }

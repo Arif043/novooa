@@ -16,6 +16,7 @@
 - [Multiagenten-Architektur des Aufgabenstudios](../notes/multiagenten-aufgabenstudio.md)
 - [Noovi, das Maskottchen](../notes/noovi-maskottchen.md)
 - [Wissensbasis-Agent](../notes/wissensbasis-agent.md)
+- [Zettelkasten-Regeln des Wissensbasis-Agenten](../notes/wissensbasis-agent-zettelkasten.md)
 - [URL Context und Seitenlinks](../notes/url-context-und-seitenlinks.md)
 
 ## Änderungen ausführen

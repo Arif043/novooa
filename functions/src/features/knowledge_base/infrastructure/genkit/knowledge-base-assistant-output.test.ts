@@ -42,3 +42,17 @@ test("keeps a plain answer when the model does not return structured output", ()
     knowledgeCommands: [],
   });
 });
+
+test("keeps several commands of one plan, e.g. atomic notes plus the link back", () => {
+  const output = assistantOutputFromModelOutput({
+    answer: "Vorschlag",
+    knowledgeCommands: [
+      {type: "createKnowledgeNote", label: "Fristen anlegen", title: "Fristen", content: "Gehört zu: [[Buchhaltung]]"},
+      {type: "createKnowledgeNote", label: "Mahnung anlegen", title: "Mahnung", content: "Siehe [[Fristen]]"},
+      {type: "updateKnowledgeNote", label: "Link ergänzen", noteId: "buchhaltung", title: "Buchhaltung", content: "- [[Fristen]]\n- [[Mahnung]]"},
+    ],
+  }, "");
+
+  assert.deepEqual(output.knowledgeCommands.map((command) => command.type), ["createKnowledgeNote", "createKnowledgeNote", "updateKnowledgeNote"]);
+});
+

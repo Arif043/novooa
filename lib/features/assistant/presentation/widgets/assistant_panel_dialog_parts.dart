@@ -4,10 +4,12 @@ class _AssistantMessageBubble extends StatelessWidget {
   const _AssistantMessageBubble({
     required this.message,
     required this.planActionResolver,
+    required this.messageBodyBuilder,
   });
 
   final AssistantMessage message;
   final AssistantPlanActionResolver? planActionResolver;
+  final AssistantMessageBodyBuilder? messageBodyBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,7 @@ class _AssistantMessageBubble extends StatelessWidget {
         child: _MessageContent(
           message: message,
           planActionResolver: planActionResolver,
+          bodyBuilder: isUser ? null : messageBodyBuilder,
         ),
       ),
     );
@@ -44,10 +47,12 @@ class _MessageContent extends StatelessWidget {
   const _MessageContent({
     required this.message,
     required this.planActionResolver,
+    required this.bodyBuilder,
   });
 
   final AssistantMessage message;
   final AssistantPlanActionResolver? planActionResolver;
+  final AssistantMessageBodyBuilder? bodyBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,8 @@ class _MessageContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (message.text.isNotEmpty)
-          Text(message.text, style: Theme.of(context).textTheme.bodyMedium),
+          bodyBuilder?.call(context, message.text) ??
+              Text(message.text, style: Theme.of(context).textTheme.bodyMedium),
         AssistantMessageSources(sources: message.urlSources),
         if (actions.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),

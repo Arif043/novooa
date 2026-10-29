@@ -18,6 +18,7 @@
 
 - [Wissensnotizen als Anhang](../notes/wissensnotizen-als-anhang.md)
 - [Wissensbasis-Agent](../notes/wissensbasis-agent.md)
+- [Zettelkasten-Regeln des Wissensbasis-Agenten](../notes/wissensbasis-agent-zettelkasten.md)
 
 ## Offene Punkte
 
