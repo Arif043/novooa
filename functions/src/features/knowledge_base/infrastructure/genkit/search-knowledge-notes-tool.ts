@@ -20,7 +20,7 @@ export function defineSearchKnowledgeNotesTool(ai: Genkit, dependencies: Knowled
   return ai.defineTool(
     {
       name: "searchKnowledgeNotes",
-      description: "Durchsucht Titel, Pfad und Inhalt aller Notizen der Wissensbasis des aktuellen Teams; Titeltreffer zuerst.",
+      description: "Searches title, path and content of all notes in the current team's knowledge base; title matches come first.",
       inputSchema: z.object({query: z.string().max(200).optional()}),
       outputSchema: z.object({notes: z.array(noteSummarySchema)}),
     },

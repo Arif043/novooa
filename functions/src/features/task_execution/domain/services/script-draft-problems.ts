@@ -2,7 +2,7 @@ import {isValidScriptWorkflowOutputName, scriptWorkflowOutputTypes} from "./scri
 
 export type ScriptDraft = {
   script: string;
-  workflowOutputs: ReadonlyArray<{name: string; typ: string}>;
+  workflowOutputs: ReadonlyArray<{name: string; type: string}>;
 };
 
 /**
@@ -37,8 +37,8 @@ function isValidName(name: string): boolean {
 
 function typeProblems(draft: ScriptDraft): string[] {
   const allowed: readonly string[] = scriptWorkflowOutputTypes;
-  return draft.workflowOutputs.filter((output) => !allowed.includes(output.typ))
-    .map((output) => `Der Typ „${output.typ}“ von „${output.name}“ ist unbekannt.`);
+  return draft.workflowOutputs.filter((output) => !allowed.includes(output.type))
+    .map((output) => `Der Typ „${output.type}“ von „${output.name}“ ist unbekannt.`);
 }
 
 function declarationProblems(draft: ScriptDraft): string[] {

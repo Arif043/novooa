@@ -6,9 +6,9 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 
 | Subagent (Tool) | Aufgabe | Tools | Ausgabe |
 | --- | --- | --- | --- |
-| `anforderungsanalyse` | Zerlegt einen Wunsch in Bausteine (Produktwissen `novooa-product-knowledge.ts`) | keine | Ziel, Auslöser, Schritte (mit `umsetzbar`), offene Fragen, `benoetigtModell`, `benoetigtScript` |
-| `modellkatalog_suche` | Findet ONNX-Modelle für `modelInference` | `sucheModelle` (lesend, `SearchModelCatalog`) | bis zu drei Vorschläge mit `modelId`, Begründung, Ein- und Ausgaben |
-| `python_entwicklung` | Schreibt Code für den Script-Baustein | keine | `script`, `workflowOutputs`, `hinweise` |
+| `requirements_analysis` | Zerlegt einen Wunsch in Bausteine (Produktwissen `novooa-product-knowledge.ts`) | keine | `goal`, `trigger`, `steps` (mit `addable`), `openQuestions`, `needsModel`, `needsScript` |
+| `model_catalog_search` | Findet ONNX-Modelle für `modelInference` | `searchModels` (lesend, `SearchModelCatalog`) | bis zu drei `suggestions` mit `modelId`, `reason`, `inputs` und `outputs` |
+| `python_development` | Schreibt Code für den Script-Baustein | keine | `script`, `workflowOutputs`, `notes` |
 
 - **Ablauf:** zuerst Anforderungsanalyse, je nach Profil Modellsuche und
   Python-Entwicklung (unabhängige Aufrufe parallel). Offene Fragen stellt er in
@@ -16,7 +16,7 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 - **Nur Vorschläge:** Subagenten haben keine verändernden Tools; Änderungen
   bleiben `commands` bis **Ausführen**.
 - **Kein Code-Ausführen:** `scriptDraftProblems` (Domain) prüft den Entwurf
-  statisch; Funde stehen als `Prüfung: …` in `hinweise`.
+  statisch; Funde stehen als `Prüfung: …` in `notes`.
 - **Grenzen:** höchstens fünf Delegationen je Anfrage (`DelegationBudget`);
   Subagenten 1–4 Tool-Runden, Orchestrator 8; Callable und Relay höchstens
   120 s.

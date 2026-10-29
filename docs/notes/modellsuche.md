@@ -13,8 +13,8 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 - Sortierung nach Zahl passender Begriffe in ID, Titel, Beschreibung,
   Aufgabe, Tags und Übersetzungen; ein Begriff trifft auch Bezeichnungen und
   Synonyme der Tags samt Obertags ([Tag-Vokabular](./modell-tag-vokabular.md)).
-- Die Treffer des Tools nennen die Themen auf Deutsch (`themen`).
-- Nutzer: das Tool `sucheModelle` des
+- Die Treffer des Tools nennen die Themen auf Deutsch (`topics`).
+- Nutzer: das Tool `searchModels` des
   [KI-Agenten](./multiagenten-aufgabenstudio.md).
 
 ## Suchdialog im Aufgabenstudio

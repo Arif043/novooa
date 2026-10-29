@@ -9,9 +9,9 @@ import {type TeamworkTranscript} from "./teamwork-transcript.js";
 export type TeamMemberRun = TeamMemberTool & {conversation: EmployeeConversation};
 
 const delegationInputSchema = z.object({
-  task: z.string().describe("Was der Mitarbeiter tun soll, mit dem nötigen Kontext; für sich verständlich."),
-  expectedResult: z.string().describe("Was genau zurückkommen soll: Inhalt, Umfang, Form, ggf. Dateipfad unter shared/."),
-  boundaries: z.string().optional().describe("Was nicht zum Auftrag gehört oder schon erledigt ist."),
+  task: z.string().describe("What the employee should do, with the necessary context; understandable on its own."),
+  expectedResult: z.string().describe("What exactly should come back: content, scope, form and, if applicable, a file path under shared/."),
+  boundaries: z.string().optional().describe("What is not part of the assignment or has already been done."),
 });
 
 const delegationOutputSchema = z.object({response: z.string()});

@@ -5,15 +5,15 @@ import {scriptWorkflowOutputTypes} from "../../../../domain/services/script-work
 import {PromptBuilder} from "../../../../../language_models/domain/prompting/prompt-builder.js";
 
 export const pythonScriptInputSchema = z.object({
-  aufgabe: z.string().min(1).max(4000).describe("Was das Script berechnen oder umformen soll."),
-  eingabe: z.string().max(2000).optional().describe("Welcher Wert als input ankommt, z. B. {{rechnung}}."),
-  ausgaben: z.array(z.string().max(60)).max(10).optional().describe("Gewünschte Ausgabewerte."),
+  task: z.string().min(1).max(4000).describe("What the script should calculate or transform."),
+  input: z.string().max(2000).optional().describe("Which value arrives as input, e.g. {{rechnung}}."),
+  outputs: z.array(z.string().max(60)).max(10).optional().describe("Desired output values."),
 });
 
 export const scriptDraftSchema = z.object({
   script: z.string().max(20000),
-  workflowOutputs: z.array(z.object({name: z.string(), typ: z.string()})).max(10),
-  hinweise: z.array(z.string()).max(10),
+  workflowOutputs: z.array(z.object({name: z.string(), type: z.string()})).max(10),
+  notes: z.array(z.string()).max(10),
 });
 
 type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
@@ -22,9 +22,9 @@ export function pythonScriptSubagentSpec(
   model: ModelArgument,
 ): SubagentSpec<typeof pythonScriptInputSchema, typeof scriptDraftSchema> {
   return {
-    name: "python_entwicklung",
-    description: "Schreibt Python-Code für einen Script-Baustein (workflow_input, workflow_output). " +
-      "Führt den Code nicht aus; liefert Script, Ausgabewerte und Hinweise.",
+    name: "python_development",
+    description: "Writes Python code for a script building block (workflow_input, workflow_output). " +
+      "Does not run the code; returns the script, output values and notes.",
     model,
     instructions,
     tools: [],
@@ -35,10 +35,10 @@ export function pythonScriptSubagentSpec(
   };
 }
 
-/** Statisch gefundene Probleme landen als Hinweise beim Orchestrator. */
+/** Statisch gefundene Probleme landen in `notes` beim Orchestrator. */
 function withStaticProblems(draft: ScriptDraftOutput): ScriptDraftOutput {
   const problems = scriptDraftProblems(draft).map((problem) => `Prüfung: ${problem}`);
-  return {...draft, hinweise: [...draft.hinweise, ...problems]};
+  return {...draft, notes: [...draft.notes, ...problems]};
 }
 
 /** Vertrag des Script-Bausteins — dieselben Regeln prüft `scriptDraftProblems` nachträglich. */

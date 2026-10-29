@@ -18,7 +18,7 @@ export function defineExtractPageLinksTool(
   return ai.defineTool(
     {
       name: "extractPageLinks",
-      description: "Liest die HTML-Links einer einzelnen öffentlichen Webseite strukturiert aus. Nutze das Tool für Fragen zu Links, Navigation, Unterseiten oder deren URLs.",
+      description: "Extracts the HTML links of a single public web page as structured data. Use this tool for questions about links, navigation, subpages or their URLs.",
       inputSchema: z.object({
         url: z.string().min(1).max(2048),
         includeExternal: z.boolean().default(false),

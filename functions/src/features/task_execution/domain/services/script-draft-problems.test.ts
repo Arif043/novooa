@@ -5,7 +5,7 @@ import {scriptDraftProblems} from "./script-draft-problems.js";
 test("accepts a draft whose announced outputs are set in the script", () => {
   const problems = scriptDraftProblems({
     script: "summe = sum(input)\nworkflow_output(\"summe\", \"number\", summe)",
-    workflowOutputs: [{name: "summe", typ: "number"}],
+    workflowOutputs: [{name: "summe", type: "number"}],
   });
 
   assert.deepEqual(problems, []);
@@ -19,9 +19,9 @@ test("reports invalid, duplicate, untyped and undeclared outputs", () => {
   const problems = scriptDraftProblems({
     script: "workflow_output('a', 'string', 'x')",
     workflowOutputs: [
-      {name: "value", typ: "string"},
-      {name: "a", typ: "string"},
-      {name: "a", typ: "text"},
+      {name: "value", type: "string"},
+      {name: "a", type: "string"},
+      {name: "a", type: "text"},
     ],
   });
 
@@ -34,7 +34,7 @@ test("reports invalid, duplicate, untyped and undeclared outputs", () => {
 test("reports {{…}} templates in the code, which are not replaced", () => {
   const problems = scriptDraftProblems({
     script: "betreff = \"{{mail.betreff}}\"\nworkflow_output(\"b\", \"string\", betreff)",
-    workflowOutputs: [{name: "b", typ: "string"}],
+    workflowOutputs: [{name: "b", type: "string"}],
   });
 
   assert.deepEqual(problems, ["Das Script enthält {{…}}; Werte liest ein Script nur mit workflow_input(\"name\")."]);

@@ -11,14 +11,14 @@ test("maps a catalog entry to a compact hit without artifact details", () => {
 
   assert.deepEqual(hit, {
     modelId: "mobilenet-v3",
-    titel: "Bildklassifikation",
-    beschreibung: "Ordnet Bilder Kategorien zu.",
-    aufgabe: "image-classification",
-    themen: ["Tiere", "altes-tag"],
-    sprachen: [],
-    eingaben: ["image (image)"],
-    ausgaben: ["value (json)"],
-    herkunft: "global",
+    title: "Bildklassifikation",
+    description: "Ordnet Bilder Kategorien zu.",
+    task: "image-classification",
+    topics: ["Tiere", "altes-tag"],
+    languages: [],
+    inputs: ["image (image)"],
+    outputs: ["value (json)"],
+    origin: "global",
   });
   assert.equal("artifactReference" in hit, false);
 });

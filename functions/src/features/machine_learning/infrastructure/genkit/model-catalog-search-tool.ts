@@ -14,14 +14,14 @@ export type ModelCatalogSearchToolDependencies = {
 
 const hitSchema = z.object({
   modelId: z.string(),
-  titel: z.string(),
-  beschreibung: z.string(),
-  aufgabe: z.string(),
-  themen: z.array(z.string()),
-  sprachen: z.array(z.string()),
-  eingaben: z.array(z.string()),
-  ausgaben: z.array(z.string()),
-  herkunft: z.enum(["global", "team"]),
+  title: z.string(),
+  description: z.string(),
+  task: z.string(),
+  topics: z.array(z.string()),
+  languages: z.array(z.string()),
+  inputs: z.array(z.string()),
+  outputs: z.array(z.string()),
+  origin: z.enum(["global", "team"]),
 });
 
 /** Lesendes Tool: durchsucht den Modellkatalog; Team-Modelle nur, wenn ein Team bekannt ist. */
@@ -31,21 +31,21 @@ export function defineModelCatalogSearchTool(
 ): ToolAction {
   return ai.dynamicTool(
     {
-      name: "sucheModelle",
-      description: "Durchsucht den Modellkatalog nach ML-Modellen (Aufgabe, Sprache, Suchbegriffe). "
-        + "Suchbegriffe treffen auch Fachthemen samt Oberthemen und Synonymen, z. B. „Tiere“ oder „Rechnung“.",
+      name: "searchModels",
+      description: "Searches the model catalog for ML models (task, languages, search terms). "
+        + "Search terms also match subject topics including parent topics and synonyms, e.g. \"Tiere\" (animals) or \"Rechnung\" (invoice).",
       inputSchema: z.object({
-        aufgabe: z.enum(modelTasks).optional(),
-        sprachen: z.array(z.string().max(20)).max(5).optional(),
-        suchbegriffe: z.string().max(200).optional(),
+        task: z.enum(modelTasks).optional(),
+        languages: z.array(z.string().max(20)).max(5).optional(),
+        searchTerms: z.string().max(200).optional(),
       }),
-      outputSchema: z.object({treffer: z.array(hitSchema)}),
+      outputSchema: z.object({hits: z.array(hitSchema)}),
     },
-    async ({aufgabe, sprachen, suchbegriffe}, options) => {
-      const criteria = new ModelSearchCriteria(aufgabe ?? null, sprachen ?? [], suchbegriffe ?? "", maxModelSearchResults);
+    async ({task, languages, searchTerms}, options) => {
+      const criteria = new ModelSearchCriteria(task ?? null, languages ?? [], searchTerms ?? "", maxModelSearchResults);
       const teamId = await dependencies.teamIdForActor(assistantActorIdFromContext(options.context));
       const {entries, vocabulary} = await dependencies.searchModelCatalog.execute(criteria, teamId);
-      return {treffer: entries.map((entry) => modelSearchHitFrom(entry, vocabulary))};
+      return {hits: entries.map((entry) => modelSearchHitFrom(entry, vocabulary))};
     },
   ) as ToolAction;
 }

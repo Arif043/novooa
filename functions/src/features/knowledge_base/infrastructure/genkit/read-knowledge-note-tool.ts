@@ -23,7 +23,7 @@ export function defineReadKnowledgeNoteTool(ai: Genkit, dependencies: KnowledgeN
   return ai.defineTool(
     {
       name: "readKnowledgeNote",
-      description: "Liest den Markdown-Inhalt einer Notiz anhand ihrer ID, dazu die Notizen, auf die sie verlinkt (links), und die Notizen, die auf sie verlinken (backlinks).",
+      description: "Reads the Markdown content of a note by its ID, together with the notes it links to (links) and the notes that link to it (backlinks).",
       inputSchema: z.object({noteId: z.string().min(1).max(200)}),
       outputSchema: z.object({found: z.boolean(), note: noteSchema.nullable()}),
     },
