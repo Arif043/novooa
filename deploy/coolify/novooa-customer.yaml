@@ -1,0 +1,173 @@
+# Kunden-Stack für Coolify: zieht fertige, gehärtete Images aus GHCR statt aus dem Checkout zu bauen.
+# Erzeugt aus docker-compose.local.yaml; Anleitung in docs/notes/coolify-deployment.md.
+name: ${NOVOOA_INSTANCE:-novooa-local}
+
+services:
+  runtime:
+    image: ghcr.io/arif043/novooa-runtime:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
+    environment:
+      PORT: "8080"
+      TZ: ${TZ:-Europe/Berlin}
+      LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
+      LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
+      PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
+      MODEL_ARTIFACT_MAX_BYTES: ${NOVOOA_MODEL_ARTIFACT_MAX_BYTES:-}
+      SCRIPT_RUNNER_URL: http://novooa-script:8091
+      SCRIPT_PACKAGES_URL: http://novooa-packages:8092
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
+      LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
+      LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
+      LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL: ${LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeTaskBuilderRelay}
+      LOCAL_RUNTIME_MAIL_RELAY_URL: ${LOCAL_RUNTIME_MAIL_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeMailRelay}
+      LOCAL_RUNTIME_GOOGLE_RELAY_URL: ${LOCAL_RUNTIME_GOOGLE_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeGoogleRelay}
+      SKILLS_SH_RELAY_URL: ${SKILLS_SH_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeSkillsRelay}
+      SKILLS_SH_BASE_URL: ${SKILLS_SH_BASE_URL:-}
+      SKILLS_SH_TOKEN: ${SKILLS_SH_TOKEN:-}
+      LOCAL_RUNTIME_FIREBASE_API_KEY: ${LOCAL_RUNTIME_FIREBASE_API_KEY:-AIzaSyCqT815piSitiqbdyIt_r5V57p0_95tGaI}
+      LOCAL_RUNTIME_FIREBASE_PROJECT_ID: ${LOCAL_RUNTIME_FIREBASE_PROJECT_ID:-syscat-90bff}
+      LOCAL_RUNTIME_FIREBASE_TOKEN_URL: ${LOCAL_RUNTIME_FIREBASE_TOKEN_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeFirebaseToken}
+    depends_on:
+      key-init:
+        condition: service_completed_successfully
+      novooa-script:
+        condition: service_healthy
+      novooa-packages:
+        condition: service_healthy
+    ports:
+      # Coolify: Bind-Adresse 127.0.0.1 und Port 0 (zufälliger freier Host-Port).
+      - "${NOVOOA_RUNTIME_BIND_ADDRESS:-127.0.0.1}:${NOVOOA_RUNTIME_PORT:-0}:8080"
+    volumes:
+      - novooa-data:/var/lib/novooa
+      - novooa-keys:/var/lib/novooa-keys
+    networks:
+      - novooa-public
+      - novooa-private
+      - novooa-script
+      - novooa-packages
+      - novooa-ml
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${COOLIFY_PROXY_NETWORK:-coolify}
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.entrypoints=http
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.middlewares=${COMPOSE_PROJECT_NAME}-https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.permanent=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.entrypoints=https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls.certresolver=${COOLIFY_CERTIFICATE_RESOLVER:-letsencrypt}
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.service=${COMPOSE_PROJECT_NAME}
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=8080
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:8080/healthz'); process.exit(response.ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  novooa-script:
+    image: ghcr.io/arif043/novooa-script:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8091"
+      SCRIPT_MAX_PROCESSES: "64"
+    expose: ["8091"]
+    networks:
+      - novooa-script
+    init: true
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777,noexec,nosuid
+    volumes:
+      - novooa-script-packages:/packages:ro
+    depends_on:
+      novooa-packages:
+        condition: service_healthy
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 96
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  novooa-packages:
+    image: ghcr.io/arif043/novooa-packages:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8092"
+      SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES: ${NOVOOA_SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES:-2147483648}
+    expose: ["8092"]
+    networks:
+      - novooa-packages
+      - novooa-packages-egress
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777,noexec,nosuid
+    volumes: [novooa-script-packages:/packages]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/healthz')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  key-init:
+    image: ghcr.io/arif043/novooa-runtime:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
+    user: "0:0"
+    network_mode: none
+    command: [node, lib/shared/local/local-runtime-keyring-init-cli.js]
+    environment:
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
+    volumes:
+      - novooa-keys:/var/lib/novooa-keys
+
+  key-rotation:
+    profiles: [maintenance]
+    image: ghcr.io/arif043/novooa-runtime:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
+    user: "0:0"
+    network_mode: none
+    command: [node, lib/shared/local/local-runtime-key-rotation-cli.js]
+    environment:
+      LOCAL_RUNTIME_ROOT: /var/lib/novooa
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
+    depends_on:
+      key-init:
+        condition: service_completed_successfully
+    volumes:
+      - novooa-data:/var/lib/novooa
+      - novooa-keys:/var/lib/novooa-keys
+
+
+networks:
+  novooa-public:
+    external: true
+    name: ${COOLIFY_PROXY_NETWORK:-coolify}
+  novooa-private:
+    internal: true
+  novooa-script:
+    internal: true
+  novooa-packages:
+    internal: true
+  novooa-packages-egress:
+  novooa-ml:
+    external: true
+
+volumes:
+  novooa-data:
+  novooa-keys:
+  novooa-script-packages:
