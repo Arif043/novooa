@@ -49,27 +49,36 @@ lassen.
 2. ML-Anwendung zuerst deployen. Sie erzeugt das interne Netz `novooa-ml`.
    `NOVOOA_MODEL_STORE_URL` auf den [Modellspeicher](./modellspeicher-garage.md)
    setzen; Speicher- und CPU-Grenzen der Serverkapazität anpassen.
-3. Kunden-Anwendung mit `deploy/coolify/novooa-customer.yaml` anlegen und die
-   untenstehenden Umgebungsvariablen setzen. Keine zusätzlichen
-   Coolify-Domains oder Proxy-Labels generieren.
+3. Kunden-Anwendung mit `deploy/coolify/novooa-customer.yaml` anlegen,
+   `NOVOOA_INSTANCE` setzen und im Domains-Tab die Domain für `runtime`
+   eintragen (siehe unten).
 4. Falls abweichend: `COOLIFY_CERTIFICATE_RESOLVER` (Standard `letsencrypt`) setzen.
    Traefiks EntryPoints müssen `http` und `https` heißen.
-5. DNS der Domain auf den Server richten. Deployen und HTTPS sowie
+5. DNS der Domain auf den Server richten (entfällt mit Wildcard-Eintrag). Deployen und HTTPS sowie
    `/healthz`, Web-App und geschützte API-Routen prüfen.
 6. Lizenz aktivieren und das erste Admin-Konto über die
    [Ersteinrichtung](./runtime-ersteinrichtung.md) anlegen.
 
-## Umgebungsvariablen der Kunden-Anwendung
+## Kunden-Anwendung: Name und Domain
 
 ```dotenv
 NOVOOA_INSTANCE=erkan
-NOVOOA_DOMAIN=erkan.novooa.cloud
 ```
 
-`NOVOOA_INSTANCE` muss je Kunde eindeutig sein und stabil bleiben: Daraus
-entstehen Compose-Projekt, Volume-Namen und Traefik-Router. Optional:
-`NOVOOA_VERSION` (anderer Image-Tag), `COOLIFY_PROXY_NETWORK` (Standard
-`coolify`), `NOVOOA_RUNTIME_BIND_ADDRESS` und `NOVOOA_RUNTIME_PORT`
+`NOVOOA_INSTANCE` ist Pflicht, muss auf dem Server eindeutig sein und stabil
+bleiben: Im Raw-Modus setzt Coolify keinen eigenen Projektnamen, daraus entstehen
+also Compose-Projekt, Volume-Namen und Traefik-Router. Fehlt er, bricht das
+Deployment ab, statt einen anderen Kunden-Stack zu überschreiben.
+
+Die Domain wird im **Domains-Tab** für den Dienst `runtime` gesetzt, auch über
+„Generate Domain“ aus der Wildcard-Domain. Coolify schreibt die erste Domain
+auch im Raw-Modus als `SERVICE_FQDN_RUNTIME` in die `.env` des Deployments; die
+Traefik-Labels der Compose-Datei verwenden sie, Traefik holt das Zertifikat
+(`COOLIFY_CERTIFICATE_RESOLVER`, Standard `letsencrypt`). Ohne Domain bricht
+das Deployment ab.
+
+Optional: `NOVOOA_VERSION` (anderer Image-Tag), `COOLIFY_PROXY_NETWORK`
+(Standard `coolify`), `NOVOOA_RUNTIME_BIND_ADDRESS` und `NOVOOA_RUNTIME_PORT`
 (Standard `127.0.0.1` und `0`, also ein freier Port nur auf dem Server).
 Traefik erreicht die Runtime direkt im Container auf Port `8080`.
 

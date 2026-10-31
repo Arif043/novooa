@@ -1,11 +1,14 @@
-# Kunden-Stack für Coolify: zieht fertige, gehärtete Images aus GHCR statt aus dem Checkout zu bauen.
+# Kunden-Stack für Coolify (Raw-Modus): zieht fertige, gehärtete Images aus GHCR.
+# Die Domain kommt aus Coolifys Domains-Tab (SERVICE_FQDN_RUNTIME); SSL holt Coolifys Traefik.
 # Erzeugt aus docker-compose.local.yaml; Anleitung in docs/notes/coolify-deployment.md.
-name: ${NOVOOA_INSTANCE:-novooa-local}
+name: ${NOVOOA_INSTANCE:?NOVOOA_INSTANCE muss je Kunde eindeutig gesetzt sein}
 
 services:
   runtime:
     image: ghcr.io/arif043/novooa-runtime:${NOVOOA_VERSION:-2026.10.31-0e3e108e}
     environment:
+      # Steht hier, damit Coolify die Pflichtvariable unter Environment Variables anzeigt.
+      NOVOOA_INSTANCE: ${NOVOOA_INSTANCE:?NOVOOA_INSTANCE muss je Kunde eindeutig gesetzt sein}
       PORT: "8080"
       TZ: ${TZ:-Europe/Berlin}
       LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
@@ -48,12 +51,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=${COOLIFY_PROXY_NETWORK:-coolify}
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.rule=Host(`${SERVICE_FQDN_RUNTIME:?Domain im Domains-Tab für den Dienst runtime setzen}`)
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.entrypoints=http
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.middlewares=${COMPOSE_PROJECT_NAME}-https
       - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.scheme=https
       - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https.redirectscheme.permanent=true
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.rule=Host(`${NOVOOA_DOMAIN:-localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.rule=Host(`${SERVICE_FQDN_RUNTIME:?Domain im Domains-Tab für den Dienst runtime setzen}`)
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.entrypoints=https
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls=true
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}-https.tls.certresolver=${COOLIFY_CERTIFICATE_RESOLVER:-letsencrypt}
