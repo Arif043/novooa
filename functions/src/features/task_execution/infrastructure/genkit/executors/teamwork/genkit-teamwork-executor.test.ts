@@ -48,8 +48,22 @@ test("a failing member is reported to the orchestrator, which keeps working", as
   assert.match(orchestrator.requests[1].messages, /Der Auftrag an Recherche ist gescheitert/);
 });
 
-test("an orchestrator model without tool calls fails readably before anything runs", async (t) => {
-  const orchestrator = fakeModel("orchestrator", () => ({text: "{}"}));
+test("an orchestrator that never delegates fails readably as a missing tool capability", async (t) => {
+  const orchestrator = fakeModel("orchestrator", () => result("selbst geschrieben", 1));
+  const worker = fakeModel("worker", () => ({text: ""}));
+  const executor = new GenkitTeamworkExecutor({
+    ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(),
+    languageModelResolver: resolverFor({orchestrator, worker}),
+  });
+
+  const failure = (await executor.execute(request))._unsafeUnwrapErr();
+
+  assert.equal(failure.code, "capabilityMissing");
+  assert.match(failure.message, /Orchestrator hat keinen Mitarbeiter beauftragt/);
+});
+
+test("a provider that rejects tool calls becomes a readable missing capability", async (t) => {
+  const orchestrator = fakeModel("orchestrator", () => { throw new Error("registry.ollama.ai/library/gemma:2b does not support tools"); });
   const worker = fakeModel("worker", () => ({text: ""}));
   const executor = new GenkitTeamworkExecutor({
     ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(),
@@ -58,14 +72,16 @@ test("an orchestrator model without tool calls fails readably before anything ru
 
   const failure = (await executor.execute(request))._unsafeUnwrapErr();
 
-  assert.match(failure.message, /Orchestrator unterstützt keine Werkzeugaufrufe/);
-  assert.equal(orchestrator.requests.length, 0);
+  assert.equal(failure.code, "capabilityMissing");
+  assert.match(failure.message, /unterstützt Werkzeugaufrufe nicht/);
+  assert.equal(orchestrator.requests.length, 1, "the model is tried instead of being rejected up front");
 });
 
 test("result files written to the shared folder are reported by path", async (t) => {
   const workspace = await workspaceFor(t);
   await writeFile(path.join(workspace.team.sharedDirectory, "bericht.md"), "# Bericht");
-  const orchestrator = fakeModel("orchestrator", () => ({text: JSON.stringify({bericht: "shared/bericht.md"})}));
+  const orchestrator = fakeModel("orchestrator", (call) => call === 1
+    ? delegation("1", "Schreibe den Bericht.") : {text: JSON.stringify({bericht: "shared/bericht.md"})});
   const executor = new GenkitTeamworkExecutor({
     ai: genkit({}), workspace, ...teamLogging(),
     languageModelResolver: resolverFor({orchestrator, worker: fakeModel("worker", () => ({text: ""}))}),

@@ -70,6 +70,7 @@
 - [Plugins je Arbeitsbereich (0028)](../notes/sqlite-workspace-plugins-0028.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
+- [Fähigkeiten von Sprachmodellen zur Laufzeit](../notes/sprachmodell-faehigkeiten-zur-laufzeit.md)
 - [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)
 - [Mitarbeiter](../notes/mitarbeiter.md)
 - [Skills-Ordner](../notes/skills-ordner.md)

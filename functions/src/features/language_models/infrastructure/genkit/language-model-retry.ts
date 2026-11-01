@@ -1,5 +1,6 @@
 import {GenkitError, type GenerateRequest, type GenerateResponseData} from "genkit";
 import {LanguageModelError, ModelProviderUnavailableError} from "../errors/language-model-errors.js";
+import {missingCapabilityIn} from "../errors/missing-capability-detection.js";
 
 /** Genkits einfache Modell-Middleware, in `use` von `ai.generate` erlaubt. */
 export type LanguageModelMiddleware = (
@@ -50,6 +51,8 @@ export function languageModelRetry(policy = defaultLanguageModelRetryPolicy): La
  * beim nächsten Versuch genauso langsam. Wiederholt wird nur „nicht erreichbar“.
  */
 export function isRetryableModelError(error: unknown): boolean {
+  // Eine fehlende Fähigkeit bleibt beim nächsten Versuch dieselbe.
+  if (missingCapabilityIn(error) !== undefined) return false;
   if (error instanceof LanguageModelError) return error instanceof ModelProviderUnavailableError;
   if (error instanceof GenkitError) return retryableGenkitStatuses.has(error.status);
   return !(error instanceof Error && error.name === "AbortError");

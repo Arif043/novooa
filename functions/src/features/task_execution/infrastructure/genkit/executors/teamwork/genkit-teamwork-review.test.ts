@@ -13,8 +13,10 @@ async function executorFor(
 ) {
   const log = logger();
   const logging = teamLogging(log);
+  // Ohne Mitarbeiter: Diese Tests prüfen nur die Prüfung, nicht die Delegation.
+  const workspace = await workspaceFor(t);
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), ...logging,
+    ai: genkit({}), workspace: {...workspace, team: {...workspace.team, members: []}}, ...logging,
     languageModelResolver: resolverFor({worker: fakeModel("worker", () => ({text: ""})), ...models}, {toolCalling: true}, capabilitiesById),
   });
   return {executor, log, transcript: logging.transcript};
@@ -75,13 +77,13 @@ test("without review no reviewer model is resolved or called", async (t) => {
   assert.equal(reviewer.requests.length, 0);
 });
 
-test("a reviewer model without structured output fails readably before anything runs", async (t) => {
+test("a reviewer whose provider rejects structured output fails readably", async (t) => {
   const orchestrator = fakeModel("orchestrator", () => result("X", 1));
-  const reviewer = fakeModel("reviewer", () => verdict(true));
+  const reviewer = fakeModel("reviewer", () => { throw new Error("response_format json_schema is not supported by this model"); });
   const {executor} = await executorFor(t, {orchestrator, reviewer}, {reviewer: {structuredOutput: false}});
 
   const failure = (await executor.execute(reviewed))._unsafeUnwrapErr();
 
-  assert.match(failure.message, /Prüfung unterstützt keine strukturierte Ausgabe/);
-  assert.equal(orchestrator.requests.length, 0);
+  assert.equal(failure.code, "capabilityMissing");
+  assert.match(failure.message, /unterstützt strukturierte Ausgabe nicht/);
 });

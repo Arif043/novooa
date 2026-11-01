@@ -1,11 +1,13 @@
 import {GenkitError, type StatusName} from "genkit";
 import {
   LanguageModelError,
+  ModelCapabilityMissingError,
   ModelOutputSchemaError,
   ModelProviderUnavailableError,
   ModelRequestRejectedError,
   ModelTimeoutError,
 } from "./language-model-errors.js";
+import {missingCapabilityIn} from "./missing-capability-detection.js";
 
 type ErrorType = new (message: string, originalError?: unknown) => LanguageModelError;
 
@@ -35,6 +37,11 @@ export async function withTranslatedGenkitErrors<T>(call: () => Promise<T>): Pro
  * wie sie sind; was nicht erkannt wird, bleibt der ursprüngliche Fehler.
  */
 export function translateGenkitError(error: unknown): unknown {
+  if (error instanceof ModelCapabilityMissingError) return error;
+  const capability = missingCapabilityIn(error);
+  if (capability !== undefined) {
+    return new ModelCapabilityMissingError(`Das gewählte Sprachmodell unterstützt ${capability} nicht. Wähle ein anderes Modell.`, error);
+  }
   if (error instanceof LanguageModelError) return error;
   if (error instanceof GenkitError) return fromGenkitError(error);
   if (isJsonSyntaxError(error)) return new ModelOutputSchemaError("Die Antwort des Modells war kein gültiges JSON.", error);

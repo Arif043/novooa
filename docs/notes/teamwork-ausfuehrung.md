@@ -13,7 +13,7 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md) · [Aufgabe](../index/aufgabe
   - Alle Agenten haben `filesystem({rootDirectory, allowWriteAccess: true})`. Pfade außerhalb der Wurzel lehnt die Middleware ab, und der Ordner wird nach dem Lauf gelöscht.
 - **Modelle** (`teamworkModelFor`):
   - dieselbe Rückfallkette wie beim [Prompt-Executor](./prompt-executor.md);
-  - jeder Agent braucht `toolCalling`, Orchestrator und Prüfung zusätzlich `structuredOutput`; sonst gibt es `ModelCapabilityMissingError` mit der Rolle, bevor etwas läuft.
+  - Fähigkeiten werden nicht vorab geprüft ([Fähigkeiten zur Laufzeit](./sprachmodell-faehigkeiten-zur-laufzeit.md)); lehnt ein Anbieter ab oder beauftragt der Orchestrator trotz Mitarbeitern niemanden, endet der Baustein mit `capabilityMissing`.
 - **Delegation** (`delegationToolsFor`):
   - je Mitarbeiter ein `ai.dynamicTool` `delegate_to_<name>` (ASCII, eindeutig) mit der Eingabe `{task, expectedResult, boundaries?}`; der Mitarbeiter bekommt sie als `<task>` mit `<context name="expected_result">` und `<context name="boundaries">`;
   - höchstens 10 Aufträge je Lauf (`DelegationBudget`), auch über Nachbesserungen hinweg;

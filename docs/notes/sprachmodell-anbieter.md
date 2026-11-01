@@ -25,6 +25,8 @@ Abacus.AI (RouteLLM), Hugging Face, ElevenLabs (nur Sprachausgabe), Ollama
   Genkit-Modell; Transport über die native `/api/chat`-API, JSON-Schemas als
   Ollama-`format`. Bildeingabe und Werkzeugaufrufe meldet Ollama je Modell über
   `/api/show` (`vision`, `tools`). Intern ein nicht geheimer Platzhalter-Key.
+- Die erkannten Fähigkeiten sind nur Information; geprüft wird zur Laufzeit
+  ([Fähigkeiten zur Laufzeit](./sprachmodell-faehigkeiten-zur-laufzeit.md)).
 - Generisch OpenAI-kompatibel: extern HTTPS-URL plus API-Key; lokal
   `http://host.docker.internal:<port>/v1`.
 

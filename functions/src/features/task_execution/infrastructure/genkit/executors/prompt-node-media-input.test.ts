@@ -62,13 +62,14 @@ test("uses the selected team language model for a text prompt", async () => {
   assert.deepEqual(models, ["team-model"]);
 });
 
-test("a selected model that cannot receive the supplied image is a failure value", async () => {
+test("a provider that rejects the supplied image is a failure value", async () => {
   const resultOrFailure = await createGenkitPromptNodeExecutor(
       fakeAi([]),
       undefined,
       {async resolve() {
         return {
-          ai: fakeAi([]), model: "team-model" as never,
+          ai: {generate: async () => { throw new Error("registry.ollama.ai/library/gemma:2b does not support images"); }} as never,
+          model: "team-model" as never,
           capabilities: {...capabilities(), imageInput: false},
           logContext: {provider: "test", model: "team-model"},
           generationConfig: {configFor: () => ({})},
@@ -81,7 +82,7 @@ test("a selected model that cannot receive the supplied image is a failure value
 
   const failure = resultOrFailure._unsafeUnwrapErr();
   assert.equal(failure.code, "capabilityMissing");
-  assert.match(failure.message, /keine Bildeingaben/);
+  assert.match(failure.message, /unterstützt Bildeingaben nicht/);
 });
 
 function executorInput() {

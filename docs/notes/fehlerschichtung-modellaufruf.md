@@ -39,7 +39,8 @@ Gehört zu: [Architektur](../index/architektur.md)
 
 Codes: `outputSchemaViolated`, `responseTruncated`, `emptyResponse`,
 `providerUnavailable`, `requestRejected`, `timedOut`, `capabilityMissing`,
-`unknown`. Die übrigen Geschäftsfehler der Bausteine stehen unter
+`unknown`. `capabilityMissing` entsteht aus der Ablehnung des Anbieters, nicht
+aus einer Vorab-Prüfung ([Fähigkeiten zur Laufzeit](./sprachmodell-faehigkeiten-zur-laufzeit.md)). Die übrigen Geschäftsfehler der Bausteine stehen unter
 [Fehlercodes der Bausteine](./baustein-fehlercodes.md).
 
 ## Siehe auch

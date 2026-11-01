@@ -47,13 +47,14 @@ test("passes the provider config translated from the generation options", async 
   assert.deepEqual(configs, [{numCtx: 16384, think: false}]);
 });
 
-test("a missing capability becomes the capabilityMissing failure", async () => {
+test("a provider rejecting a capability becomes the capabilityMissing failure", async () => {
   const executor = new GenkitPromptExecutor({ai: {} as never, languageModelResolver: fakeResolver(), logger: silentLogger()});
 
   const answerOrFailure = await executor.execute({...imageInput(), languageModelId: "model-1"});
 
   assert.ok(answerOrFailure.isErr());
   assert.equal(answerOrFailure.error.code, "capabilityMissing");
+  assert.match(answerOrFailure.error.message, /unterstützt Bildgenerierung nicht/);
 });
 
 function imageInput(): PromptNodeInput {
@@ -66,7 +67,8 @@ function imageInput(): PromptNodeInput {
 function fakeResolver(): GenkitLanguageModelResolver {
   return {async resolve() {
     return {
-      ai: {} as never, model: "text-only" as never, logContext: {}, generationConfig: {configFor: () => ({})},
+      ai: {generate: async () => { throw new Error("Response modalities IMAGE is not supported by this model."); }} as never,
+      model: "text-only" as never, logContext: {}, generationConfig: {configFor: () => ({})},
       capabilities: {textGeneration: true, imageInput: false, structuredOutput: false, toolCalling: false, imageGeneration: false},
     };
   }};

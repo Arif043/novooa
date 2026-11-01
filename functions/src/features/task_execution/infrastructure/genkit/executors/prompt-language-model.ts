@@ -3,8 +3,6 @@ import {
   type ResolvedGenkitLanguageModel,
 } from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
-import {ModelCapabilityMissingError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
-import {type PromptNodeInput} from "./prompt-node-types.js";
 
 // Exportiert für gezielte Tests der Vorgabe-Fallback-Kette.
 export async function languageModelFor(
@@ -39,24 +37,4 @@ async function defaultLanguageModelFor(
   } catch {
     return undefined;
   }
-}
-
-export function validateCapabilities(
-  input: PromptNodeInput,
-  languageModel: ResolvedGenkitLanguageModel | undefined,
-): void {
-  if (!languageModel) return;
-  const missing = missingCapability(input, languageModel.capabilities);
-  if (missing) throw new ModelCapabilityMissingError(`Das gewählte Sprachmodell unterstützt keine ${missing}.`);
-}
-
-function missingCapability(
-  input: PromptNodeInput,
-  capabilities: ResolvedGenkitLanguageModel["capabilities"],
-): string | undefined {
-  if (!capabilities.textGeneration) return "Textgenerierung";
-  if (input.mediaUrls.length > 0 && !capabilities.imageInput) return "Bildeingaben";
-  if (input.outputType === "structured" && !capabilities.structuredOutput) return "strukturierte Ausgabe";
-  if (input.outputType === "image" && !capabilities.imageGeneration) return "Bildgenerierung";
-  return undefined;
 }

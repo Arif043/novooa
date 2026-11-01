@@ -4,7 +4,7 @@ import {type PromptExecutor} from "../../../domain/executors/prompt-executor.js"
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {imageModel, imageModelLogContext, modelLogContext, textModel, textModelGenerationConfig} from "../runner/ai-models.js";
 import {executeImagePrompt} from "./prompt-image-executor.js";
-import {languageModelFor, validateCapabilities} from "./prompt-language-model.js";
+import {languageModelFor} from "./prompt-language-model.js";
 import {type PromptModelCall} from "./prompt-model-call.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
 import {executeDecisionPrompt, executeStructuredPrompt, executeTextPrompt} from "./prompt-text-executor.js";
@@ -53,7 +53,6 @@ export class GenkitPromptExecutor implements PromptExecutor {
     const languageModel = await languageModelFor(
       request.languageModelId, request.teamId, languageModelResolver, defaultsStore,
     );
-    validateCapabilities(request, languageModel);
     return executePromptNode(this.callFor(request, languageModel), request);
   }
 

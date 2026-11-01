@@ -7,7 +7,7 @@ import {type ApplicationLogger} from "../../../../../../shared/logging/applicati
 import {type LanguageModelFailure} from "../../../../../language_models/domain/entities/language-model-failure.js";
 import {type LlmGateway} from "../../../../../language_models/domain/prompting/llm-gateway.js";
 import {type LlmPrompt} from "../../../../../language_models/domain/prompting/llm-prompt.js";
-import {ModelOutputSchemaError} from "../../../../../language_models/infrastructure/errors/language-model-errors.js";
+import {ModelCapabilityMissingError, ModelOutputSchemaError} from "../../../../../language_models/infrastructure/errors/language-model-errors.js";
 import {languageModelFailureFrom} from "../../../../../language_models/infrastructure/errors/language-model-failure-mapper.js";
 import {type GenkitLlmBinding} from "../../../../../language_models/infrastructure/genkit/llm/genkit-llm-binding.js";
 import {createLlmGateway} from "../../../../../language_models/infrastructure/genkit/llm/llm-gateway-factory.js";
@@ -59,7 +59,7 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
 
   private async run(request: TeamworkExecutionRequest): Promise<TeamworkExecutionResult> {
     const {workspace, transcript} = this.dependencies;
-    const orchestrator = await teamworkModelFor(request, this.dependencies, {label: "den Orchestrator", needsStructuredOutput: true});
+    const orchestrator = await teamworkModelFor(request, this.dependencies);
     const reviewer = await this.reviewerFor(request);
     const runs = await teamMemberRuns(request, workspace, this.dependencies);
     const imagePaths = await writeTeamworkImages(workspace.rootDirectory, request.mediaUrls);
@@ -68,6 +68,7 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
       members: runs, fields: request.outputFields, instruction: request.instruction, mediaUrls: request.mediaUrls,
       workspace, imagePaths,
     })});
+    assertDelegated(runs.length, transcript);
     const fields = reviewer
       ? await reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), transcript)
       : first.fields;
@@ -80,7 +81,6 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
     return teamworkModelFor(
       {languageModelId: request.review.languageModelId, teamId: request.teamId, generationOptions: request.generationOptions},
       this.dependencies,
-      {label: "die Prüfung", needsStructuredOutput: true},
     );
   }
 
@@ -118,4 +118,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function definedOutputOf(output: Record<string, unknown>, fields: TeamworkOutputField[]): Record<string, unknown> {
   return Object.fromEntries(fields.map((field) => field.name.trim()).filter((name) => name in output)
     .map((name) => [name, output[name]]));
+}
+
+/**
+ * Ein Modell ohne Werkzeugaufrufe lehnt sie nicht immer ab, sondern antwortet einfach selbst. Hat der
+ * Orchestrator trotz Mitarbeitern niemanden beauftragt, ist das der Hinweis darauf.
+ */
+function assertDelegated(memberCount: number, transcript: TeamworkTranscript): void {
+  if (memberCount === 0 || transcript.entries().some((entry) => entry.kind === "task")) return;
+  throw new ModelCapabilityMissingError(
+    "Der Orchestrator hat keinen Mitarbeiter beauftragt. Vermutlich unterstützt sein Sprachmodell keine Werkzeugaufrufe; wähle für den Orchestrator ein anderes Modell.",
+  );
 }

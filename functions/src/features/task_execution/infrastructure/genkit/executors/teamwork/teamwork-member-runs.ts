@@ -25,7 +25,6 @@ async function memberRunFor(
   const model = await teamworkModelFor(
     {languageModelId: member.languageModelId, teamId, generationOptions: defaultGenerationOptions},
     sources,
-    {label: `den Mitarbeiter „${member.employee.name}“`, needsStructuredOutput: false},
   );
   const use = teamworkMiddleware(rootDirectory, member.skillsDirectory);
   return {
