@@ -142,6 +142,8 @@ services:
     user: "0:0"
     network_mode: none
     command: [node, lib/shared/local/local-runtime-keyring-init-cli.js]
+    # Läuft einmal und endet; "no" hält Coolify davon ab, den Stack deshalb als degraded zu melden.
+    restart: "no"
     environment:
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
     volumes:
@@ -156,6 +158,8 @@ services:
     user: "0:0"
     network_mode: none
     command: [node, lib/shared/local/local-runtime-key-rotation-cli.js]
+    # Läuft einmal und endet; "no" hält Coolify davon ab, den Stack deshalb als degraded zu melden.
+    restart: "no"
     environment:
       LOCAL_RUNTIME_ROOT: /var/lib/novooa
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
